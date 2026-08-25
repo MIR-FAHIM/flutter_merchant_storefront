@@ -1,6 +1,7 @@
 import 'package:ecom_delivery_flutter/app/api_providers/company_data.dart';
 import 'package:ecom_delivery_flutter/app/modules/home/controllers/home_controller.dart';
 import 'package:ecom_delivery_flutter/app/routes/app_pages.dart';
+import 'package:ecom_delivery_flutter/app/services/auth_service.dart';
 import 'package:ecom_delivery_flutter/common/Color.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
@@ -45,11 +46,11 @@ class ProfileView extends GetView<HomeController> {
                 CircleAvatar(
                   radius: 50,
                   backgroundColor: Colors.grey.shade300,
-                  backgroundImage: user.photo != null
+                  backgroundImage: user.avatarOriginal != null
                       ? CachedNetworkImageProvider(
-                      "${CompanyData.image_file_url}/${user.photo}") // Replace with actual domain
+                      "${CompanyData.image_file_url}/${user.avatarOriginal}") // Replace with actual domain
                       : null,
-                  child: user.photo == null
+                  child: user.avatarOriginal == null
                       ? const Icon(Icons.person, size: 40, color: Colors.white)
                       : null,
                 ),
@@ -86,37 +87,26 @@ class ProfileView extends GetView<HomeController> {
                 ListTile(
                   leading: const Icon(Icons.work, color: Colors.white),
                   title: Text(
-                    user.designation?.designationName ?? 'No Designation',
+                    user.userType ?? 'No Designation',
                     style: const TextStyle(color: Colors.white70),
                   ),
                 ),
 
-                // Role
+
+
                 ListTile(
-                  leading: const Icon(Icons.verified_user, color: Colors.white),
-                  title: Text(
-                    user.role?.roleName ?? 'No Role',
-                    style: const TextStyle(color: Colors.white70),
-                  ),
+                  leading:
+                  Icon(Icons.exit_to_app, color: AppColors.redTextColor),
+                  title: Text('Log Out',
+                      style: TextStyle(color: AppColors.redTextColor)),
+                  onTap: () {
+                    Get.find<AuthService>().removeCurrentUser();
+                    Get.toNamed(Routes.SPLASHSCREEN);
+                  },
                 ),
 
-                // Department
-                ListTile(
-                  leading: const Icon(Icons.apartment, color: Colors.white),
-                  title: Text(
-                    user.department?.departmentName ?? 'No Department',
-                    style: const TextStyle(color: Colors.white70),
-                  ),
-                ),
 
-                // Start Time
-                ListTile(
-                  leading: const Icon(Icons.access_time, color: Colors.white),
-                  title: Text(
-                    "Start Time: ${user.startHour?.toString().padLeft(2, '0')}:${user.startMin?.toString().padLeft(2, '0')}",
-                    style: const TextStyle(color: Colors.white70),
-                  ),
-                ),
+
               ],
             ),
           );

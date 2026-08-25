@@ -19,7 +19,7 @@ class SplashscreenView extends GetView<SplashscreenController> {
           children: [
             Center(
               child: Image(
-                color: Colors.white,
+               
                 height: 200,
                 width: 200,
                 image: AssetImage(

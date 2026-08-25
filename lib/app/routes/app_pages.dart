@@ -2,6 +2,12 @@
 import 'package:ecom_delivery_flutter/app/modules/auth/login/bindings/login_binding.dart';
 import 'package:ecom_delivery_flutter/app/modules/auth/login/views/login_view.dart';
 
+import 'package:ecom_delivery_flutter/app/modules/order/binding/order_binding.dart';
+import 'package:ecom_delivery_flutter/app/modules/order/view/order_detail_view.dart';
+import 'package:ecom_delivery_flutter/app/modules/order/view/order_view.dart';
+import 'package:ecom_delivery_flutter/app/modules/product/binding/product_binding.dart';
+import 'package:ecom_delivery_flutter/app/modules/product/view/product_list_view.dart';
+
 
 import 'package:get/get.dart';
 import '../modules/home/bindings/home_binding.dart';
@@ -41,6 +47,25 @@ class AppPages {
       name: _Paths.SPLASHSCREEN,
       page: () => SplashscreenView(),
       binding: SplashscreenBinding(),
+    ),
+
+
+
+GetPage(
+      name: _Paths.PRODUCT_LIST,
+      page: () => ProductListView(),
+      binding: ProductBinding(),
+    ),
+GetPage(
+      name: _Paths.ORDER_SHOP_DETAIL,
+      page: () => OrderDetailView(),
+      binding: OrderBinding(),
+    ),
+
+GetPage(
+      name: _Paths.ORDER_SHOP_LIST,
+      page: () => OrderListView(),
+      binding: OrderBinding(),
     ),
 
 

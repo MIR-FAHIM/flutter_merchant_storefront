@@ -10,28 +10,20 @@ abstract class Routes {
 
   static const ROOT = _Paths.ROOT;
   static const SPLASHSCREEN = _Paths.SPLASHSCREEN;
-  static const TUTORVIEW = _Paths.TUTORVIEW;
+
   static const LOGIN = _Paths.LOGIN;
-  static const EMPLOYEELIST = _Paths.EMPLOYEELIST;
-  static const NOTICELIST = _Paths.NOTICELIST;
+  static const PRODUCT_LIST = _Paths.PRODUCT_LIST;
+
   static const NOTIFICATIONVIEW = _Paths.NOTIFICATIONVIEW;
-  static const ALLATTENDANCEBYDATE = _Paths.ALLATTENDANCEBYDATE;
-  static const MYTASK = _Paths.MYTASK;
-  static const TASKDETAILS = _Paths.TASKDETAILS;
-  static const ADDTASK = _Paths.ADDTASK;
-  static const DEPARTMENTWISEUSER = _Paths.DEPARTMENTWISEUSER;
-  static const ALLTASK = _Paths.ALLTASK;
-  static const CONVERSATIONLIST = _Paths.CONVERSATIONLIST;
-  static const CHATVIEW = _Paths.CHATVIEW;
-  static const MYATTENDANCE = _Paths.MYATTENDANCE;
-  static const ALLPROSPECTVIEW = _Paths.ALLPROSPECTVIEW;
-  static const PROSPECTDETAIL = _Paths.PROSPECTDETAIL;
-  static const FB_LEAD = _Paths.FB_LEAD;
-  static const Add_Fb_lead = _Paths.Add_Fb_lead;
-  static const VISIT_VIEW = _Paths.VISIT_VIEW;
-  static const PROJECT_LIST = _Paths.PROJECT_LIST;
-  static const PROJECT_DETAILS = _Paths.PROJECT_DETAILS;
-  static const PROSPECT_LOG_ACTIVITY = _Paths.PROSPECT_LOG_ACTIVITY;
+  static const ALL_DELIVERY_ORDER = _Paths.ALL_DELIVERY_ORDER;
+  static const Completed_DELIVERY_ORDER = _Paths.Completed_DELIVERY_ORDER;
+  static const Pending_DELIVERY_ORDER = _Paths.Pending_DELIVERY_ORDER;
+  static const ORDER_DETAIL = _Paths.ORDER_DETAIL;
+  static const DELIVERED_ORDER = _Paths.DELIVERED_ORDER;
+  static const MY_DELIVERY = _Paths.MY_DELIVERY;
+  static const ORDER_SHOP_DETAIL = _Paths.ORDER_SHOP_DETAIL;
+  static const ORDER_SHOP_LIST = _Paths.ORDER_SHOP_LIST;
+
 
 }
 
@@ -41,28 +33,21 @@ abstract class _Paths {
   static const HOME = '/home';
 
   static const ROOT = '/root';
-  static const CHATVIEW = '/CHATVIEW';
-  static const CONVERSATIONLIST = '/CONVERSATIONLIST';
+
   static const LOGIN = '/LOGIN';
-  static const DEPARTMENTWISEUSER = '/DEPARTMENTWISEUSER';
-  static const ALLTASK = '/ALLTASK';
-  static const MYATTENDANCE = '/MYATTENDANCE';
+  static const ORDER_SHOP_LIST = '/ORDER_SHOP_LIST';
+  static const PRODUCT_LIST = '/PRODUCT_LIST';
+
   static const SPLASHSCREEN = '/splashscreen';
-  static const ADDTASK = '/ADDTASK';
-  static const MYTASK = '/MYTASK';
-  static const EMPLOYEELIST = '/EMPLOYEELIST';
-  static const NOTICELIST = '/NOTICELIST';
+  static const ORDER_SHOP_DETAIL = '/ORDER_SHOP_DETAIL';
+
   static const NOTIFICATIONVIEW = '/NOTIFICATIONVIEW';
-  static const ALLATTENDANCEBYDATE = '/ALLATTENDANCEBYDATE';
-  static const TASKDETAILS = '/TASKDETAILS';
-  static const ALLPROSPECTVIEW = '/ALLPROSPECTVIEW';
-  static const PROSPECTDETAIL = '/PROSPECTDETAIL';
-  static const TUTORVIEW = '/TUTORVIEW';
-  static const FB_LEAD = '/FB_LEAD';
-  static const Add_Fb_lead = '/Add_Fb_lead';
-  static const VISIT_VIEW = '/VISIT_VIEW';
-  static const PROJECT_LIST = '/PROJECT_LIST';
-  static const PROJECT_DETAILS = '/PROJECT_DETAILS';
-  static const PROSPECT_LOG_ACTIVITY = '/PROSPECT_LOG_ACTIVITY';
+  static const ALL_DELIVERY_ORDER = '/ALL_DELIVERY_ORDER';
+  static const Completed_DELIVERY_ORDER = '/Completed_DELIVERY_ORDER';
+  static const Pending_DELIVERY_ORDER = '/Pending_DELIVERY_ORDER';
+  static const ORDER_DETAIL = '/ORDER_DETAIL';
+  static const DELIVERED_ORDER = '/DELIVERED_ORDER';
+  static const MY_DELIVERY = '/MY_DELIVERY';
+
 
 }

@@ -1,4 +1,4 @@
-package ecom.fahim.bd
+package com.myzoo.marchant
 
 import io.flutter.embedding.android.FlutterActivity
 

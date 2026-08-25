@@ -29,7 +29,7 @@ class AuthRepository {
 
   getProfile(String userID) async {
     APIManager _manager = APIManager();
-    final response = await _manager.get(ApiClient.getProfile + userID);
+    final response = await _manager.getWithHeader(ApiClient.getProfile + userID, {});
 
     print('user profile: ${response}');
 

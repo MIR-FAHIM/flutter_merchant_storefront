@@ -189,11 +189,26 @@ class APIManager {
   Future<dynamic> getWithHeader(
       String url, Map<String, String> headerData) async {
     print("Calling API: $url");
-    headerData["remark"] = "Agent";
+    headerData["Authorization"] = "Bearer ${Get.find<AuthService>().currentUser.value.data!.token}";
     print('token: $headerData');
     var responseJson;
     try {
       final response = await http.get(Uri.parse(url), headers: headerData);
+      print(response.body);
+      responseJson = _response(response);
+    } on SocketException {
+      throw FetchDataException('No Internet connection');
+    }
+    return responseJson;
+  }
+ Future<dynamic> patchWithHeader(
+      String url, Map<String, String> headerData) async {
+    print("Calling API: $url");
+    headerData["Authorization"] = "Bearer ${Get.find<AuthService>().currentUser.value.data!.token}";
+    print('token: $headerData');
+    var responseJson;
+    try {
+      final response = await http.patch(Uri.parse(url), headers: headerData);
       print(response.body);
       responseJson = _response(response);
     } on SocketException {
@@ -215,11 +230,16 @@ class APIManager {
         case 450:
         var responseJson = json.decode(response.body.toString());
         return responseJson;
+
+        case 422:
+        var responseJson = json.decode(response.body.toString());
+        return responseJson;
       case 400:
         throw BadRequestException(response.body.toString());
       case 401:
       case 403:
-        throw UnauthorisedException(response.body.toString());
+      var responseJson = json.decode(response.body.toString());
+      return responseJson;
       case 500:
         throw UnauthorisedException(response.body.toString());
       default:

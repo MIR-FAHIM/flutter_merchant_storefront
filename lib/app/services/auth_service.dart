@@ -6,7 +6,7 @@ import 'package:get_storage/get_storage.dart';
 import 'settings_service.dart';
 
 class AuthService extends GetxService {
-  final currentUser = UserLoginResModel().obs;
+  final currentUser = LoginResponseModel().obs;
   late GetStorage _box;
   final used = false.obs;
   final alreadyLogged = false.obs;
@@ -25,7 +25,7 @@ class AuthService extends GetxService {
     super.onInit();
   }
 
-  void setUser(UserLoginResModel customer) async {
+  void setUser(LoginResponseModel customer) async {
     _box.write('current_user', customer.toJson());
 
     getCurrentUser();
@@ -56,13 +56,13 @@ class AuthService extends GetxService {
 
   Future getCurrentUser() async {
     if (_box.hasData('current_user')) {
-      currentUser.value = UserLoginResModel.fromJson(await _box.read('current_user'));
+      currentUser.value = LoginResponseModel.fromJson(await _box.read('current_user'));
     }
     print('customer data: ${currentUser.value.data!.user!.name}');
   }
 
   Future removeCurrentUser() async {
-    currentUser.value = UserLoginResModel();
+    currentUser.value = LoginResponseModel();
     await _box.remove('alreadyLogged');
     await _box.remove('current_user');
   }

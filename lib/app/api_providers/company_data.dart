@@ -3,13 +3,13 @@ class CompanyData {
 //paystation
 
 
-  static const String baseUrl = 'https://ecomvendor.braintodo.com/public';
-  static const String image_file_url = "https://pswork.asadgadget.com/storage/app/public/";
-  static const String appname = "PayStation Work";
-  static const String siteName = "PSWork";
+  static const String baseUrl = 'https://myzooapi.myzoo.asia/public';
+  static const String image_file_url = "https://myzooapi.myzoo.asia/storage/app/public/";
+  static const String appname = "MyZoo Merchant";
+  static const String siteName = "MyZoo Merchant";
   static const String companyID = "1";
-  static const String companyLogo = "assets/logo/papplus.png";
-  static const String packageName = "ecom.fahim.bd";
+  static const String companyLogo = "assets/logo/myzoo_mer.png";
+  static const String packageName = "com.myzoo.marchant";
 
   // jayga
   //
@@ -29,6 +29,6 @@ class CompanyData {
  //  static const String siteName = "BrainToDo";
  //  static const String companyID = "3";
  //  static const String companyLogo = "assets/logo/braintodo.png";
- //  static const String packageName = "ecom.fahim.bd";
+ //  static const String packageName = "com.myzoo.marchant";
 
 }

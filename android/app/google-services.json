@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "152440789435",
+    "project_id": "myzoo-customer",
+    "storage_bucket": "myzoo-customer.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:152440789435:android:363c88e757ae0c30b64c9e",
+        "android_client_info": {
+          "package_name": "com.myzoo.marchant"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAnwsDKv5Hy-nFeC2hwP4vPCPF8R2ArfIc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:152440789435:android:34547cfac41accb0b64c9e",
+        "android_client_info": {
+          "package_name": "com.myzoo.delivery"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAnwsDKv5Hy-nFeC2hwP4vPCPF8R2ArfIc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:152440789435:android:ffc719a0f4beeea0b64c9e",
+        "android_client_info": {
+          "package_name": "com.myzoo.marchant"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAnwsDKv5Hy-nFeC2hwP4vPCPF8R2ArfIc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -117,7 +117,7 @@ getDeviceToken()async{
 
       if (resp['status'] == 'success') {
         try {
-          UserLoginResModel model = UserLoginResModel.fromJson(resp);
+          LoginResponseModel model = LoginResponseModel.fromJson(resp);
           print("Login successful. Token: ${model.data!.token}");
 
           Get.find<AuthService>().setUser(model);
