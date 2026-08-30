@@ -132,6 +132,7 @@ dependencies:
   cached_network_image: ^3.3.0
   permission_handler: ^11.3.0
   dropdown_search: ^6.0.1
+  qr_flutter: ^4.1.0
 
 
 dev_dependencies:

@@ -27,8 +27,12 @@ class ApiClient {
 
   //shop
   static const String shopDashboard = '$baseUrl/api/reports/shop/';
+  static const String sellerShopList = '$baseUrl/api/shops/list';
   static const String shopProductList = '$baseUrl/api/shops/products/';
   static const String shopOrderList = '$baseUrl/api/orders/shop/';
+  static const String subscriptionPackages =
+      '$baseUrl/api/subscription-packages';
+  static const String stores = '$baseUrl/api/stores/';
 
   static const String orderDetails = '$baseUrl/api/orders/details/';
 }

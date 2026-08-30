@@ -246,47 +246,61 @@ class HomeView extends GetView<HomeController> {
 
                   const SizedBox(height: 12),
 
-                  Row(
+                  GridView.count(
+                    crossAxisCount: 3,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                    childAspectRatio: 1.05,
                     children: [
-                      Expanded(
-                        child: _QuickActionCard(
-                          title: "Orders",
-                          icon: Icons.receipt_long_outlined,
-                          color: const Color(0xFF34D399),
-                          onTap: () {
-                            Get.toNamed(Routes.MY_DELIVERY);
-                          },
-                        ),
+                      _QuickActionCard(
+                        title: "Orders",
+                        icon: Icons.receipt_long_outlined,
+                        color: const Color(0xFF34D399),
+                        onTap: () {
+                          Get.toNamed(Routes.MY_DELIVERY);
+                        },
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _QuickActionCard(
-                          title: "Products",
-                          icon: Icons.add_box_outlined,
-                          color: const Color(0xFF60A5FA),
-                          onTap: () {
-                            Get.snackbar(
-                              "Products",
-                              "Connect product page route here",
-                              snackPosition: SnackPosition.BOTTOM,
-                            );
-                          },
-                        ),
+                      _QuickActionCard(
+                        title: "Products",
+                        icon: Icons.add_box_outlined,
+                        color: const Color(0xFF60A5FA),
+                        onTap: () {
+                          Get.snackbar(
+                            "Products",
+                            "Connect product page route here",
+                            snackPosition: SnackPosition.BOTTOM,
+                          );
+                        },
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _QuickActionCard(
-                          title: "Earnings",
-                          icon: Icons.account_balance_wallet_outlined,
-                          color: const Color(0xFFFBBF24),
-                          onTap: () {
-                            Get.snackbar(
-                              "Earnings",
-                              "Connect earning page route here",
-                              snackPosition: SnackPosition.BOTTOM,
-                            );
-                          },
-                        ),
+                      _QuickActionCard(
+                        title: "Earnings",
+                        icon: Icons.account_balance_wallet_outlined,
+                        color: const Color(0xFFFBBF24),
+                        onTap: () {
+                          Get.snackbar(
+                            "Earnings",
+                            "Connect earning page route here",
+                            snackPosition: SnackPosition.BOTTOM,
+                          );
+                        },
+                      ),
+                      _QuickActionCard(
+                        title: "Packages",
+                        icon: Icons.workspace_premium_outlined,
+                        color: const Color(0xFFFBBF24),
+                        onTap: () {
+                          Get.toNamed(Routes.SELLER_PACKAGES);
+                        },
+                      ),
+                      _QuickActionCard(
+                        title: "Store QR",
+                        icon: Icons.qr_code_2_rounded,
+                        color: const Color(0xFF2DD4BF),
+                        onTap: () {
+                          Get.toNamed(Routes.SELLER_STORE_QR);
+                        },
                       ),
                     ],
                   ),
@@ -1041,6 +1055,24 @@ class _ShopDashboardDrawer extends StatelessWidget {
                   "Connect product route here",
                   snackPosition: SnackPosition.BOTTOM,
                 );
+              },
+            ),
+            _DrawerItem(
+              icon: Icons.qr_code_2_rounded,
+              title: "Store QR Download",
+              color: const Color(0xFF2DD4BF),
+              onTap: () {
+                Navigator.pop(context);
+                Get.toNamed(Routes.SELLER_STORE_QR);
+              },
+            ),
+            _DrawerItem(
+              icon: Icons.workspace_premium_outlined,
+              title: "Subscription Packages",
+              color: const Color(0xFFFBBF24),
+              onTap: () {
+                Navigator.pop(context);
+                Get.toNamed(Routes.SELLER_PACKAGES);
               },
             ),
             const Spacer(),

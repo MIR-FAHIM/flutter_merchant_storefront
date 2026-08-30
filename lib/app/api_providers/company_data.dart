@@ -7,6 +7,7 @@ class CompanyData {
   static const String image_file_url = "https://myzooapi.myzoo.asia/storage/app/public/";
   static const String appname = "MyZoo Merchant";
   static const String siteName = "MyZoo Merchant";
+  static const String publicStoreBaseUrl = "https://myzoo.asia/store";
   static const String companyID = "1";
   static const String companyLogo = "assets/logo/myzoo_mer.png";
   static const String packageName = "com.myzoo.marchant";

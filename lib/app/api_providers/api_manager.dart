@@ -201,6 +201,63 @@ class APIManager {
     }
     return responseJson;
   }
+
+  Future<Map<String, dynamic>> getWithHeaderStatus(
+      String url, Map<String, String> headerData) async {
+    print("Calling API: $url");
+    headerData["Authorization"] =
+        "Bearer ${Get.find<AuthService>().currentUser.value.data!.token}";
+    print('token: $headerData');
+
+    try {
+      final response = await http.get(Uri.parse(url), headers: headerData);
+      final body = _decodeResponseBody(response.body);
+
+      return {
+        'status_code': response.statusCode,
+        'body': body,
+      };
+    } on SocketException {
+      throw FetchDataException('No Internet connection');
+    }
+  }
+
+  Future<Map<String, dynamic>> postJsonWithHeaderStatus(
+      String url, Map<String, dynamic> param, Map<String, String> headerData) async {
+    print("Calling API: $url");
+    print("Calling parameters: $param");
+    headerData["Authorization"] =
+        "Bearer ${Get.find<AuthService>().currentUser.value.data!.token}";
+    headerData["Content-Type"] = "application/json";
+    headerData["Accept"] = "application/json";
+    print('token: $headerData');
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        body: jsonEncode(param),
+        headers: headerData,
+      );
+      final body = _decodeResponseBody(response.body);
+
+      return {
+        'status_code': response.statusCode,
+        'body': body,
+      };
+    } on SocketException {
+      throw FetchDataException('No Internet connection');
+    }
+  }
+
+  dynamic _decodeResponseBody(String body) {
+    if (body.isEmpty) return null;
+
+    try {
+      return json.decode(body);
+    } catch (_) {
+      return {'message': body};
+    }
+  }
  Future<dynamic> patchWithHeader(
       String url, Map<String, String> headerData) async {
     print("Calling API: $url");
@@ -235,13 +292,17 @@ class APIManager {
         var responseJson = json.decode(response.body.toString());
         return responseJson;
       case 400:
-        throw BadRequestException(response.body.toString());
+        var responseJson = json.decode(response.body.toString());
+        return responseJson;
       case 401:
+        var responseJson = json.decode(response.body.toString());
+        return responseJson;
       case 403:
       var responseJson = json.decode(response.body.toString());
       return responseJson;
       case 500:
-        throw UnauthorisedException(response.body.toString());
+        var responseJson = json.decode(response.body.toString());
+        return responseJson;
       default:
         throw FetchDataException(
             'Error occurred while communicating with Server with StatusCode: ${response.statusCode}');
