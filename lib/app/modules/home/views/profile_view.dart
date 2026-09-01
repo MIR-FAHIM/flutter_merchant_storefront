@@ -184,6 +184,15 @@ class ProfileView extends GetView<HomeController> {
                     Get.toNamed(Routes.SPLASHSCREEN);
                   },
                 ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Version ${CompanyData.appVersion}',
+                  style: TextStyle(
+                    color: Colors.white54,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
           );

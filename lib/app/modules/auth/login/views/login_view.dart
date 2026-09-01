@@ -160,6 +160,16 @@ class LoginView extends GetView<LoginController> {
                                   SizedBox(
                                     height: _size.width * .08,
                                   ),
+                                  const Center(
+                                    child: Text(
+                                      'Version ${CompanyData.appVersion}',
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
