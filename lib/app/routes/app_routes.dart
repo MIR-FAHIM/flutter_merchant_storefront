@@ -8,6 +8,10 @@ abstract class Routes {
   static const SPLASHSCREEN = _Paths.SPLASHSCREEN;
   static const LOGIN = _Paths.LOGIN;
   static const PRODUCT_LIST = _Paths.PRODUCT_LIST;
+  static const PRODUCT_DETAILS = _Paths.PRODUCT_DETAILS;
+  static const PRODUCT_EDIT = _Paths.PRODUCT_EDIT;
+  static const PRODUCT_ADD = _Paths.PRODUCT_ADD;
+  static const MARKETPLACE_CATEGORIES = _Paths.MARKETPLACE_CATEGORIES;
   static const NOTIFICATIONVIEW = _Paths.NOTIFICATIONVIEW;
   static const ALL_DELIVERY_ORDER = _Paths.ALL_DELIVERY_ORDER;
   static const Completed_DELIVERY_ORDER = _Paths.Completed_DELIVERY_ORDER;
@@ -19,6 +23,7 @@ abstract class Routes {
   static const ORDER_SHOP_LIST = _Paths.ORDER_SHOP_LIST;
   static const SELLER_STORE_QR = _Paths.SELLER_STORE_QR;
   static const SELLER_PACKAGES = _Paths.SELLER_PACKAGES;
+  static const WEBVIEW = _Paths.WEBVIEW;
 }
 
 abstract class _Paths {
@@ -27,10 +32,15 @@ abstract class _Paths {
   static const LOGIN = '/LOGIN';
   static const ORDER_SHOP_LIST = '/ORDER_SHOP_LIST';
   static const PRODUCT_LIST = '/PRODUCT_LIST';
+  static const PRODUCT_DETAILS = '/product/details';
+  static const PRODUCT_EDIT = '/product/edit';
+  static const PRODUCT_ADD = '/product/add';
+  static const MARKETPLACE_CATEGORIES = '/seller/store-categories';
   static const SPLASHSCREEN = '/splashscreen';
   static const ORDER_SHOP_DETAIL = '/ORDER_SHOP_DETAIL';
   static const SELLER_STORE_QR = '/seller/store-qr';
   static const SELLER_PACKAGES = '/seller/packages';
+  static const WEBVIEW = '/webview';
   static const NOTIFICATIONVIEW = '/NOTIFICATIONVIEW';
   static const ALL_DELIVERY_ORDER = '/ALL_DELIVERY_ORDER';
   static const Completed_DELIVERY_ORDER = '/Completed_DELIVERY_ORDER';

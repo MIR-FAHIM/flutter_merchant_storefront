@@ -12,6 +12,10 @@ class OrderDetailView extends GetView<OrderController> {
 
   @override
   Widget build(BuildContext context) {
+    if (controller.orderStatusOptions.isEmpty && !controller.isStatusLoading.value) {
+      controller.loadOrderStatuses();
+    }
+
     return Scaffold(
       backgroundColor: _bgColor,
       appBar: AppBar(
@@ -67,6 +71,32 @@ class OrderDetailView extends GetView<OrderController> {
                 total: order?.total ?? item?.lineTotal ?? 0,
                 status: order?.status ?? item?.status ?? 'N/A',
                 paymentStatus: order?.paymentStatus ?? 'N/A',
+              ),
+
+              const SizedBox(height: 16),
+
+              _StatusUpdateCard(
+                statusOptions: controller.orderStatusOptions,
+                selectedStatus: controller.selectedOrderStatus.value,
+                onChanged: (value) {
+                  if (value != null) {
+                    controller.selectedOrderStatus.value = value.toLowerCase();
+                  }
+                },
+                onUpdate: () {
+                  final String orderId = (order?.id ?? item?.orderId ?? 0).toString();
+                  if (orderId == '0' || orderId.isEmpty) {
+                    return;
+                  }
+
+                  controller.changeOrderStatus(
+                    orderId: orderId,
+                    status: controller.selectedOrderStatus.value.toLowerCase(),
+                  );
+                },
+                isUpdating: controller.isUpdatingStatus.value,
+                errorMessage: controller.statusErrorMessage.value,
+                successMessage: controller.statusUpdateMessage.value,
               ),
 
               const SizedBox(height: 16),
@@ -159,6 +189,111 @@ class OrderDetailView extends GetView<OrderController> {
   }
 }
 
+class _StatusUpdateCard extends StatelessWidget {
+  const _StatusUpdateCard({
+    required this.statusOptions,
+    required this.selectedStatus,
+    required this.onChanged,
+    required this.onUpdate,
+    required this.isUpdating,
+    required this.errorMessage,
+    required this.successMessage,
+  });
+
+  final List<OrderStatusOption> statusOptions;
+  final String selectedStatus;
+  final ValueChanged<String?> onChanged;
+  final VoidCallback onUpdate;
+  final bool isUpdating;
+  final String errorMessage;
+  final String successMessage;
+
+  @override
+  Widget build(BuildContext context) {
+    final List<DropdownMenuItem<String>> items = statusOptions
+        .map(
+          (item) => DropdownMenuItem<String>(
+            value: item.name.toLowerCase(),
+            child: Text(item.name),
+          ),
+        )
+        .toList();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: OrderDetailView._cardColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: OrderDetailView._borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Order Status',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            initialValue: selectedStatus.isNotEmpty && items.any((entry) => entry.value == selectedStatus)
+                ? selectedStatus
+                : (items.isNotEmpty ? items.first.value : null),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: const Color(0xFF121417),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFF2E3033)),
+              ),
+            ),
+            dropdownColor: const Color(0xFF1B1C1E),
+            style: const TextStyle(color: Colors.white),
+            iconEnabledColor: Colors.white,
+            items: items,
+            onChanged: onChanged,
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: isUpdating ? null : onUpdate,
+              icon: isUpdating
+                  ? const SizedBox(
+                      width: 15,
+                      height: 15,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Icon(Icons.sync_rounded),
+              label: Text(isUpdating ? 'Updating...' : 'Update Status'),
+            ),
+          ),
+          if (errorMessage.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Text(
+                errorMessage,
+                style: const TextStyle(color: Colors.redAccent, fontSize: 12.5),
+              ),
+            ),
+          if (successMessage.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Text(
+                successMessage,
+                style: const TextStyle(color: Color(0xFF34D399), fontSize: 12.5),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 class _HeroOrderCard extends StatelessWidget {
   const _HeroOrderCard({
     required this.orderNumber,
@@ -235,7 +370,7 @@ class _HeroChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.14),
+        color: Colors.white.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
@@ -359,9 +494,9 @@ class _ErrorBanner extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.redAccent.withOpacity(0.14),
+        color: Colors.redAccent.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.redAccent.withOpacity(0.35)),
+        border: Border.all(color: Colors.redAccent.withValues(alpha: 0.35)),
       ),
       child: Text(
         message,

@@ -207,6 +207,7 @@ class APIManager {
     print("Calling API: $url");
     headerData["Authorization"] =
         "Bearer ${Get.find<AuthService>().currentUser.value.data!.token}";
+    headerData["Accept"] = "application/json";
     print('token: $headerData');
 
     try {
@@ -278,7 +279,7 @@ class APIManager {
     print(response);
     print(response.statusCode);
     switch (response.statusCode) {
-      case 200:
+        case 200:
         var responseJson = json.decode(response.body.toString());
         return responseJson;
         case 201:
@@ -291,10 +292,13 @@ class APIManager {
         case 422:
         var responseJson = json.decode(response.body.toString());
         return responseJson;
-      case 400:
+        case 400:
         var responseJson = json.decode(response.body.toString());
         return responseJson;
       case 401:
+        var responseJson = json.decode(response.body.toString());
+        return responseJson;
+        case 404:
         var responseJson = json.decode(response.body.toString());
         return responseJson;
       case 403:

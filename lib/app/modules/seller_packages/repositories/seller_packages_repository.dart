@@ -1,5 +1,7 @@
 import 'package:ecom_delivery_flutter/app/api_providers/api_manager.dart';
 import 'package:ecom_delivery_flutter/app/api_providers/api_url.dart';
+import 'package:ecom_delivery_flutter/app/services/auth_service.dart';
+import 'package:get/get.dart';
 
 class SellerPackagesRepository {
   final APIManager _manager = APIManager();
@@ -29,20 +31,22 @@ class SellerPackagesRepository {
     return _manager.getWithHeaderStatus(url, {});
   }
 
-  Future<Map<String, dynamic>> subscribeToPackage({
+  Future subscribeToPackage({
     required String storeId,
     required int packageId,
     required String billingCycle,
   }) async {
     final String url = '${ApiClient.stores}$storeId/subscription/subscribe';
 
-    return _manager.postJsonWithHeaderStatus(
+    return _manager.postAPICallWithHeader(
       url,
       {
-        'subscription_package_id': packageId,
+        'subscription_package_id': packageId.toString(),
         'billing_cycle': billingCycle,
       },
-      {},
+      {
+'Authorization': "Bearer ${Get.find<AuthService>().currentUser.value.data!.token!}",
+      },
     );
   }
 }

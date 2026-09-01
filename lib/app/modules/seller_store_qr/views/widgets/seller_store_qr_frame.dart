@@ -64,7 +64,7 @@ class SellerStoreQrFrame extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: Color(0xFF062B4F),
-                  fontSize: 28,
+                  fontSize: 16,
                   fontWeight: FontWeight.w900,
                   height: 1.12,
                 ),
@@ -106,15 +106,7 @@ class SellerStoreQrFrame extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              const Text(
-                'MyZoo Storefront',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Color(0xFF078A83),
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
+
               const SizedBox(height: 8),
               Text(
                 storeUrl,
