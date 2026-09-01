@@ -1,12 +1,10 @@
 import 'dart:io';
-
 import 'package:ecom_delivery_flutter/app/api_providers/company_data.dart';
 import 'package:ecom_delivery_flutter/app/routes/app_pages.dart';
 import 'package:ecom_delivery_flutter/app/services/auth_service.dart';
 import 'package:ecom_delivery_flutter/common/Color.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 import '../controllers/home_controller.dart';
 
 class HomeView extends GetView<HomeController> {
