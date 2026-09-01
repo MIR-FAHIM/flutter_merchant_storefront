@@ -20,7 +20,7 @@ class AuthRepository {
     };
 
     APIManager _manager = APIManager();
-    final response = await _manager.loginAPICall(ApiClient.login, _loginData);
+    final response = await _manager.loginAPICall(ApiClient.sellerLogin, _loginData);
 
     print('user login: ${response}');
 
@@ -32,6 +32,18 @@ class AuthRepository {
     final response = await _manager.getWithHeader(ApiClient.getProfile + userID, {});
 
     print('user profile: ${response}');
+
+    return response;
+  }
+
+  getSellerProfile(String userID) async {
+    APIManager _manager = APIManager();
+    final response = await _manager.getWithHeader(
+      ApiClient.sellerProfile + userID,
+      {},
+    );
+
+    print('seller profile: ${response}');
 
     return response;
   }

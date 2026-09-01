@@ -10,8 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:badges/badges.dart' as badges;
 
-
-
 class ProfileView extends GetView<HomeController> {
   const ProfileView({Key? key}) : super(key: key);
 
@@ -43,23 +41,23 @@ class ProfileView extends GetView<HomeController> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // Profile picture
-                CircleAvatar(
-                  radius: 50,
-                  backgroundColor: Colors.grey.shade300,
-                  backgroundImage: user.avatarOriginal != null
-                      ? CachedNetworkImageProvider(
-                      "${CompanyData.image_file_url}/${user.avatarOriginal}") // Replace with actual domain
-                      : null,
-                  child: user.avatarOriginal == null
-                      ? const Icon(Icons.person, size: 40, color: Colors.white)
-                      : null,
-                ),
-                const SizedBox(height: 12),
+
 
                 // Name
                 Text(
+                  'User ID: ${user.id.toString()}',
+                  style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
+                ),
+                const SizedBox(height: 4),
+                Text(
                   user.name ?? 'No Name',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
                 ),
                 const SizedBox(height: 4),
 
@@ -77,10 +75,33 @@ class ProfileView extends GetView<HomeController> {
                 ),
                 const SizedBox(height: 12),
 
+                if (user.shop?.banner?.url != null) ...[
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: CachedNetworkImage(
+                      imageUrl: user.shop!.banner!.url!,
+                      height: 140,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ],
+
+                if (user.shop?.logo?.url != null) ...[
+                  const SizedBox(height: 12),
+                  CircleAvatar(
+                    radius: 32,
+                    backgroundColor: Colors.white,
+                    backgroundImage: CachedNetworkImageProvider(user.shop!.logo!.url!),
+                  ),
+                ],
+
                 // Address
                 ListTile(
                   leading: const Icon(Icons.home, color: Colors.white),
-                  title: Text(user.address ?? 'No Address', style: const TextStyle(color: Colors.white70)),
+                  title: Text(user.address ?? 'No Address',
+                      style: const TextStyle(color: Colors.white70)),
                 ),
 
                 // Designation
@@ -91,12 +112,71 @@ class ProfileView extends GetView<HomeController> {
                     style: const TextStyle(color: Colors.white70),
                   ),
                 ),
+                ListTile(
+                  leading: const Icon(Icons.store, color: Colors.white),
+                  title: Text(
+                    '${user.shop?.name ?? 'No Shop'}',
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                ),
+ ListTile(
+                  leading: const Icon(Icons.store, color: Colors.white),
+                  title: Text(
+                    'Shop ID:${user.shop?.id ?? 0}',
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                ),
 
+                ListTile(
+                  leading: const Icon(Icons.store, color: Colors.white),
+                  title: Text(
+                    'Shop Code: ${user.shop?.code}',
+                    style: const TextStyle(color: Colors.blue),
+                  ),
+                ),
 
+                if (user.shop?.package == null) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    margin: const EdgeInsets.only(top: 12, bottom: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: Colors.orange.withOpacity(0.4)),
+                    ),
+                    child: const Text(
+                      'Please Buy A package to get started',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.orange,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ] else ...[
+                  ListTile(
+                    leading:
+                        const Icon(Icons.card_membership, color: Colors.white),
+                    title: Text(
+                      user.shop?.package?.package?.name ?? 'Package Activated',
+                      style: const TextStyle(color: Colors.white70),
+                    ),
+                    subtitle: Text(
+                      user.shop?.package?.status ?? 'Active',
+                      style: TextStyle(
+                        color: user.shop?.package?.status == 'active'
+                            ? Colors.greenAccent
+                            : Colors.white60,
+                      ),
+                    ),
+                  ),
+                ],
 
                 ListTile(
                   leading:
-                  Icon(Icons.exit_to_app, color: AppColors.redTextColor),
+                      Icon(Icons.exit_to_app, color: AppColors.redTextColor),
                   title: Text('Log Out',
                       style: TextStyle(color: AppColors.redTextColor)),
                   onTap: () {
@@ -104,9 +184,6 @@ class ProfileView extends GetView<HomeController> {
                     Get.toNamed(Routes.SPLASHSCREEN);
                   },
                 ),
-
-
-
               ],
             ),
           );
@@ -115,4 +192,3 @@ class ProfileView extends GetView<HomeController> {
     );
   }
 }
-

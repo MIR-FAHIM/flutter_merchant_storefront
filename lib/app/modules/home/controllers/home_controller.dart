@@ -56,7 +56,7 @@ class HomeController extends GetxController {
   }
 
   getProfile() {
-    AuthRepository().getProfile(userID.value.toString()).then((e) {
+    AuthRepository().getSellerProfile(userID.value.toString()).then((e) {
       print("profile data is $e");
       if (e['status'] == 'success') {
         ProfileModel model = ProfileModel.fromJson(e);

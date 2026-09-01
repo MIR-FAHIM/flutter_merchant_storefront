@@ -162,11 +162,7 @@ class HomeView extends GetView<HomeController> {
                           iconColor: const Color(0xFF60A5FA),
                           backgroundColor: const Color(0xFF1E3A5F),
                           onTap: () {
-                            Get.snackbar(
-                              "Products",
-                              "Connect product route here",
-                              snackPosition: SnackPosition.BOTTOM,
-                            );
+                            Get.toNamed(Routes.PRODUCT_LIST);
                           },
                         ),
                       ),
@@ -267,11 +263,15 @@ class HomeView extends GetView<HomeController> {
                         icon: Icons.add_box_outlined,
                         color: const Color(0xFF60A5FA),
                         onTap: () {
-                          Get.snackbar(
-                            "Products",
-                            "Connect product page route here",
-                            snackPosition: SnackPosition.BOTTOM,
-                          );
+                          Get.toNamed(Routes.PRODUCT_LIST);
+                        },
+                      ),
+                      _QuickActionCard(
+                        title: "Categories",
+                        icon: Icons.category_outlined,
+                        color: const Color(0xFF8B5CF6),
+                        onTap: () {
+                          Get.toNamed(Routes.MARKETPLACE_CATEGORIES);
                         },
                       ),
                       _QuickActionCard(
@@ -444,10 +444,15 @@ class _DashboardHeroCard extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: _HeroMiniStat(
-                  title: "Products",
-                  value: _FormatUtil.compactNumber(productsCount),
-                  icon: Icons.inventory_2_outlined,
+                child: InkWell(
+                  onTap: (){
+                    Get.toNamed(Routes.PRODUCT_LIST);
+                  },
+                  child: _HeroMiniStat(
+                    title: "Products",
+                    value: _FormatUtil.compactNumber(productsCount),
+                    icon: Icons.inventory_2_outlined,
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
@@ -774,11 +779,16 @@ class _BusinessSnapshotCard extends StatelessWidget {
             indent: 16,
             endIndent: 16,
           ),
-          _SnapshotTile(
-            title: "Total Products",
-            value: productsCount.toString(),
-            icon: Icons.inventory_2_outlined,
-            color: const Color(0xFF60A5FA),
+          InkWell(
+            onTap: (){
+              Get.toNamed(Routes.PRODUCT_LIST);
+            },
+            child: _SnapshotTile(
+              title: "Total Products",
+              value: productsCount.toString(),
+              icon: Icons.inventory_2_outlined,
+              color: const Color(0xFF60A5FA),
+            ),
           ),
           const Divider(
             height: 1,
@@ -1035,26 +1045,13 @@ class _ShopDashboardDrawer extends StatelessWidget {
                 Navigator.pop(context);
               },
             ),
-            _DrawerItem(
-              icon: Icons.receipt_long_outlined,
-              title: "Orders",
-              color: const Color(0xFF34D399),
-              onTap: () {
-                Navigator.pop(context);
-                Get.toNamed(Routes.MY_DELIVERY);
-              },
-            ),
+
             _DrawerItem(
               icon: Icons.inventory_2_outlined,
               title: "Products",
               color: const Color(0xFF60A5FA),
               onTap: () {
-                Navigator.pop(context);
-                Get.snackbar(
-                  "Products",
-                  "Connect product route here",
-                  snackPosition: SnackPosition.BOTTOM,
-                );
+                Get.toNamed(Routes.PRODUCT_LIST);
               },
             ),
             _DrawerItem(

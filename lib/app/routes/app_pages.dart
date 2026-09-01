@@ -6,6 +6,10 @@ import 'package:ecom_delivery_flutter/app/modules/order/binding/order_binding.da
 import 'package:ecom_delivery_flutter/app/modules/order/view/order_detail_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/order/view/order_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/product/binding/product_binding.dart';
+import 'package:ecom_delivery_flutter/app/modules/product/view/marketplace_categories_view.dart';
+import 'package:ecom_delivery_flutter/app/modules/product/view/product_add_view.dart';
+import 'package:ecom_delivery_flutter/app/modules/product/view/product_details_view.dart';
+import 'package:ecom_delivery_flutter/app/modules/product/view/product_edit_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/product/view/product_list_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/root/bindings/root_binding.dart';
 import 'package:ecom_delivery_flutter/app/modules/root/views/root_view.dart';
@@ -15,6 +19,8 @@ import 'package:ecom_delivery_flutter/app/modules/seller_store_qr/bindings/selle
 import 'package:ecom_delivery_flutter/app/modules/seller_store_qr/views/seller_store_qr_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/splashscreen/bindings/splashscreen_binding.dart';
 import 'package:ecom_delivery_flutter/app/modules/splashscreen/views/splashscreen_view.dart';
+import 'package:ecom_delivery_flutter/app/modules/webview/bindings/webview_binding.dart';
+import 'package:ecom_delivery_flutter/app/modules/webview/views/webview_view.dart';
 import 'package:get/get.dart';
 
 part 'app_routes.dart';
@@ -52,6 +58,26 @@ class AppPages {
       binding: ProductBinding(),
     ),
     GetPage(
+      name: _Paths.PRODUCT_DETAILS,
+      page: () => ProductDetailsView(),
+      binding: ProductBinding(),
+    ),
+    GetPage(
+      name: _Paths.PRODUCT_EDIT,
+      page: () => ProductEditView(),
+      binding: ProductBinding(),
+    ),
+    GetPage(
+      name: _Paths.PRODUCT_ADD,
+      page: () => const ProductAddView(),
+      binding: ProductBinding(),
+    ),
+    GetPage(
+      name: _Paths.MARKETPLACE_CATEGORIES,
+      page: () => const MarketplaceCategoriesView(),
+      binding: ProductBinding(),
+    ),
+    GetPage(
       name: _Paths.ORDER_SHOP_DETAIL,
       page: () => OrderDetailView(),
       binding: OrderBinding(),
@@ -70,6 +96,11 @@ class AppPages {
       name: _Paths.SELLER_PACKAGES,
       page: () => const SellerPackagesView(),
       binding: SellerPackagesBinding(),
+    ),
+    GetPage(
+      name: _Paths.WEBVIEW,
+      page: () => WebviewView(),
+      binding: WebviewBinding(),
     ),
   ];
 }

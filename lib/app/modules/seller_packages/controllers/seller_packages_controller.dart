@@ -170,26 +170,20 @@ class SellerPackagesController extends GetxController
         billingCycle: package.billingCycleText,
       );
 
-      if (!_handleApiError(response)) return;
-
-      final body = _bodyMap(response['body']);
-      final paymentRequired = _toBool(body['payment_required']);
+      final body = response['data'];
+      final paymentRequired = body['payment_required'];
       final paymentUrl = body['payment_url']?.toString();
 
-      if (paymentRequired && paymentUrl != null && paymentUrl.isNotEmpty) {
-        final opened = await launchUrl(
-          Uri.parse(paymentUrl),
-          mode: LaunchMode.externalApplication,
+      print("43726 $paymentRequired ------ $paymentUrl ");
+
+      if (paymentRequired) {
+        Get.toNamed(
+          Routes.WEBVIEW,
+          arguments: {
+            'paymentURL': paymentUrl,
+            'title': 'Subscription Payment',
+          },
         );
-
-        if (!opened) {
-          Get.showSnackbar(
-            Ui.ErrorSnackBar(message: 'Could not open payment page.'),
-          );
-          return;
-        }
-
-        await fetchStoreSubscription();
         return;
       }
 

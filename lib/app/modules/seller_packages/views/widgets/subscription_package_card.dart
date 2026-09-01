@@ -117,10 +117,7 @@ class SubscriptionPackageCard extends StatelessWidget {
                 icon: Icons.groups_2_outlined,
                 label: _limitText(package.maxStaff, 'staff'),
               ),
-              _LimitChip(
-                icon: Icons.account_tree_outlined,
-                label: _limitText(package.maxBranches, 'branches'),
-              ),
+
 
             ],
           ),

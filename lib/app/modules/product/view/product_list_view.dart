@@ -1,4 +1,5 @@
 import 'package:ecom_delivery_flutter/app/modules/product/controller/product_controller.dart';
+import 'package:ecom_delivery_flutter/app/routes/app_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -25,6 +26,28 @@ class ProductListView extends GetView<ProductController> {
             color: Colors.white,
             fontWeight: FontWeight.w900,
           ),
+        ),
+        actions: [
+          IconButton(
+            tooltip: 'Marketplace Categories',
+            onPressed: () {
+              Get.toNamed(
+                Routes.MARKETPLACE_CATEGORIES,
+                arguments: {'storeId': controller.shopId},
+              );
+            },
+            icon: const Icon(Icons.category_outlined),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Get.toNamed(Routes.PRODUCT_ADD),
+        backgroundColor: const Color(0xFF34D399),
+        foregroundColor: Colors.black,
+        icon: const Icon(Icons.add_rounded),
+        label: const Text(
+          'Add Product',
+          style: TextStyle(fontWeight: FontWeight.w900),
         ),
       ),
       body: Obx(() {
@@ -73,10 +96,11 @@ class ProductListView extends GetView<ProductController> {
                       return ProductCard(
                         product: product,
                         onTap: () {
-                          Get.snackbar(
-                            'Product',
-                            product.name ?? 'Product details',
-                            snackPosition: SnackPosition.BOTTOM,
+                          Get.toNamed(
+                            Routes.PRODUCT_DETAILS,
+                            arguments: {
+                              'product_id': product.id,
+                            },
                           );
                         },
                       );

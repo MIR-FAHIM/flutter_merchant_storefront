@@ -93,6 +93,7 @@ class LoginUser {
   final int? remainingUploads;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final LoginShop? shop;
 
   LoginUser({
     this.id,
@@ -119,6 +120,7 @@ class LoginUser {
     this.remainingUploads,
     this.createdAt,
     this.updatedAt,
+    this.shop,
   });
 
   factory LoginUser.fromJson(Map<String, dynamic> json) {
@@ -147,6 +149,9 @@ class LoginUser {
       remainingUploads: _toInt(json['remaining_uploads']),
       createdAt: _toDateTime(json['created_at']),
       updatedAt: _toDateTime(json['updated_at']),
+      shop: json['shop'] is Map<String, dynamic>
+          ? LoginShop.fromJson(Map<String, dynamic>.from(json['shop']))
+          : null,
     );
   }
 
@@ -174,6 +179,103 @@ class LoginUser {
       'referral_code': referralCode,
       'customer_package_id': customerPackageId,
       'remaining_uploads': remainingUploads,
+      'created_at': createdAt?.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
+      'shop': shop?.toJson(),
+    };
+  }
+}
+
+class LoginShop {
+  final int? id;
+  final int? userId;
+  final String? name;
+  final String? shopName;
+  final String? slug;
+  final String? code;
+  final String? description;
+  final String? logo;
+  final String? banner;
+  final String? phone;
+  final String? email;
+  final String? address;
+  final dynamic zone;
+  final dynamic district;
+  final dynamic area;
+  final dynamic lat;
+  final dynamic lon;
+  final String? status;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+
+  LoginShop({
+    this.id,
+    this.userId,
+    this.name,
+    this.shopName,
+    this.slug,
+    this.code,
+    this.description,
+    this.logo,
+    this.banner,
+    this.phone,
+    this.email,
+    this.address,
+    this.zone,
+    this.district,
+    this.area,
+    this.lat,
+    this.lon,
+    this.status,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  factory LoginShop.fromJson(Map<String, dynamic> json) {
+    return LoginShop(
+      id: _toInt(json['id']),
+      userId: _toInt(json['user_id']),
+      name: json['name']?.toString(),
+      shopName: json['shop_name']?.toString(),
+      slug: json['slug']?.toString(),
+      code: json['code']?.toString(),
+      description: json['description']?.toString(),
+      logo: json['logo']?.toString(),
+      banner: json['banner']?.toString(),
+      phone: json['phone']?.toString(),
+      email: json['email']?.toString(),
+      address: json['address']?.toString(),
+      zone: json['zone'],
+      district: json['district'],
+      area: json['area'],
+      lat: json['lat'],
+      lon: json['lon'],
+      status: json['status']?.toString(),
+      createdAt: _toDateTime(json['created_at']),
+      updatedAt: _toDateTime(json['updated_at']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'user_id': userId,
+      'name': name,
+      'shop_name': shopName,
+      'slug': slug,
+      'code': code,
+      'description': description,
+      'logo': logo,
+      'banner': banner,
+      'phone': phone,
+      'email': email,
+      'address': address,
+      'zone': zone,
+      'district': district,
+      'area': area,
+      'lat': lat,
+      'lon': lon,
+      'status': status,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };
