@@ -17,6 +17,9 @@ import 'package:ecom_delivery_flutter/app/modules/seller_packages/bindings/selle
 import 'package:ecom_delivery_flutter/app/modules/seller_packages/views/seller_packages_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/seller_store_qr/bindings/seller_store_qr_binding.dart';
 import 'package:ecom_delivery_flutter/app/modules/seller_store_qr/views/seller_store_qr_view.dart';
+import 'package:ecom_delivery_flutter/app/modules/shop_chat/bindings/shop_chat_binding.dart';
+import 'package:ecom_delivery_flutter/app/modules/shop_chat/views/chat_thread_view.dart';
+import 'package:ecom_delivery_flutter/app/modules/shop_chat/views/conversation_list_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/splashscreen/bindings/splashscreen_binding.dart';
 import 'package:ecom_delivery_flutter/app/modules/splashscreen/views/splashscreen_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/webview/bindings/webview_binding.dart';
@@ -98,9 +101,21 @@ class AppPages {
       binding: SellerPackagesBinding(),
     ),
     GetPage(
+      name: _Paths.SHOP_CHAT_CONVERSATIONS,
+      page: () => const ConversationListView(),
+      binding: ShopChatBinding(),
+    ),
+    GetPage(
+      name: _Paths.SHOP_CHAT_THREAD,
+      page: () => const ChatThreadView(),
+      binding: ShopChatBinding(),
+    ),
+    GetPage(
       name: _Paths.WEBVIEW,
       page: () => WebviewView(),
       binding: WebviewBinding(),
     ),
   ];
 }
+
+

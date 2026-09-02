@@ -1,4 +1,5 @@
 import 'package:ecom_delivery_flutter/app/modules/auth/login/controllers/login_controller.dart';
+import 'package:ecom_delivery_flutter/app/routes/app_pages.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
@@ -43,6 +44,7 @@ class FireBaseMessagingService extends GetxService {
     FirebaseMessaging.instance.getInitialMessage().then((message) async {
       if (message != null) {
         RemoteNotification notification = message.notification!;
+        _handleChatNavigation(message.data);
         type = message.data['notification_type'] != '' &&
                 message.data['notification_type'] != null
             ? message.data['notification_type'].toString()
@@ -125,6 +127,7 @@ class FireBaseMessagingService extends GetxService {
       print("i am in on message opened app function ");
 
       RemoteNotification notification = message.notification!;
+      _handleChatNavigation(message.data);
       String? payloadOfOpenedApp =
           message.data['notification_type']?.toString() ?? '';
 
@@ -153,6 +156,21 @@ class FireBaseMessagingService extends GetxService {
 
 
     });
+  }
+
+  void _handleChatNavigation(Map<String, dynamic> data) {
+    final notificationType =
+        (data['type'] ?? data['notification_type'] ?? '').toString();
+    final conversationId =
+        (data['conversation_id'] ?? data['conversationId'] ?? '').toString();
+
+    if (notificationType != 'chat' || conversationId.isEmpty) return;
+    if (Get.currentRoute == Routes.SHOP_CHAT_THREAD) return;
+
+    Get.toNamed(
+      Routes.SHOP_CHAT_THREAD,
+      arguments: {'conversation_id': conversationId},
+    );
   }
 
   Future<void> setDeviceToken() async {

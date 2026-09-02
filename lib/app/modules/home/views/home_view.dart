@@ -275,6 +275,14 @@ class HomeView extends GetView<HomeController> {
                         },
                       ),
                       _QuickActionCard(
+                        title: "Chat",
+                        icon: Icons.forum_outlined,
+                        color: const Color(0xFF2DD4BF),
+                        onTap: () {
+                          Get.toNamed(Routes.SHOP_CHAT_CONVERSATIONS);
+                        },
+                      ),
+                      _QuickActionCard(
                         title: "Earnings",
                         icon: Icons.account_balance_wallet_outlined,
                         color: const Color(0xFFFBBF24),
@@ -381,24 +389,19 @@ class _DashboardHeroCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Container(
-                height: 46,
-                width: 46,
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.16),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Image.asset(
-                  CompanyData.companyLogo,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) {
-                    return const Icon(
-                      Icons.storefront_rounded,
-                      color: Colors.white,
-                      size: 26,
-                    );
-                  },
+              InkWell(
+                onTap: (){
+                  Get.toNamed(Routes.SHOP_CHAT_CONVERSATIONS);
+                },
+                child: Container(
+                  height: 46,
+                  width: 46,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(Icons.chat, color: Colors.green,),
                 ),
               ),
             ],
@@ -1052,6 +1055,15 @@ class _ShopDashboardDrawer extends StatelessWidget {
               color: const Color(0xFF60A5FA),
               onTap: () {
                 Get.toNamed(Routes.PRODUCT_LIST);
+              },
+            ),
+            _DrawerItem(
+              icon: Icons.forum_outlined,
+              title: "Customer Chat",
+              color: const Color(0xFF2DD4BF),
+              onTap: () {
+                Navigator.pop(context);
+                Get.toNamed(Routes.SHOP_CHAT_CONVERSATIONS);
               },
             ),
             _DrawerItem(
