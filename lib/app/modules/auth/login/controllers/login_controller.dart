@@ -3,6 +3,7 @@ import 'package:ecom_delivery_flutter/app/repositories/auth_repositories.dart';
 import 'package:ecom_delivery_flutter/app/routes/app_pages.dart';
 import 'package:ecom_delivery_flutter/app/services/auth_service.dart';
 import 'package:ecom_delivery_flutter/app/services/firebase_messaging_service%20copy.dart';
+import 'package:ecom_delivery_flutter/app/services/firebase_messaging_service.dart';
 import 'package:ecom_delivery_flutter/app/services/location_service.dart';
 import 'package:ecom_delivery_flutter/common/ui.dart';
 import 'package:ecom_delivery_flutter/service/shared_pref.dart';
@@ -33,7 +34,7 @@ class LoginController extends GetxController {
     mobileNumber.value = Get.arguments ?? '';
     loginFormKey = GlobalKey<FormState>();
     imeiNumber.value = Get.find<LocationService>().imei.value;
-    getDeviceToken();
+
     askingPhonePermission();
     super.onInit();
   }
@@ -95,13 +96,15 @@ class LoginController extends GetxController {
   //     debugPrint("error! code: ${e.code} - message: ${e.message}");
   //   }
   // }
-getDeviceToken()async{
- await FirebaseMessaging.instance.getToken().then((e){
-   deviceToken.value = e!;
- });
-}
-  void login() async {
+// getDeviceToken()async{
+//  await FirebaseMessaging.instance.getToken().then((e){
+//    deviceToken.value = e!;
+//  });
+// }
+  Future<void> login() async {
+    await FireBaseMessagingService.setDeviceToken();
     print("Device token (IMEI): ${imeiNumber.value}");
+    print("Device token (fcm): ${deviceToken.value}");
 
     if (!loginFormKey.currentState!.validate()) return;
 
@@ -126,19 +129,19 @@ getDeviceToken()async{
         } catch (e) {
           Get.back(); // Close loader
           Get.showSnackbar(
-            Ui.ErrorSnackBar(message: e.toString(), title: 'Parse Error'.tr),
+            Ui.ErrorSnackBar(message: e.toString(), title: 'login.parseError'.tr),
           );
         }
       } else {
         Get.back(); // Close loader
         Get.showSnackbar(
-          Ui.ErrorSnackBar(message: resp['message'] ?? 'Login failed', title: 'Error'.tr),
+          Ui.ErrorSnackBar(message: resp['message'] ?? 'login.failed'.tr, title: 'login.error'.tr),
         );
       }
     } catch (e) {
       Get.back(); // Close loader
       Get.showSnackbar(
-        Ui.ErrorSnackBar(message: e.toString(), title: 'Error'.tr),
+          Ui.ErrorSnackBar(message: e.toString(), title: 'login.error'.tr),
       );
     }
   }

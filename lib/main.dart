@@ -57,18 +57,18 @@ initServices() async {
   Get.log('starting services ...');
   await GetStorage.init();
 
- // await Firebase.initializeApp();
+ await Firebase.initializeApp();
   // await initPusher();
-  // await Permission.notification.status.then((value) {
-  //   //ios  Permission.accessNotificationPolicy;
-  //   if (value.isGranted) {
-  //     print("hlw fahim 111 _______________________ notification request ");
-  //   } else {
-  //     print("hlw fahim 222_______________________ notification request ");
-  //
-  //     Permission.notification.request();
-  //   }
-  // });
+  await Permission.notification.status.then((value) {
+    //ios  Permission.accessNotificationPolicy;
+    if (value.isGranted) {
+      print("hlw fahim 111 _______________________ notification request ");
+    } else {
+      print("hlw fahim 222_______________________ notification request ");
+
+      Permission.notification.request();
+    }
+  });
 
   ///remove
   // await flutterLocalNotificationsPlugin
@@ -84,8 +84,8 @@ initServices() async {
   await Get.putAsync(() => TranslationService().init());
 
   await Get.putAsync<LocationService>(() async => LocationService());
-  //FirebaseMessaging.onBackgroundMessage(backgroundHander);
-  //await Get.putAsync(() => FireBaseMessagingService().init());
+  FirebaseMessaging.onBackgroundMessage(backgroundHander);
+  await Get.putAsync(() => FireBaseMessagingService().init());
 
   // NotificationLocal.initialize(flutterLocalNotificationsPlugin);
 

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:ecom_delivery_flutter/app/api_providers/company_data.dart';
+import 'package:ecom_delivery_flutter/app/models/dashboard_model.dart';
 import 'package:ecom_delivery_flutter/app/routes/app_pages.dart';
 import 'package:ecom_delivery_flutter/app/services/auth_service.dart';
 import 'package:ecom_delivery_flutter/common/Color.dart';
@@ -114,7 +115,9 @@ class HomeView extends GetView<HomeController> {
               ? const _DashboardLoading()
               : RefreshIndicator(
             onRefresh: () async {
+              await controller.refreshUnreadCount();
               await controller.reportDashboardShopController();
+
             },
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(
@@ -124,11 +127,20 @@ class HomeView extends GetView<HomeController> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _DashboardHeroCard(
-                    ordersAmount: dashboard.ordersAmount ?? 0,
-                    ordersCount: dashboard.ordersCount ?? 0,
-                    productsCount: dashboard.productsCount ?? 0,
-                    shopsCount: dashboard.shopsCount ?? 0,
+                  Obx(
+
+                     () {
+                      return _DashboardHeroCard(
+                        unreadChatCount: controller.unreadChatCount.value,
+                        summary: controller.shopSummary.value,
+                        isSummaryLoading: controller.isShopSummaryLoading.value,
+                        onPeriodChanged: controller.refreshShopSummary,
+                        onChatTap: () async {
+                          await controller.refreshUnreadCount();
+                          Get.toNamed(Routes.SHOP_CHAT_CONVERSATIONS);
+                        },
+                      );
+                    }
                   ),
 
                   const SizedBox(height: 18),
@@ -338,21 +350,56 @@ class HomeView extends GetView<HomeController> {
   }
 }
 
-class _DashboardHeroCard extends StatelessWidget {
+class _DashboardHeroCard extends StatefulWidget {
   const _DashboardHeroCard({
-    required this.ordersAmount,
-    required this.ordersCount,
-    required this.productsCount,
-    required this.shopsCount,
+    required this.unreadChatCount,
+    required this.onChatTap,
+    required this.summary,
+    required this.isSummaryLoading,
+    required this.onPeriodChanged,
   });
 
-  final double ordersAmount;
-  final int ordersCount;
-  final int productsCount;
-  final int shopsCount;
+  final int unreadChatCount;
+  final Future<void> Function() onChatTap;
+  final ShopSummary? summary;
+  final bool isSummaryLoading;
+  final Future<void> Function({String period}) onPeriodChanged;
+
+  @override
+  State<_DashboardHeroCard> createState() => _DashboardHeroCardState();
+}
+
+class _DashboardHeroCardState extends State<_DashboardHeroCard> {
+  bool _showMonthly = false;
 
   @override
   Widget build(BuildContext context) {
+    final demoMetrics = _showMonthly
+        ? const _DemoPeriodMetrics(
+            sales: 486900,
+            orders: 612,
+            paid: 412500,
+            due: 74400,
+          )
+        : const _DemoPeriodMetrics(
+            sales: 18450,
+            orders: 24,
+            paid: 15200,
+            due: 3250,
+          );
+    final selectedPeriod = _showMonthly ? 'monthly' : 'daily';
+    final apiMetrics = widget.summary?.period == selectedPeriod
+      ? widget.summary
+      : null;
+    final metrics = apiMetrics == null
+        ? demoMetrics
+        : _DemoPeriodMetrics(
+            sales: apiMetrics.totalSales,
+            orders: apiMetrics.orderCount,
+            paid: apiMetrics.paidAmount,
+            due: apiMetrics.dueAmount,
+          );
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -379,9 +426,9 @@ class _DashboardHeroCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
-                  "Welcome back",
+                  "dashboardHero.welcome".tr,
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: 13,
@@ -390,82 +437,161 @@ class _DashboardHeroCard extends StatelessWidget {
                 ),
               ),
               InkWell(
-                onTap: (){
-                  Get.toNamed(Routes.SHOP_CHAT_CONVERSATIONS);
-                },
-                child: Container(
-                  height: 46,
-                  width: 46,
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(Icons.chat, color: Colors.green,),
+                onTap: widget.onChatTap,
+                borderRadius: BorderRadius.circular(16),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      height: 46,
+                      width: 46,
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(Icons.chat, color: Colors.green),
+                    ),
+                    if (widget.unreadChatCount > 0)
+                      Positioned(
+                        top: -8,
+                        right: -8,
+                        child: Container(
+                          constraints: const BoxConstraints(minWidth: 20),
+                          height: 20,
+                          padding: const EdgeInsets.symmetric(horizontal: 5),
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Colors.redAccent,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                          child: Text(
+                            widget.unreadChatCount > 99
+                                ? '99+'
+                                : widget.unreadChatCount.toString(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          const Text(
-            "Shop Report",
+          const SizedBox(height: 16),
+          Text(
+            "dashboardHero.salesOverview".tr,
             style: TextStyle(
               color: Colors.white,
               fontSize: 22,
               fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(height: 18),
-          const Text(
-            "Total Order Amount",
-            style: TextStyle(
+          const SizedBox(height: 4),
+          Text(
+            widget.isSummaryLoading
+                ? 'Loading report...'
+                : _showMonthly
+              ? "dashboardHero.monthlySummary".tr
+              : "dashboardHero.dailySummary".tr,
+            style: const TextStyle(
               color: Colors.white70,
               fontSize: 12.5,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            _FormatUtil.money(ordersAmount),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
+          const SizedBox(height: 16),
+          Container(
+            height: 42,
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.16),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                _PeriodToggle(
+                  label: 'dashboardHero.daily'.tr,
+                  selected: !_showMonthly,
+                  onTap: () {
+                    if (_showMonthly) setState(() => _showMonthly = false);
+                    widget.onPeriodChanged(period: 'daily');
+                  },
+                ),
+                _PeriodToggle(
+                  label: 'dashboardHero.monthly'.tr,
+                  selected: _showMonthly,
+                  onTap: () {
+                    if (!_showMonthly) setState(() => _showMonthly = true);
+                    widget.onPeriodChanged(period: 'monthly');
+                  },
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 16),
-          Row(
+          const SizedBox(height: 14),
+          Stack(
+            alignment: Alignment.center,
             children: [
-              Expanded(
-                child: _HeroMiniStat(
-                  title: "Orders",
-                  value: _FormatUtil.compactNumber(ordersCount),
-                  icon: Icons.shopping_bag_outlined,
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                child: GridView.count(
+                  key: ValueKey(_showMonthly),
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                  childAspectRatio: 1.65,
+                  children: [
+                _HeroMetricTile(
+                  title: 'dashboardHero.totalSales'.tr,
+                  value: _FormatUtil.moneyShort(metrics.sales),
+                  icon: Icons.trending_up_rounded,
+                  color: const Color(0xFFBBF7D0),
+                ),
+                _HeroMetricTile(
+                  title: 'dashboardHero.orderCount'.tr,
+                  value: _FormatUtil.compactNumber(metrics.orders),
+                  icon: Icons.receipt_long_outlined,
+                  color: const Color(0xFFBFDBFE),
+                ),
+                _HeroMetricTile(
+                  title: 'dashboardHero.paidAmount'.tr,
+                  value: _FormatUtil.moneyShort(metrics.paid),
+                  icon: Icons.check_circle_outline_rounded,
+                  color: const Color(0xFFFDE68A),
+                ),
+                _HeroMetricTile(
+                  title: 'dashboardHero.dueAmount'.tr,
+                  value: _FormatUtil.moneyShort(metrics.due),
+                  icon: Icons.pending_actions_rounded,
+                  color: const Color(0xFFFECACA),
+                ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: InkWell(
-                  onTap: (){
-                    Get.toNamed(Routes.PRODUCT_LIST);
-                  },
-                  child: _HeroMiniStat(
-                    title: "Products",
-                    value: _FormatUtil.compactNumber(productsCount),
-                    icon: Icons.inventory_2_outlined,
+              if (widget.isSummaryLoading)
+                const Positioned.fill(
+                  child: ColoredBox(
+                    color: Color(0x33000000),
+                    child: Center(
+                      child: SizedBox(
+                        height: 22,
+                        width: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.2,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _HeroMiniStat(
-                  title: "Shops",
-                  value: _FormatUtil.compactNumber(shopsCount),
-                  icon: Icons.storefront_outlined,
-                ),
-              ),
             ],
           ),
         ],
@@ -474,54 +600,110 @@ class _DashboardHeroCard extends StatelessWidget {
   }
 }
 
-class _HeroMiniStat extends StatelessWidget {
-  const _HeroMiniStat({
+class _DemoPeriodMetrics {
+  const _DemoPeriodMetrics({
+    required this.sales,
+    required this.orders,
+    required this.paid,
+    required this.due,
+  });
+
+  final double sales;
+  final int orders;
+  final double paid;
+  final double due;
+}
+
+class _PeriodToggle extends StatelessWidget {
+  const _PeriodToggle({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: selected ? Colors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected ? const Color(0xFF115E59) : Colors.white70,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HeroMetricTile extends StatelessWidget {
+  const _HeroMetricTile({
     required this.title,
     required this.value,
     required this.icon,
+    required this.color,
   });
 
   final String title;
   final String value;
   final IconData icon;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(11),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.14),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.14),
-        ),
+        color: Colors.white.withOpacity(0.13),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.12)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Icon(
-            icon,
-            color: Colors.white,
-            size: 18,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 13,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
+          Icon(icon, color: color, size: 22),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -1020,8 +1202,8 @@ class _ShopDashboardDrawer extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    "Shop Dashboard",
+                  Text(
+                    "shopDashboardDrawer.title".tr,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 18,
@@ -1029,8 +1211,8 @@ class _ShopDashboardDrawer extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    "Manage orders, products, and shop report",
+                  Text(
+                    "shopDashboardDrawer.description".tr,
                     style: TextStyle(
                       color: Colors.white70,
                       fontSize: 12.5,
@@ -1042,7 +1224,7 @@ class _ShopDashboardDrawer extends StatelessWidget {
             ),
             _DrawerItem(
               icon: Icons.dashboard_outlined,
-              title: "Dashboard",
+              title: "shopDashboardDrawer.dashboard".tr,
               color: AppColors.primaryColor,
               onTap: () {
                 Navigator.pop(context);
@@ -1051,7 +1233,7 @@ class _ShopDashboardDrawer extends StatelessWidget {
 
             _DrawerItem(
               icon: Icons.inventory_2_outlined,
-              title: "Products",
+              title: "shopDashboardDrawer.products".tr,
               color: const Color(0xFF60A5FA),
               onTap: () {
                 Get.toNamed(Routes.PRODUCT_LIST);
@@ -1059,7 +1241,7 @@ class _ShopDashboardDrawer extends StatelessWidget {
             ),
             _DrawerItem(
               icon: Icons.forum_outlined,
-              title: "Customer Chat",
+              title: "shopDashboardDrawer.customerChat".tr,
               color: const Color(0xFF2DD4BF),
               onTap: () {
                 Navigator.pop(context);
@@ -1068,7 +1250,7 @@ class _ShopDashboardDrawer extends StatelessWidget {
             ),
             _DrawerItem(
               icon: Icons.qr_code_2_rounded,
-              title: "Store QR Download",
+              title: "shopDashboardDrawer.storeQrDownload".tr,
               color: const Color(0xFF2DD4BF),
               onTap: () {
                 Navigator.pop(context);
@@ -1077,7 +1259,7 @@ class _ShopDashboardDrawer extends StatelessWidget {
             ),
             _DrawerItem(
               icon: Icons.workspace_premium_outlined,
-              title: "Subscription Packages",
+              title: "shopDashboardDrawer.subscriptionPackages".tr,
               color: const Color(0xFFFBBF24),
               onTap: () {
                 Navigator.pop(context);
@@ -1087,7 +1269,7 @@ class _ShopDashboardDrawer extends StatelessWidget {
             const Spacer(),
             _DrawerItem(
               icon: Icons.logout_rounded,
-              title: "Log Out",
+              title: "shopDashboardDrawer.logOut".tr,
               color: Colors.redAccent,
               onTap: () {
                 Get.find<AuthService>().removeCurrentUser();

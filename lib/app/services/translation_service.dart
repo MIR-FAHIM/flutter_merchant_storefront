@@ -19,12 +19,27 @@ class TranslationService extends GetxService {
   // with the code of language concatenate with the country code
   // for example (en_US.json)
   Future<TranslationService> init() async {
-    languages.forEach((lang) async {
+    for (final lang in languages) {
       print('language: $lang');
       var _file = await Helper.getJsonFile('assets/locales/${lang}.json');
-      translations.putIfAbsent(lang, () => Map<String, String>.from(_file));
-    });
+      translations[lang] = _flattenTranslations(_file);
+    }
     return this;
+  }
+
+  Map<String, String> _flattenTranslations(
+    Map<String, dynamic> values, [String prefix = '']
+  ) {
+    final flattened = <String, String>{};
+    values.forEach((key, value) {
+      final fullKey = prefix.isEmpty ? key : '$prefix.$key';
+      if (value is Map<String, dynamic>) {
+        flattened.addAll(_flattenTranslations(value, fullKey));
+      } else {
+        flattened[fullKey] = value.toString();
+      }
+    });
+    return flattened;
   }
 
   // get list of supported local in the application

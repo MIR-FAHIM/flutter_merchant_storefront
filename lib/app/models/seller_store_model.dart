@@ -1,15 +1,19 @@
+import 'package:ecom_delivery_flutter/app/models/subscription_package_model.dart';
+
 class SellerStoreModel {
   final dynamic id;
   final String name;
   final String? slug;
   final String? logo;
+  final StoreSubscription? package;
 
-  SellerStoreModel({
+SellerStoreModel({
     this.id,
     required this.name,
     this.slug,
     this.logo,
-  });
+    this.package,
+});
 
   factory SellerStoreModel.fromJson(Map<String, dynamic> json) {
     return SellerStoreModel(
@@ -18,6 +22,11 @@ class SellerStoreModel {
           'MyZoo Store',
       slug: _firstText(json, ['slug', 'shop_slug', 'store_slug']),
       logo: _firstText(json, ['logo', 'shop_logo', 'store_logo']),
+      package: json['package'] is Map
+          ? StoreSubscription.fromJson(
+              Map<String, dynamic>.from(json['package']),
+            )
+          : null,
     );
   }
 
@@ -37,3 +46,5 @@ String? _firstText(Map<String, dynamic> json, List<String> keys) {
 
   return null;
 }
+
+

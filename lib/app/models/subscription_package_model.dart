@@ -66,50 +66,66 @@ class SubscriptionPackage {
 
 class StoreSubscription {
   final int? id;
+  final int? storeId;
   final int? subscriptionPackageId;
   final String packageName;
   final String status;
   final String? expiresAt;
   final String? renewsAt;
+  final String? trialEndsAt;
+  final String? billingCycle;
+  final String? paymentStatus;
   final int? maxProducts;
   final int? maxOrdersPerMonth;
+  final SubscriptionPackage? package;
 
   StoreSubscription({
     this.id,
+    this.storeId,
     this.subscriptionPackageId,
     required this.packageName,
     required this.status,
     this.expiresAt,
     this.renewsAt,
+    this.trialEndsAt,
+    this.billingCycle,
+    this.paymentStatus,
     this.maxProducts,
     this.maxOrdersPerMonth,
+    this.package,
   });
 
   factory StoreSubscription.fromJson(Map<String, dynamic> json) {
-    final package = _nestedMap(json['package']) ??
+    final packageMap = _nestedMap(json['package']) ??
         _nestedMap(json['subscription_package']) ??
         _nestedMap(json['plan']);
 
     return StoreSubscription(
       id: _toInt(json['id']),
+      storeId: _toInt(json['store_id']),
       subscriptionPackageId: _toInt(json['subscription_package_id']) ??
           _toInt(json['package_id']) ??
-          _toInt(package?['id']),
+          _toInt(packageMap?['id']),
       packageName: _text(json['package_name']) ??
           _text(json['name']) ??
-          _text(package?['name']) ??
+          _text(packageMap?['name']) ??
           'No active package',
       status: _text(json['status']) ?? 'inactive',
       expiresAt: _text(json['expires_at']) ??
           _text(json['expired_at']) ??
-          _text(json['end_date']),
+          _text(json['end_date']) ??
+          _text(json['ends_at']),
       renewsAt: _text(json['renews_at']) ??
           _text(json['renewal_date']) ??
           _text(json['next_billing_at']),
+      trialEndsAt: _text(json['trial_ends_at']),
+      billingCycle: _text(json['billing_cycle']) ?? _text(packageMap?['billing_cycle']),
+      paymentStatus: _text(json['payment_status']),
       maxProducts:
-          _toInt(json['max_products']) ?? _toInt(package?['max_products']),
+          _toInt(json['max_products']) ?? _toInt(packageMap?['max_products']),
       maxOrdersPerMonth: _toInt(json['max_orders_per_month']) ??
-          _toInt(package?['max_orders_per_month']),
+          _toInt(packageMap?['max_orders_per_month']),
+      package: packageMap == null ? null : SubscriptionPackage.fromJson(packageMap),
     );
   }
 
@@ -170,3 +186,5 @@ bool _toBool(dynamic value) {
   final text = value?.toString().toLowerCase().trim();
   return text == '1' || text == 'true' || text == 'yes';
 }
+
+

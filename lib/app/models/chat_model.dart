@@ -147,6 +147,8 @@ class ChatMessage {
     this.replyTo,
     this.sender,
     this.isRead = false,
+    this.isDelivered = false,
+    this.isSeen = false,
     this.createdAt,
     this.updatedAt,
     this.isPending = false,
@@ -165,6 +167,8 @@ class ChatMessage {
   final ReplyPreview? replyTo;
   final ChatSender? sender;
   final bool isRead;
+  final bool isDelivered;
+  final bool isSeen;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final bool isPending;
@@ -206,6 +210,8 @@ class ChatMessage {
     ReplyPreview? replyTo,
     ChatSender? sender,
     bool? isRead,
+    bool? isDelivered,
+    bool? isSeen,
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? isPending,
@@ -224,6 +230,8 @@ class ChatMessage {
       replyTo: replyTo ?? this.replyTo,
       sender: sender ?? this.sender,
       isRead: isRead ?? this.isRead,
+      isDelivered: isDelivered ?? this.isDelivered,
+      isSeen: isSeen ?? this.isSeen,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isPending: isPending ?? this.isPending,
@@ -249,7 +257,12 @@ class ChatMessage {
       order: orderMap == null ? null : ChatOrder.fromJson(orderMap),
       replyTo: replyMap == null ? null : ReplyPreview.fromJson(replyMap),
       sender: senderMap == null ? null : ChatSender.fromJson(senderMap),
-      isRead: json['is_read'] == true || json['read_at'] != null,
+      isRead: _toBool(json['is_read']) ||
+          _toBool(json['is_seen']) ||
+          json['read_at'] != null ||
+          json['seen_at'] != null,
+      isDelivered: _toBool(json['is_delivered']) || json['delivered_at'] != null,
+      isSeen: _toBool(json['is_seen']) || json['seen_at'] != null,
       createdAt: _toDate(json['created_at']),
       updatedAt: _toDate(json['updated_at']),
     );
@@ -383,6 +396,14 @@ int? _toNullableInt(dynamic value) {
 DateTime? _toDate(dynamic value) {
   if (value == null) return null;
   return DateTime.tryParse(value.toString());
+}
+
+bool _toBool(dynamic value) {
+  if (value is bool) return value;
+  if (value is num) return value == 1;
+
+  final text = value?.toString().toLowerCase().trim();
+  return text == '1' || text == 'true' || text == 'yes';
 }
 
 ChatMessageType _messageType(dynamic value) {

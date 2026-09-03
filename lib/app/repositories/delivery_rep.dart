@@ -70,4 +70,14 @@ class DeliveryRepository {
 
     return response;
   }
+
+  Future<Map<String, dynamic>> reportShopDashboardSummary({
+    required String shopID,
+    required String period,
+  }) async {
+    final uri = Uri.parse('${ApiClient.shopDashboardSummary}$shopID/summary')
+        .replace(queryParameters: {'period': period});
+    final response = await APIManager().getWithHeaderStatus(uri.toString(), {});
+    return response;
+  }
 }

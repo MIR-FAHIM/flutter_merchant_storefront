@@ -17,6 +17,12 @@ class SellerPackagesRepository {
     return _manager.getWithHeaderStatus(url, {});
   }
 
+  Future<Map<String, dynamic>> fetchSellerProfile({
+    required String userId,
+  }) async {
+    return _manager.getWithHeaderStatus(ApiClient.sellerProfile + userId, {});
+  }
+
   Future<Map<String, dynamic>> fetchSubscriptionPackages() async {
     const String url = '${ApiClient.subscriptionPackages}?status=active&all=1';
 
@@ -50,3 +56,5 @@ class SellerPackagesRepository {
     );
   }
 }
+
+

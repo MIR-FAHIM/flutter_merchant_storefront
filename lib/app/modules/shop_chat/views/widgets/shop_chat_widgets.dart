@@ -116,11 +116,13 @@ class MessageBubble extends StatelessWidget {
     super.key,
     required this.message,
     required this.isMine,
+    this.readStatusText,
     required this.onReply,
   });
 
   final ChatMessage message;
   final bool isMine;
+  final String? readStatusText;
   final VoidCallback onReply;
 
   @override
@@ -210,6 +212,19 @@ class MessageBubble extends StatelessWidget {
                       color: message.isFailed
                           ? Colors.redAccent
                           : (isMine ? Colors.white70 : const Color(0xFF6B7280)),
+                    ),
+                  ],
+                  if (isMine && readStatusText != null) ...[
+                    const SizedBox(width: 6),
+                    Text(
+                      readStatusText!,
+                      style: TextStyle(
+                        color: message.isRead || message.isSeen
+                            ? const Color(0xFFB6F4FF)
+                            : Colors.white70,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ],
                 ],

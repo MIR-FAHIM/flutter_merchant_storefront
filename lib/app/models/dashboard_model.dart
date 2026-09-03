@@ -137,3 +137,35 @@ double? _toDouble(dynamic value) {
 
   return double.tryParse(value.toString());
 }
+
+class ShopSummary {
+  const ShopSummary({
+    required this.period,
+    required this.from,
+    required this.to,
+    required this.totalSales,
+    required this.orderCount,
+    required this.paidAmount,
+    required this.dueAmount,
+  });
+
+  final String period;
+  final String? from;
+  final String? to;
+  final double totalSales;
+  final int orderCount;
+  final double paidAmount;
+  final double dueAmount;
+
+  factory ShopSummary.fromJson(Map<String, dynamic> json) {
+    return ShopSummary(
+      period: json['period']?.toString() ?? 'daily',
+      from: json['from']?.toString(),
+      to: json['to']?.toString(),
+      totalSales: _toDouble(json['total_sales']) ?? 0,
+      orderCount: _toInt(json['order_count']) ?? 0,
+      paidAmount: _toDouble(json['paid_amount']) ?? 0,
+      dueAmount: _toDouble(json['due_amount']) ?? 0,
+    );
+  }
+}

@@ -173,9 +173,9 @@ class FireBaseMessagingService extends GetxService {
     );
   }
 
-  Future<void> setDeviceToken() async {
-    Get.find<LoginController>().deviceToken.value =
-        (await FirebaseMessaging.instance.getToken())!;
+  static Future<void> setDeviceToken() async {
+    final token = await FirebaseMessaging.instance.getToken();
+    Get.find<LoginController>().deviceToken.value = token ?? '';
   }
 
   Future<bool> extractNumbersFromString(String input) async {

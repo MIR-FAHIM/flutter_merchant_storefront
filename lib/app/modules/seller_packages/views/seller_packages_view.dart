@@ -71,21 +71,43 @@ class SellerPackagesView extends GetView<SellerPackagesController> {
                 const SizedBox(height: 16),
                 _CurrentSubscriptionCard(controller: controller),
                 const SizedBox(height: 22),
-                const Text(
-                  'Available Packages',
-                  style: TextStyle(
+                if (controller.boughtPackage != null) ...[
+                  const Text(
+                    'Bought Package',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SubscriptionPackageCard(
+                    package: controller.boughtPackage!,
+                    isCurrent: true,
+                    isLoading: false,
+                    onSubscribe: null,
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                Text(
+                  controller.boughtPackage == null
+                      ? 'Available Packages'
+                      : 'Other Packages',
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 17,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
                 const SizedBox(height: 12),
-                if (controller.packages.isEmpty)
-                  const _StatePanel(
-                    message: 'No active subscription packages found.',
+                if (controller.otherPackages.isEmpty)
+                  _StatePanel(
+                    message: controller.boughtPackage == null
+                        ? 'No active subscription packages found.'
+                        : 'No other active subscription packages found.',
                   )
                 else
-                  ...controller.packages.map((package) {
+                  ...controller.otherPackages.map((package) {
                     return SubscriptionPackageCard(
                       package: package,
                       isCurrent: controller.isCurrentPackage(package),
@@ -238,7 +260,7 @@ class _CurrentSubscriptionCard extends StatelessWidget {
                 if (subscription.displayDate.isNotEmpty)
                   _InfoChip(
                     icon: Icons.event_available_rounded,
-                    label: 'Renew/Expire: ${subscription.displayDate}',
+                    label: _remainingDaysText(subscription.displayDate),
                   ),
                 _InfoChip(
                   icon: Icons.inventory_2_outlined,
@@ -262,6 +284,25 @@ class _CurrentSubscriptionCard extends StatelessWidget {
   String _limitText(int? value, String label) {
     if (value == null || value < 0) return 'Unlimited $label';
     return '$value $label';
+  }
+
+  String _remainingDaysText(String dateText) {
+    final targetDate = DateTime.tryParse(dateText)?.toLocal();
+    if (targetDate == null) return dateText;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final targetDay = DateTime(
+      targetDate.year,
+      targetDate.month,
+      targetDate.day,
+    );
+    final days = targetDay.difference(today).inDays;
+
+    if (days > 1) return '$days days remaining';
+    if (days == 1) return '1 day remaining';
+    if (days == 0) return 'Expires today';
+    return 'Expired ${days.abs()} day${days.abs() == 1 ? '' : 's'} ago';
   }
 }
 
@@ -394,3 +435,9 @@ class _StateMessage extends StatelessWidget {
     );
   }
 }
+
+
+
+
+
+

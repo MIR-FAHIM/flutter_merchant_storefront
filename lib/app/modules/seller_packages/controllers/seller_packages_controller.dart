@@ -55,6 +55,29 @@ class SellerPackagesController extends GetxController
   bool get hasActiveSubscription =>
       currentSubscription.value?.isActive == true;
 
+  SubscriptionPackage? get boughtPackage {
+    final subscription = currentSubscription.value;
+    if (subscription == null) return null;
+
+    if (subscription.package != null) return subscription.package;
+
+    for (final package in packages) {
+      if (package.id != null &&
+          package.id == subscription.subscriptionPackageId) {
+        return package;
+      }
+    }
+
+    return null;
+  }
+
+  List<SubscriptionPackage> get otherPackages {
+    final currentPackageId = currentSubscription.value?.subscriptionPackageId;
+    if (currentPackageId == null) return packages.toList();
+
+    return packages.where((package) => package.id != currentPackageId).toList();
+  }
+
   Future<void> loadInitialData() async {
     final auth = Get.find<AuthService>().currentUser.value;
     final userId = auth.data?.user?.id?.toString();
@@ -70,6 +93,7 @@ class SellerPackagesController extends GetxController
       errorText.value = '';
 
       await fetchSellerStores(userId);
+      await fetchSellerProfilePackage(userId);
       await fetchSubscriptionPackages();
 
       if (selectedStoreId.isNotEmpty) {
@@ -92,6 +116,33 @@ class SellerPackagesController extends GetxController
     final parsedStores = _parseStores(response['body']);
     stores.assignAll(parsedStores);
     selectedStore.value = parsedStores.isNotEmpty ? parsedStores.first : null;
+    currentSubscription.value = selectedStore.value?.package;
+  }
+
+  Future<void> fetchSellerProfilePackage(String userId) async {
+    final response = await _repository.fetchSellerProfile(userId: userId);
+    if (!_handleApiError(response, showSnackbar: false)) return;
+
+    final body = _bodyMap(response['body']);
+    final data = _bodyMap(body['data']);
+    final shop = _bodyMap(data['shop']);
+    if (shop.isEmpty) return;
+
+    final profileStore = SellerStoreModel.fromJson(shop);
+    final index = stores.indexWhere((store) => _sameId(store.id, profileStore.id));
+
+    if (index >= 0) {
+      stores[index] = profileStore;
+    } else {
+      stores.insert(0, profileStore);
+    }
+
+    if (profileStore.package != null) {
+      selectedStore.value = index >= 0 ? stores[index] : profileStore;
+      currentSubscription.value = profileStore.package;
+    } else if (selectedStore.value == null) {
+      selectedStore.value = index >= 0 ? stores[index] : profileStore;
+    }
   }
 
   Future<void> fetchSubscriptionPackages() async {
@@ -116,17 +167,19 @@ class SellerPackagesController extends GetxController
 
     try {
       isSubscriptionLoading.value = true;
+      final fallbackSubscription = currentSubscription.value;
 
       final response = await _repository.fetchStoreSubscription(
         storeId: selectedStoreId,
       );
 
       if (!_handleApiError(response)) {
-        currentSubscription.value = null;
+        currentSubscription.value = fallbackSubscription;
         return;
       }
 
-      currentSubscription.value = _parseSubscription(response['body']);
+      currentSubscription.value =
+          _parseSubscription(response['body']) ?? fallbackSubscription;
     } catch (e) {
       Get.showSnackbar(
         Ui.ErrorSnackBar(message: e.toString(), title: 'Error'.tr),
@@ -138,7 +191,7 @@ class SellerPackagesController extends GetxController
 
   Future<void> selectStore(SellerStoreModel? store) async {
     selectedStore.value = store;
-    currentSubscription.value = null;
+    currentSubscription.value = store?.package;
 
     if (selectedStoreId.isNotEmpty) {
       await fetchStoreSubscription();
@@ -206,9 +259,7 @@ class SellerPackagesController extends GetxController
 
   bool isCurrentPackage(SubscriptionPackage package) {
     final currentPackageId = currentSubscription.value?.subscriptionPackageId;
-    return hasActiveSubscription &&
-        currentPackageId != null &&
-        package.id == currentPackageId;
+    return currentPackageId != null && package.id == currentPackageId;
   }
 
   bool isSubscribing(SubscriptionPackage package) {
@@ -277,31 +328,42 @@ class SellerPackagesController extends GetxController
 
   StoreSubscription? _parseSubscription(dynamic body) {
     final map = _bodyMap(body);
-    final data = map['data'];
-    final subscription = map['subscription'];
+    final data = _bodyMap(map['data']);
+    final subscription = _bodyMap(map['subscription']);
 
-    if (data is Map) {
-      return StoreSubscription.fromJson(Map<String, dynamic>.from(data));
+    if (data.isNotEmpty) {
+      final dataSubscription = _bodyMap(data['subscription']);
+      final dataShop = _bodyMap(data['shop']);
+      final shopPackage = _bodyMap(dataShop['package']);
+
+      if (dataSubscription.isNotEmpty) {
+        return StoreSubscription.fromJson(dataSubscription);
+      }
+      if (shopPackage.isNotEmpty) {
+        return StoreSubscription.fromJson(shopPackage);
+      }
+      if (_hasSubscriptionFields(data)) {
+        return StoreSubscription.fromJson(data);
+      }
     }
 
-    if (subscription is Map) {
-      return StoreSubscription.fromJson(
-        Map<String, dynamic>.from(subscription),
-      );
+    if (subscription.isNotEmpty) {
+      return StoreSubscription.fromJson(subscription);
     }
 
-    final hasSubscriptionFields = map.containsKey('subscription_package_id') ||
+    if (map.isEmpty || !_hasSubscriptionFields(map)) return null;
+
+    return StoreSubscription.fromJson(map);
+  }
+
+  bool _hasSubscriptionFields(Map<String, dynamic> map) {
+    return map.containsKey('subscription_package_id') ||
         map.containsKey('package_id') ||
         map.containsKey('package_name') ||
         map.containsKey('subscription_package') ||
         map.containsKey('package') ||
         map.containsKey('plan');
-
-    if (map.isEmpty || !hasSubscriptionFields) return null;
-
-    return StoreSubscription.fromJson(map);
   }
-
   List<SubscriptionPackage> _parsePackages(dynamic body) {
     final list = _findList(body);
 
@@ -351,6 +413,11 @@ class SellerPackagesController extends GetxController
     return {};
   }
 
+  bool _sameId(dynamic first, dynamic second) {
+    if (first == null || second == null) return false;
+    return first.toString() == second.toString();
+  }
+
   bool _toBool(dynamic value) {
     if (value is bool) return value;
     if (value is num) return value == 1;
@@ -359,3 +426,6 @@ class SellerPackagesController extends GetxController
     return text == '1' || text == 'true' || text == 'yes';
   }
 }
+
+
+

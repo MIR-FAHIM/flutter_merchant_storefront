@@ -1,5 +1,8 @@
 import 'package:ecom_delivery_flutter/app/modules/auth/login/bindings/login_binding.dart';
 import 'package:ecom_delivery_flutter/app/modules/auth/login/views/login_view.dart';
+import 'package:ecom_delivery_flutter/app/modules/auth/seller_register/bindings/seller_register_binding.dart';
+import 'package:ecom_delivery_flutter/app/modules/auth/seller_register/views/seller_register_view.dart';
+import 'package:ecom_delivery_flutter/app/modules/auth/seller_register/views/seller_registration_success_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/home/bindings/home_binding.dart';
 import 'package:ecom_delivery_flutter/app/modules/home/views/home_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/order/binding/order_binding.dart';
@@ -49,6 +52,15 @@ class AppPages {
       name: _Paths.LOGIN,
       page: () => LoginView(),
       binding: LoginBinding(),
+    ),
+    GetPage(
+      name: _Paths.SELLER_REGISTER,
+      page: () => const SellerRegisterView(),
+      binding: SellerRegisterBinding(),
+    ),
+    GetPage(
+      name: _Paths.SELLER_REGISTER_SUCCESS,
+      page: () => const SellerRegistrationSuccessView(),
     ),
     GetPage(
       name: _Paths.SPLASHSCREEN,
@@ -117,5 +129,6 @@ class AppPages {
     ),
   ];
 }
+
 
 

@@ -8,6 +8,8 @@ abstract class Routes {
   static const ROOT = _Paths.ROOT;
   static const SPLASHSCREEN = _Paths.SPLASHSCREEN;
   static const LOGIN = _Paths.LOGIN;
+  static const SELLER_REGISTER = _Paths.SELLER_REGISTER;
+  static const SELLER_REGISTER_SUCCESS = _Paths.SELLER_REGISTER_SUCCESS;
   static const PRODUCT_LIST = _Paths.PRODUCT_LIST;
   static const PRODUCT_DETAILS = _Paths.PRODUCT_DETAILS;
   static const PRODUCT_EDIT = _Paths.PRODUCT_EDIT;
@@ -33,6 +35,8 @@ abstract class _Paths {
   static const HOME = '/home';
   static const ROOT = '/root';
   static const LOGIN = '/LOGIN';
+  static const SELLER_REGISTER = '/seller-register';
+  static const SELLER_REGISTER_SUCCESS = '/seller-register/success';
   static const ORDER_SHOP_LIST = '/ORDER_SHOP_LIST';
   static const PRODUCT_LIST = '/PRODUCT_LIST';
   static const PRODUCT_DETAILS = '/product/details';
@@ -54,5 +58,6 @@ abstract class _Paths {
   static const DELIVERED_ORDER = '/DELIVERED_ORDER';
   static const MY_DELIVERY = '/MY_DELIVERY';
 }
+
 
 
