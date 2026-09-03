@@ -4,6 +4,7 @@ part of 'app_pages.dart';
 abstract class Routes {
   Routes._();
 
+
   static const ROOT = _Paths.ROOT;
   static const SPLASHSCREEN = _Paths.SPLASHSCREEN;
   static const LOGIN = _Paths.LOGIN;
@@ -23,6 +24,8 @@ abstract class Routes {
   static const ORDER_SHOP_LIST = _Paths.ORDER_SHOP_LIST;
   static const SELLER_STORE_QR = _Paths.SELLER_STORE_QR;
   static const SELLER_PACKAGES = _Paths.SELLER_PACKAGES;
+  static const SHOP_CHAT_CONVERSATIONS = _Paths.SHOP_CHAT_CONVERSATIONS;
+  static const SHOP_CHAT_THREAD = _Paths.SHOP_CHAT_THREAD;
   static const WEBVIEW = _Paths.WEBVIEW;
 }
 
@@ -40,6 +43,8 @@ abstract class _Paths {
   static const ORDER_SHOP_DETAIL = '/ORDER_SHOP_DETAIL';
   static const SELLER_STORE_QR = '/seller/store-qr';
   static const SELLER_PACKAGES = '/seller/packages';
+  static const SHOP_CHAT_CONVERSATIONS = '/seller/chat';
+  static const SHOP_CHAT_THREAD = '/seller/chat/thread';
   static const WEBVIEW = '/webview';
   static const NOTIFICATIONVIEW = '/NOTIFICATIONVIEW';
   static const ALL_DELIVERY_ORDER = '/ALL_DELIVERY_ORDER';
@@ -49,3 +54,5 @@ abstract class _Paths {
   static const DELIVERED_ORDER = '/DELIVERED_ORDER';
   static const MY_DELIVERY = '/MY_DELIVERY';
 }
+
+

@@ -1,223 +1,430 @@
-// To parse this JSON data, do
-//
-//     final chatModel = chatModelFromJson(jsonString);
-
-import 'dart:convert';
-
-ChatModel chatModelFromJson(String str) => ChatModel.fromJson(json.decode(str));
-
-String chatModelToJson(ChatModel data) => json.encode(data.toJson());
-
-class ChatModel {
-  String? status;
-  String? message;
-  List<ChatDatum>? data;
-
-  ChatModel({
-     this.status,
-     this.message,
-     this.data,
-  });
-
-  factory ChatModel.fromJson(Map<String, dynamic> json) => ChatModel(
-    status: json["status"],
-    message: json["message"],
-    data: List<ChatDatum>.from(json["data"].map((x) => ChatDatum.fromJson(x))),
-  );
-
-  Map<String, dynamic> toJson() => {
-    "status": status,
-    "message": message,
-    "data": List<dynamic>.from(data!.map((x) => x.toJson())),
-  };
+enum ChatMessageType {
+  text,
+  product,
+  order,
+  orderStatus,
+  system,
+  image,
+  voice,
+  file,
+  unknown,
 }
 
-class ChatDatum {
-  int id;
-  int conversationRoomId;
-  int senderId;
-  int receiverId;
-  String message;
-  String messageType;
-  String filePath;
-  String fileName;
-  String fileSize;
-  bool isRead;
-  bool isDelivered;
-  bool isSeen;
-  DateTime? readAt;
-  String deliveredAt;
-  String seenAt;
-  bool isEdited;
-  bool isDeleted;
-  int parentId;
-  DateTime createdAt;
-  DateTime updatedAt;
-  Sender sender;
-  dynamic receiver;
-
-  ChatDatum({
-    required this.id,
-    required this.conversationRoomId,
-    required this.senderId,
-    required this.receiverId,
-    required this.message,
-    required this.messageType,
-    required this.filePath,
-    required this.fileName,
-    required this.fileSize,
-    required this.isRead,
-    required this.isDelivered,
-    required this.isSeen,
-    required this.readAt,
-    required this.deliveredAt,
-    required this.seenAt,
-    required this.isEdited,
-    required this.isDeleted,
-    required this.parentId,
-    required this.createdAt,
-    required this.updatedAt,
-    required this.sender,
-    required this.receiver,
-  });
-
-  factory ChatDatum.fromJson(Map<String, dynamic> json) => ChatDatum(
-    id: json["id"],
-    conversationRoomId: json["conversation_room_id"],
-    senderId: json["sender_id"],
-    receiverId: json["receiver_id"] ?? 0,
-    message: json["message"],
-    messageType: json["message_type"] ?? "text",
-    filePath: json["file_path"] ?? "No Data",
-    fileName: json["file_name"]?? "No Data",
-    fileSize: json["file_size"]?? "No Data",
-    isRead: json["is_read"],
-    isDelivered: json["is_delivered"],
-    isSeen: json["is_seen"],
-    readAt: json["read_at"] == null ? null : DateTime.parse(json["read_at"]),
-    deliveredAt: json["delivered_at"]?? '',
-    seenAt: json["seen_at"] ?? "",
-    isEdited: json["is_edited"],
-    isDeleted: json["is_deleted"],
-    parentId: json["parent_id"] ?? 0,
-    createdAt: DateTime.parse(json["created_at"]),
-    updatedAt: DateTime.parse(json["updated_at"]),
-    sender: Sender.fromJson(json["sender"]),
-    receiver: json["receiver"],
-  );
-
-  Map<String, dynamic> toJson() => {
-    "id": id,
-    "conversation_room_id": conversationRoomId,
-    "sender_id": senderId,
-    "receiver_id": receiverId,
-    "message": message,
-    "message_type": messageType,
-    "file_path": filePath,
-    "file_name": fileName,
-    "file_size": fileSize,
-    "is_read": isRead,
-    "is_delivered": isDelivered,
-    "is_seen": isSeen,
-    "read_at": readAt?.toIso8601String(),
-    "delivered_at": deliveredAt,
-    "seen_at": seenAt,
-    "is_edited": isEdited,
-    "is_deleted": isDeleted,
-    "parent_id": parentId,
-    "created_at": createdAt.toIso8601String(),
-    "updated_at": updatedAt.toIso8601String(),
-    "sender": sender.toJson(),
-    "receiver": receiver,
-  };
+enum ChatSenderType {
+  customer,
+  shop,
+  system,
+  unknown,
 }
 
-
-
-class Sender {
-  int id;
-  String name;
-  String email;
-  String phone;
-  String address;
-  int designationId;
-  int roleId;
-  int departmentId;
-  DateTime birthdate;
-  bool isActive;
-  String photo;
-  String bio;
-  int startHour;
-  int startMin;
-  String? fcmToken;
-  String? appToken;
-  String? emailVerifiedAt;
-  DateTime? createdAt;
-  DateTime updatedAt;
-
-  Sender({
-    required this.id,
-    required this.name,
-    required this.email,
-    required this.phone,
-    required this.address,
-    required this.designationId,
-    required this.roleId,
-    required this.departmentId,
-    required this.birthdate,
-    required this.isActive,
-    required this.photo,
-    required this.bio,
-    required this.startHour,
-    required this.startMin,
-    required this.fcmToken,
-    required this.appToken,
-    required this.emailVerifiedAt,
-    required this.createdAt,
-    required this.updatedAt,
+class PaginatedResponse<T> {
+  PaginatedResponse({
+    required this.items,
+    this.currentPage = 1,
+    this.lastPage = 1,
+    this.total = 0,
   });
 
-  factory Sender.fromJson(Map<String, dynamic> json) => Sender(
-    id: json["id"],
-    name: json["name"]!,
-    email: json["email"] ?? "No Data",
-    phone: json["phone"] ?? "No data",
-    address: json["address"] ?? "No Data",
-    designationId: json["designation_id"],
-    roleId: json["role_id"],
-    departmentId: json["department_id"],
-    birthdate: DateTime.parse(json["birthdate"]),
-    isActive: json["isActive"],
-    photo: json["photo"] ?? "No Data",
-    bio: json["bio"] ?? "No Data",
-    startHour: json["start_hour"],
-    startMin: json["start_min"],
-    fcmToken: json["fcm_token"] ?? "No Data",
-    appToken: json["app_token"] ?? "No Data",
-    emailVerifiedAt: json["email_verified_at"],
-    createdAt: json["created_at"] == null ? null : DateTime.parse(json["created_at"]),
-    updatedAt: DateTime.parse(json["updated_at"]),
-  );
+  final List<T> items;
+  final int currentPage;
+  final int lastPage;
+  final int total;
 
-  Map<String, dynamic> toJson() => {
-    "id": id,
-    "name": name,
-    "email": email,
-    "phone": phone,
-    "address": address,
-    "designation_id": designationId,
-    "role_id": roleId,
-    "department_id": departmentId,
-    "birthdate": birthdate.toIso8601String(),
-    "isActive": isActive,
-    "photo": photo,
-    "bio": bio,
-    "start_hour": startHour,
-    "start_min": startMin,
-    "fcm_token": fcmToken,
-    "app_token": appToken,
-    "email_verified_at": emailVerifiedAt,
-    "created_at": createdAt?.toIso8601String(),
-    "updated_at": updatedAt.toIso8601String(),
-  };
+  bool get hasMore => currentPage < lastPage;
+}
+
+class Conversation {
+  Conversation({
+    required this.id,
+    this.shopId,
+    this.customerId,
+    this.shop,
+    this.customer,
+    this.lastMessage,
+    this.unreadCount = 0,
+    this.status,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  final int id;
+  final int? shopId;
+  final int? customerId;
+  final ConversationShop? shop;
+  final ConversationCustomer? customer;
+  final ChatMessage? lastMessage;
+  final int unreadCount;
+  final String? status;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+
+  String get title => customer?.name ?? shop?.name ?? 'Customer';
+  String? get imageUrl => customer?.avatar ?? shop?.logo;
+  String get preview => lastMessage?.previewText ?? 'No messages yet';
+
+  factory Conversation.fromJson(Map<String, dynamic> json) {
+    final shopMap = _asMap(json['shop'] ?? json['store']);
+    final customerMap = _asMap(json['customer'] ?? json['user']);
+    final messageMap = _asMap(json['last_message'] ?? json['latest_message']);
+
+    return Conversation(
+      id: _toInt(json['id']),
+      shopId: _toNullableInt(json['shop_id'] ?? json['store_id']),
+      customerId: _toNullableInt(json['customer_id'] ?? json['user_id']),
+      shop: shopMap == null ? null : ConversationShop.fromJson(shopMap),
+      customer: customerMap == null
+          ? null
+          : ConversationCustomer.fromJson(customerMap),
+      lastMessage: messageMap == null ? null : ChatMessage.fromJson(messageMap),
+      unreadCount: _toInt(json['unread_count'] ?? json['unread_messages_count']),
+      status: json['status']?.toString(),
+      createdAt: _toDate(json['created_at']),
+      updatedAt: _toDate(json['updated_at']),
+    );
+  }
+}
+
+class ConversationShop {
+  ConversationShop({
+    this.id,
+    this.name,
+    this.slug,
+    this.logo,
+  });
+
+  final int? id;
+  final String? name;
+  final String? slug;
+  final String? logo;
+
+  factory ConversationShop.fromJson(Map<String, dynamic> json) {
+    return ConversationShop(
+      id: _toNullableInt(json['id']),
+      name: _firstString(json, ['shop_name', 'name', 'store_name']),
+      slug: _firstString(json, ['slug', 'shop_slug', 'store_slug']),
+      logo: _firstString(json, ['logo', 'image', 'avatar']),
+    );
+  }
+}
+
+class ConversationCustomer {
+  ConversationCustomer({
+    this.id,
+    this.name,
+    this.email,
+    this.phone,
+    this.avatar,
+  });
+
+  final int? id;
+  final String? name;
+  final String? email;
+  final String? phone;
+  final String? avatar;
+
+  factory ConversationCustomer.fromJson(Map<String, dynamic> json) {
+    return ConversationCustomer(
+      id: _toNullableInt(json['id']),
+      name: _firstString(json, ['name', 'full_name', 'customer_name']),
+      email: json['email']?.toString(),
+      phone: json['phone']?.toString(),
+      avatar: _firstString(json, ['avatar', 'photo', 'image', 'profile_photo']),
+    );
+  }
+}
+
+class ChatMessage {
+  ChatMessage({
+    required this.id,
+    this.conversationId,
+    this.senderId,
+    this.senderType = ChatSenderType.unknown,
+    this.type = ChatMessageType.text,
+    this.message,
+    this.fileUrl,
+    this.product,
+    this.order,
+    this.replyTo,
+    this.sender,
+    this.isRead = false,
+    this.createdAt,
+    this.updatedAt,
+    this.isPending = false,
+    this.isFailed = false,
+  });
+
+  final int id;
+  final int? conversationId;
+  final int? senderId;
+  final ChatSenderType senderType;
+  final ChatMessageType type;
+  final String? message;
+  final String? fileUrl;
+  final ChatProduct? product;
+  final ChatOrder? order;
+  final ReplyPreview? replyTo;
+  final ChatSender? sender;
+  final bool isRead;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final bool isPending;
+  final bool isFailed;
+
+  String get previewText {
+    if ((message ?? '').trim().isNotEmpty) return message!.trim();
+    switch (type) {
+      case ChatMessageType.product:
+        return product?.name ?? 'Product shared';
+      case ChatMessageType.order:
+        return order?.orderNumber ?? 'Order shared';
+      case ChatMessageType.orderStatus:
+        return 'Order status update';
+      case ChatMessageType.system:
+        return message ?? 'System message';
+      case ChatMessageType.image:
+        return 'Image';
+      case ChatMessageType.voice:
+        return 'Voice message';
+      case ChatMessageType.file:
+        return 'File';
+      case ChatMessageType.text:
+      case ChatMessageType.unknown:
+        return 'Message';
+    }
+  }
+
+  ChatMessage copyWith({
+    int? id,
+    int? conversationId,
+    int? senderId,
+    ChatSenderType? senderType,
+    ChatMessageType? type,
+    String? message,
+    String? fileUrl,
+    ChatProduct? product,
+    ChatOrder? order,
+    ReplyPreview? replyTo,
+    ChatSender? sender,
+    bool? isRead,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    bool? isPending,
+    bool? isFailed,
+  }) {
+    return ChatMessage(
+      id: id ?? this.id,
+      conversationId: conversationId ?? this.conversationId,
+      senderId: senderId ?? this.senderId,
+      senderType: senderType ?? this.senderType,
+      type: type ?? this.type,
+      message: message ?? this.message,
+      fileUrl: fileUrl ?? this.fileUrl,
+      product: product ?? this.product,
+      order: order ?? this.order,
+      replyTo: replyTo ?? this.replyTo,
+      sender: sender ?? this.sender,
+      isRead: isRead ?? this.isRead,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isPending: isPending ?? this.isPending,
+      isFailed: isFailed ?? this.isFailed,
+    );
+  }
+
+  factory ChatMessage.fromJson(Map<String, dynamic> json) {
+    final productMap = _asMap(json['product']);
+    final orderMap = _asMap(json['order']);
+    final replyMap = _asMap(json['reply_to'] ?? json['reply']);
+    final senderMap = _asMap(json['sender']);
+
+    return ChatMessage(
+      id: _toInt(json['id']),
+      conversationId: _toNullableInt(json['conversation_id']),
+      senderId: _toNullableInt(json['sender_id']),
+      senderType: _senderType(json['sender_type']),
+      type: _messageType(json['message_type'] ?? json['type']),
+      message: json['message']?.toString() ?? json['body']?.toString(),
+      fileUrl: _firstString(json, ['file_url', 'file_path', 'attachment_url']),
+      product: productMap == null ? null : ChatProduct.fromJson(productMap),
+      order: orderMap == null ? null : ChatOrder.fromJson(orderMap),
+      replyTo: replyMap == null ? null : ReplyPreview.fromJson(replyMap),
+      sender: senderMap == null ? null : ChatSender.fromJson(senderMap),
+      isRead: json['is_read'] == true || json['read_at'] != null,
+      createdAt: _toDate(json['created_at']),
+      updatedAt: _toDate(json['updated_at']),
+    );
+  }
+}
+
+class ChatSender {
+  ChatSender({
+    this.id,
+    this.name,
+    this.avatar,
+    this.type = ChatSenderType.unknown,
+  });
+
+  final int? id;
+  final String? name;
+  final String? avatar;
+  final ChatSenderType type;
+
+  factory ChatSender.fromJson(Map<String, dynamic> json) {
+    return ChatSender(
+      id: _toNullableInt(json['id']),
+      name: _firstString(json, ['name', 'full_name', 'shop_name']),
+      avatar: _firstString(json, ['avatar', 'logo', 'image']),
+      type: _senderType(json['type'] ?? json['sender_type']),
+    );
+  }
+}
+
+class ChatProduct {
+  ChatProduct({
+    this.id,
+    this.name,
+    this.slug,
+    this.image,
+    this.price,
+  });
+
+  final int? id;
+  final String? name;
+  final String? slug;
+  final String? image;
+  final String? price;
+
+  factory ChatProduct.fromJson(Map<String, dynamic> json) {
+    return ChatProduct(
+      id: _toNullableInt(json['id'] ?? json['product_id']),
+      name: _firstString(json, ['name', 'product_name', 'title']),
+      slug: json['slug']?.toString(),
+      image: _firstString(json, ['thumbnail', 'image', 'cover_image']),
+      price: (json['price'] ?? json['unit_price'] ?? json['selling_price'])
+          ?.toString(),
+    );
+  }
+}
+
+class ChatOrder {
+  ChatOrder({
+    this.id,
+    this.orderNumber,
+    this.status,
+    this.total,
+  });
+
+  final int? id;
+  final String? orderNumber;
+  final String? status;
+  final String? total;
+
+  factory ChatOrder.fromJson(Map<String, dynamic> json) {
+    return ChatOrder(
+      id: _toNullableInt(json['id'] ?? json['order_id']),
+      orderNumber:
+          _firstString(json, ['order_number', 'invoice_no', 'code']) ??
+              (json['id'] != null ? 'Order #${json['id']}' : null),
+      status: json['status']?.toString(),
+      total: (json['total'] ?? json['grand_total'] ?? json['amount'])
+          ?.toString(),
+    );
+  }
+}
+
+class ReplyPreview {
+  ReplyPreview({
+    this.id,
+    this.message,
+    this.senderName,
+    this.type = ChatMessageType.unknown,
+  });
+
+  final int? id;
+  final String? message;
+  final String? senderName;
+  final ChatMessageType type;
+
+  factory ReplyPreview.fromJson(Map<String, dynamic> json) {
+    return ReplyPreview(
+      id: _toNullableInt(json['id']),
+      message: json['message']?.toString() ?? json['body']?.toString(),
+      senderName: _firstString(json, ['sender_name', 'name']),
+      type: _messageType(json['message_type'] ?? json['type']),
+    );
+  }
+}
+
+Map<String, dynamic>? _asMap(dynamic value) {
+  if (value is Map<String, dynamic>) return value;
+  if (value is Map) return Map<String, dynamic>.from(value);
+  return null;
+}
+
+String? _firstString(Map<String, dynamic> json, List<String> keys) {
+  for (final key in keys) {
+    final value = json[key];
+    if (value != null && value.toString().trim().isNotEmpty) {
+      return value.toString();
+    }
+  }
+  return null;
+}
+
+int _toInt(dynamic value) => _toNullableInt(value) ?? 0;
+
+int? _toNullableInt(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse(value.toString());
+}
+
+DateTime? _toDate(dynamic value) {
+  if (value == null) return null;
+  return DateTime.tryParse(value.toString());
+}
+
+ChatMessageType _messageType(dynamic value) {
+  final normalized = value?.toString().toLowerCase().replaceAll('-', '_');
+  switch (normalized) {
+    case 'text':
+      return ChatMessageType.text;
+    case 'product':
+      return ChatMessageType.product;
+    case 'order':
+      return ChatMessageType.order;
+    case 'order_status':
+    case 'orderstatus':
+      return ChatMessageType.orderStatus;
+    case 'system':
+      return ChatMessageType.system;
+    case 'image':
+      return ChatMessageType.image;
+    case 'voice':
+    case 'audio':
+      return ChatMessageType.voice;
+    case 'file':
+    case 'attachment':
+      return ChatMessageType.file;
+    default:
+      return ChatMessageType.unknown;
+  }
+}
+
+ChatSenderType _senderType(dynamic value) {
+  final normalized = value?.toString().toLowerCase();
+  switch (normalized) {
+    case 'customer':
+    case 'user':
+      return ChatSenderType.customer;
+    case 'shop':
+    case 'seller':
+    case 'store':
+      return ChatSenderType.shop;
+    case 'system':
+      return ChatSenderType.system;
+    default:
+      return ChatSenderType.unknown;
+  }
 }

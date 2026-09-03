@@ -49,4 +49,7 @@ class ApiClient {
   static const String stores = '$baseUrl/api/stores/';
 
   static const String orderDetails = '$baseUrl/api/orders/details/';
+  static const String chatBase = '$baseUrl/api/chat';
+  static const String chatConversations = '$chatBase/conversations';
+  static const String chatMessages = '$chatBase/messages/';
 }
