@@ -5,6 +5,7 @@ import 'package:ecom_delivery_flutter/app/api_providers/api_url.dart';
 import 'package:ecom_delivery_flutter/app/services/auth_service.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../models/store_category_model.dart';
@@ -250,11 +251,13 @@ class ProductRepository {
     for (int i = 0; i < images.length; i++) {
       final XFile image = images[i];
       final List<int> bytes = await image.readAsBytes();
+      final String fileName = _uploadFileName(image);
       request.files.add(
         http.MultipartFile.fromBytes(
           'images[$i][image]',
           bytes,
-          filename: image.name,
+          filename: fileName,
+          contentType: _imageContentType(fileName),
         ),
       );
       request.fields['images[$i][is_primary]'] = i == 0 ? '1' : '0';
@@ -273,5 +276,31 @@ class ProductRepository {
           ? decoded
           : <String, dynamic>{'message': response.body},
     };
+  }
+
+  String _uploadFileName(XFile image) {
+    final name = image.name.trim();
+    if (name.isNotEmpty) return name;
+
+    final pathParts = image.path.split(RegExp(r'[\\/]'));
+    final pathName = pathParts.isEmpty ? '' : pathParts.last.trim();
+    return pathName.isNotEmpty ? pathName : 'product-image.jpg';
+  }
+
+  MediaType _imageContentType(String fileName) {
+    final extension = fileName.split('.').last.toLowerCase();
+    switch (extension) {
+      case 'jpg':
+      case 'jpeg':
+        return MediaType('image', 'jpeg');
+      case 'png':
+        return MediaType('image', 'png');
+      case 'webp':
+        return MediaType('image', 'webp');
+      case 'gif':
+        return MediaType('image', 'gif');
+      default:
+        return MediaType('image', 'jpeg');
+    }
   }
 }

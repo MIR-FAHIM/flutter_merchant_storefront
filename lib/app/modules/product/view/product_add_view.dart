@@ -309,14 +309,22 @@ class _ProductAddViewState extends State<ProductAddView> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {
-                        if (currentStep.value < 3) {
-                          currentStep.value++;
-                        } else {
-                          _submitProduct();
-                        }
-                      },
-                      child: Text(currentStep.value < 3 ? 'Next' : 'Submit'),
+                      onPressed: controller.isCreatingProduct.value
+                          ? null
+                          : () {
+                              if (currentStep.value < 3) {
+                                currentStep.value++;
+                              } else {
+                                _submitProduct();
+                              }
+                            },
+                      child: controller.isCreatingProduct.value
+                          ? const SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(currentStep.value < 3 ? 'Next' : 'Submit'),
                     ),
                   ),
                 ],

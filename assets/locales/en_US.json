@@ -76,6 +76,13 @@
     "totalSales": "Total sales",
     "orderCount": "Order count",
     "paidAmount": "Paid amount",
-    "dueAmount": "Due amount"
+    "dueAmount": "Due amount",
+    "storeQrTitle": "Share your store QR code with customers",
+    "storeQrSubtitle": "When customers install the MyZoo customer app and scan your QR code, your store will be added to their favorite stores list."
+  },
+  "dashboardActions": {
+    "buy": "Buy",
+    "sell": "Sell",
+    "buyComingSoon": "Buying tools will be connected here."
   }
 }

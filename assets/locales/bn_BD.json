@@ -76,6 +76,13 @@
     "totalSales": "মোট বিক্রয়",
     "orderCount": "অর্ডারের সংখ্যা",
     "paidAmount": "পরিশোধিত অর্থ",
-    "dueAmount": "বকেয়া অর্থ"
+    "dueAmount": "বকেয়া অর্থ",
+    "storeQrTitle": "আপনার কাস্টমারের কাছে দোকানের QR কোড শেয়ার করুন",
+    "storeQrSubtitle": "আপনার কাস্টমার MyZoo customer app ইনস্টল করে QR স্ক্যান করলে আপনার স্টোরটি তার পছন্দের দোকানের তালিকায় যুক্ত থাকবে।"
+  },
+  "dashboardActions": {
+    "buy": "কেনা",
+    "sell": "বেচা",
+    "buyComingSoon": "কেনার টুল এখানে যুক্ত করা হবে।"
   }
 }

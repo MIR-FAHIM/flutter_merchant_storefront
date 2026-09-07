@@ -729,16 +729,11 @@ class ProductController extends GetxController {
       final body = response['body'];
       final payload = body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
 
-      if (statusCode < 200 || statusCode >= 300) {
-        final errors = payload['errors'];
-        String message = payload['message']?.toString() ?? 'Unable to create product';
-        if (errors is Map && errors.isNotEmpty) {
-          final values = errors.values.whereType<List>().expand((e) => e).toList();
-          if (values.isNotEmpty) {
-            message = values.first.toString();
-          }
-        }
-        addProductError.value = message;
+      if (statusCode < 200 || statusCode >= 300 || !_isSuccessPayload(payload)) {
+        addProductError.value = _productApiMessage(
+          payload,
+          fallback: 'Unable to create product',
+        );
         return false;
       }
 
@@ -755,9 +750,18 @@ class ProductController extends GetxController {
         );
         final uploadStatus = uploadResponse['status_code'] is int ? uploadResponse['status_code'] as int : 500;
         final uploadBody = uploadResponse['body'];
-        if (uploadStatus < 200 || uploadStatus >= 300) {
-          final uploadPayload = uploadBody is Map ? Map<String, dynamic>.from(uploadBody) : <String, dynamic>{};
-          addProductError.value = uploadPayload['message']?.toString() ?? 'Product was created but images could not be uploaded.';
+        final uploadPayload = uploadBody is Map
+            ? Map<String, dynamic>.from(uploadBody)
+            : <String, dynamic>{};
+        if (uploadStatus < 200 ||
+            uploadStatus >= 300 ||
+            !_isSuccessPayload(uploadPayload)) {
+          final message = _productApiMessage(
+            uploadPayload,
+            fallback: 'Images could not be uploaded.',
+          );
+          addProductError.value =
+              'Product created successfully, but image upload failed. $message';
           return false;
         }
       }
@@ -789,6 +793,29 @@ class ProductController extends GetxController {
     if (id != null) return int.tryParse(id.toString());
 
     return null;
+  }
+
+  bool _isSuccessPayload(Map<String, dynamic> payload) {
+    final status = payload['status']?.toString().toLowerCase();
+    return status == null || status.isEmpty || status == 'success';
+  }
+
+  String _productApiMessage(
+    Map<String, dynamic> payload, {
+    required String fallback,
+  }) {
+    final errors = payload['errors'];
+    if (errors is Map && errors.isNotEmpty) {
+      final values = errors.values
+          .whereType<List>()
+          .expand((items) => items)
+          .where((item) => item.toString().trim().isNotEmpty)
+          .toList();
+      if (values.isNotEmpty) return values.first.toString();
+    }
+
+    final message = payload['message']?.toString().trim();
+    return message?.isNotEmpty == true ? message! : fallback;
   }
 
   List<dynamic> _extractList(dynamic body, {required List<String> keys}) {
