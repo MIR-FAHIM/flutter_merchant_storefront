@@ -41,6 +41,14 @@ class ProductRepository {
     return response;
   }
 
+  Future<Map<String, dynamic>> fetchProductLimitReport({
+    required String shopId,
+  }) async {
+    final APIManager manager = APIManager();
+    final String url = '${ApiClient.shopProductLimitReport}$shopId/product-limit-report';
+    return manager.getWithHeaderStatus(url, {});
+  }
+
   Future<Map<String, dynamic>> fetchSellerShops() async {
     final APIManager manager = APIManager();
     final String url = '${ApiClient.sellerShopList}?page=1&per_page=100';

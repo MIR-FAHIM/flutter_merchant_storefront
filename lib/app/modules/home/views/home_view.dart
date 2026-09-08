@@ -81,12 +81,26 @@ class HomeView extends GetView<HomeController> {
             elevation: 0,
             backgroundColor: const Color(0xFF111213),
             iconTheme: const IconThemeData(color: Colors.white),
-            title: const Text(
-              "Shop Dashboard",
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-                fontSize: 20,
+            title: ElevatedButton(
+              onPressed: () {
+              Get.toNamed(Routes.SELLER_CUSTOMER_ADD);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 0,
+              ),
+              child: const Text(
+                'কাস্টমার যুক্ত করুন',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 12,
+                  color: Colors.black
+                ),
               ),
             ),
             actions: [
@@ -102,6 +116,8 @@ class HomeView extends GetView<HomeController> {
                     child: Stack(
                       clipBehavior: Clip.none,
                       children: [
+
+
                         Container(
                           height: 46,
                           width: 46,
@@ -148,6 +164,22 @@ class HomeView extends GetView<HomeController> {
                   ),
                 ),
               ),
+
+              InkWell(
+                onTap:(){
+                  Get.toNamed(Routes.SELLER_CUSTOMER_LIST_VIEW);
+                },
+                child: Container(
+                  height: 46,
+                  width: 46,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.supervised_user_circle, color: Colors.green),
+                ),
+              ),
               Container(
                 margin: const EdgeInsets.only(right: 14),
                 decoration: BoxDecoration(
@@ -175,6 +207,8 @@ class HomeView extends GetView<HomeController> {
                   onRefresh: () async {
                     await controller.refreshUnreadCount();
                     await controller.reportDashboardShopController();
+                    await controller.refreshShopOrderReport();
+                    await controller.refreshShopProductLimitReport();
                   },
                   child: SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(
@@ -232,42 +266,31 @@ class HomeView extends GetView<HomeController> {
                         //   ),
                         // ),
                         const SizedBox(height: 18),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _MetricCard(
-                                title: "Orders",
-                                value: _FormatUtil.compactNumber(
-                                  dashboard.ordersCount ?? 0,
-                                ),
-                                subtitle: "Total received orders",
-                                icon: Icons.shopping_bag_outlined,
-                                iconColor: const Color(0xFF34D399),
-                                backgroundColor: const Color(0xFF064E3B),
-                                onTap: () {
-                                  Get.toNamed(Routes.MY_DELIVERY);
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _MetricCard(
-                                title: "Products",
-                                value: _FormatUtil.compactNumber(
-                                  dashboard.productsCount ?? 0,
-                                ),
-                                subtitle: "Listed products",
-                                icon: Icons.inventory_2_outlined,
-                                iconColor: const Color(0xFF60A5FA),
-                                backgroundColor: const Color(0xFF1E3A5F),
-                                onTap: () {
-                                  Get.toNamed(Routes.PRODUCT_LIST);
-                                },
-                              ),
-                            ),
-                          ],
+                        Obx(
+                          () => _SimpleOrderReportCard(
+                            report: controller.shopOrderReport.value,
+                            isLoading:
+                                controller.isShopOrderReportLoading.value,
+                            errorMessage: controller.shopOrderReportErrorText,
+                            onTap: () => Get.toNamed(Routes.ORDER_SHOP_LIST),
+                            onRetry: controller.refreshShopOrderReport,
+                          ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 18),
+                        Obx(
+                          () => _SimpleProductLimitReportCard(
+                            report: controller.shopProductLimitReport.value,
+                            isLoading: controller
+                                .isShopProductLimitReportLoading.value,
+                            errorMessage:
+                                controller.shopProductLimitReportErrorText,
+                            onTap: () => Get.toNamed(Routes.PRODUCT_LIST),
+                            onRetry: controller.refreshShopProductLimitReport,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+
+
                         Row(
                           children: [
                             Expanded(
@@ -716,6 +739,305 @@ class _DashboardModeCard extends StatelessWidget {
                 height: 1,
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SimpleOrderReportCard extends StatelessWidget {
+  const _SimpleOrderReportCard({
+    required this.report,
+    required this.isLoading,
+    required this.errorMessage,
+    required this.onTap,
+    required this.onRetry,
+  });
+
+
+  final ShopOrderSimpleReport? report;
+  final bool isLoading;
+  final String errorMessage;
+  final VoidCallback onTap;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = [
+      _SimpleOrderReportItem(
+        label: 'orderReport.today'.tr,
+        value: report?.todayTotalOrder ?? 0,
+        color: const Color(0xFF34D399),
+      ),
+      _SimpleOrderReportItem(
+        label: 'orderReport.yesterday'.tr,
+        value: report?.yesterdayTotalOrder ?? 0,
+        color: const Color(0xFF60A5FA),
+      ),
+      _SimpleOrderReportItem(
+        label: 'orderReport.lastWeek'.tr,
+        value: report?.lastWeekTotalOrder ?? 0,
+        color: const Color(0xFFFBBF24),
+      ),
+      _SimpleOrderReportItem(
+        label: 'orderReport.lastMonth'.tr,
+        value: report?.lastMonthTotalOrder ?? 0,
+        color: const Color(0xFFA78BFA),
+      ),
+    ];
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1B1C1E),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFF2E3033)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.receipt_long_outlined,
+                  color: Color(0xFF34D399),
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'orderReport.title'.tr,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                if (isLoading)
+                  const SizedBox(
+                    height: 16,
+                    width: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                else
+                  const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: Color(0xFF9CA3AF),
+                    size: 15,
+                  ),
+              ],
+            ),
+            if (errorMessage.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              InkWell(
+                onTap: onRetry,
+                child: Text(
+                  '$errorMessage ${'orderReport.retry'.tr}',
+                  style: const TextStyle(
+                    color: Colors.orangeAccent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ] else ...[
+              const SizedBox(height: 14),
+              Row(
+                children: items
+                    .map(
+                      (item) => Expanded(
+                        child: _OrderReportMetric(item: item),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SimpleOrderReportItem {
+  const _SimpleOrderReportItem({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final int value;
+  final Color color;
+}
+
+class _OrderReportMetric extends StatelessWidget {
+  const _OrderReportMetric({required this.item});
+
+  final _SimpleOrderReportItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          _FormatUtil.compactNumber(item.value),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: item.color,
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          item.label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Color(0xFF9CA3AF),
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SimpleProductLimitReportCard extends StatelessWidget {
+  const _SimpleProductLimitReportCard({
+    required this.report,
+    required this.isLoading,
+    required this.errorMessage,
+    required this.onTap,
+    required this.onRetry,
+  });
+
+  final ShopProductLimitReport? report;
+  final bool isLoading;
+  final String errorMessage;
+  final VoidCallback onTap;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = [
+      _SimpleOrderReportItem(
+        label: 'productLimitReport.limit'.tr,
+        value: report?.productLimit ?? 0,
+        color: const Color(0xFF60A5FA),
+      ),
+      _SimpleOrderReportItem(
+        label: 'productLimitReport.added'.tr,
+        value: report?.totalProductAdded ?? 0,
+        color: const Color(0xFF34D399),
+      ),
+
+    ];
+    final canAddMore = report?.canAddMoreProduct ?? false;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1B1C1E),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFF2E3033)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.inventory_2_outlined,
+                  color: Color(0xFF60A5FA),
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'productLimitReport.title'.tr,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                if (isLoading)
+                  const SizedBox(
+                    height: 16,
+                    width: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                else
+                  const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: Color(0xFF9CA3AF),
+                    size: 15,
+                  ),
+              ],
+            ),
+            if (errorMessage.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              InkWell(
+                onTap: onRetry,
+                child: Text(
+                  '$errorMessage ${'orderReport.retry'.tr}',
+                  style: const TextStyle(
+                    color: Colors.orangeAccent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ] else ...[
+              const SizedBox(height: 14),
+              Row(
+                children: items
+                    .map(
+                      (item) => Expanded(
+                        child: _OrderReportMetric(item: item),
+                      ),
+                    )
+                    .toList(),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: canAddMore
+                      ? const Color(0xFF064E3B)
+                      : const Color(0xFF4A1D1D),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  canAddMore
+                      ? 'productLimitReport.canAdd'.tr
+                      : 'productLimitReport.limitFull'.tr,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

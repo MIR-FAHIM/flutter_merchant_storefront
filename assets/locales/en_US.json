@@ -84,5 +84,36 @@
     "buy": "Buy",
     "sell": "Sell",
     "buyComingSoon": "Buying tools will be connected here."
+  },
+  "orderReport": {
+    "title": "Order Report",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "lastWeek": "Last Week",
+    "lastMonth": "Last Month",
+    "retry": "Tap to retry."
+  },
+  "productLimitReport": {
+    "title": "Product Limit Report",
+    "limit": "Limit",
+    "added": "Added",
+    "remaining": "Remaining",
+    "canAdd": "You can add more products",
+    "limitFull": "Product limit reached"
+  },
+
+  "sellerCustomers": {
+    "addCustomer": "Add Customer",
+    "description": "Create a new customer or attach an existing customer account to yourself.",
+    "createNewCustomer": "Create New Customer",
+    "name": "Name",
+    "phone": "Phone Number",
+    "email": "Email",
+    "address": "Address",
+    "password": "Password",
+    "saveCustomer": "Save Customer",
+    "attachExistingCustomer": "Attach Existing Customer",
+    "customerUserId": "Customer User ID",
+    "attachCustomer": "Attach Customer"
   }
 }

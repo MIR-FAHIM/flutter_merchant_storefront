@@ -169,3 +169,63 @@ class ShopSummary {
     );
   }
 }
+
+class ShopOrderSimpleReport {
+  const ShopOrderSimpleReport({
+    required this.shopId,
+    required this.todayTotalOrder,
+    required this.yesterdayTotalOrder,
+    required this.lastWeekTotalOrder,
+    required this.lastMonthTotalOrder,
+  });
+
+  final int shopId;
+  final int todayTotalOrder;
+  final int yesterdayTotalOrder;
+  final int lastWeekTotalOrder;
+  final int lastMonthTotalOrder;
+
+  factory ShopOrderSimpleReport.fromJson(Map<String, dynamic> json) {
+    return ShopOrderSimpleReport(
+      shopId: _toInt(json['shop_id']) ?? 0,
+      todayTotalOrder: _toInt(json['today_total_order']) ?? 0,
+      yesterdayTotalOrder: _toInt(json['yesterday_total_order']) ?? 0,
+      lastWeekTotalOrder: _toInt(json['last_week_total_order']) ?? 0,
+      lastMonthTotalOrder: _toInt(json['last_month_total_order']) ?? 0,
+    );
+  }
+}
+
+class ShopProductLimitReport {
+  const ShopProductLimitReport({
+    required this.shopId,
+    required this.productLimit,
+    required this.totalProductAdded,
+    required this.remainingProductLimit,
+    required this.canAddMoreProduct,
+  });
+
+  final int shopId;
+  final int productLimit;
+  final int totalProductAdded;
+  final int remainingProductLimit;
+  final bool canAddMoreProduct;
+
+  factory ShopProductLimitReport.fromJson(Map<String, dynamic> json) {
+    return ShopProductLimitReport(
+      shopId: _toInt(json['shop_id']) ?? 0,
+      productLimit: _toInt(json['product_limit']) ?? 0,
+      totalProductAdded: _toInt(json['total_product_added']) ?? 0,
+      remainingProductLimit: _toInt(json['remaining_product_limit']) ?? 0,
+      canAddMoreProduct: _toBool(json['can_add_more_product']),
+    );
+  }
+}
+
+bool _toBool(dynamic value) {
+  if (value is bool) return value;
+  if (value is num) return value != 0;
+
+  final text = value?.toString().toLowerCase().trim();
+  return text == 'true' || text == '1' || text == 'yes';
+}

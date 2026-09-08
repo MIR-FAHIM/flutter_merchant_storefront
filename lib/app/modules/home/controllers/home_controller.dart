@@ -5,6 +5,7 @@ import 'package:ecom_delivery_flutter/app/models/profile_model.dart';
 import 'package:ecom_delivery_flutter/app/repositories/auth_repositories.dart';
 import 'package:ecom_delivery_flutter/app/repositories/delivery_rep.dart';
 import 'package:ecom_delivery_flutter/app/modules/shop_chat/repositories/shop_chat_repository.dart';
+import 'package:ecom_delivery_flutter/app/repositories/product_rep.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:get/get.dart';
@@ -43,6 +44,15 @@ class HomeController extends GetxController {
   final shopSummary = Rxn<ShopSummary>();
   final isShopSummaryLoading = false.obs;
   final shopSummaryError = ''.obs;
+  final shopOrderReport = Rxn<ShopOrderSimpleReport>();
+  final isShopOrderReportLoading = false.obs;
+  final shopOrderReportError = ''.obs;
+  String get shopOrderReportErrorText => shopOrderReportError.value;
+  final shopProductLimitReport = Rxn<ShopProductLimitReport>();
+  final isShopProductLimitReportLoading = false.obs;
+  final shopProductLimitReportError = ''.obs;
+  String get shopProductLimitReportErrorText =>
+      shopProductLimitReportError.value;
 
   final ShopChatRepository _shopChatRepository = ShopChatRepository();
 
@@ -55,6 +65,8 @@ class HomeController extends GetxController {
     refreshUnreadCount();
     reportDashboardShopController();
     refreshShopSummary();
+    refreshShopOrderReport();
+    refreshShopProductLimitReport();
 
     super.onInit();
     print('HomeController.onInit');
@@ -102,6 +114,60 @@ class HomeController extends GetxController {
       debugPrint('refreshShopSummary error: $error');
     } finally {
       isShopSummaryLoading.value = false;
+    }
+  }
+
+  Future<void> refreshShopOrderReport() async {
+    if (isShopOrderReportLoading.value) return;
+
+    isShopOrderReportLoading.value = true;
+    shopOrderReportError.value = '';
+    try {
+      final response = await DeliveryRepository().reportShopOrders(
+        shopID: shopID.value.toString(),
+      );
+      if (response['status_code'] != 200) {
+        throw Exception('Unable to load order report');
+      }
+
+      final body = response['body'];
+      final data = body is Map ? body['data'] : null;
+      if (data is! Map) throw Exception('Invalid order report response');
+      shopOrderReport.value = ShopOrderSimpleReport.fromJson(
+        Map<String, dynamic>.from(data),
+      );
+    } catch (error) {
+      shopOrderReportError.value = error.toString();
+      debugPrint('refreshShopOrderReport error: $error');
+    } finally {
+      isShopOrderReportLoading.value = false;
+    }
+  }
+
+  Future<void> refreshShopProductLimitReport() async {
+    if (isShopProductLimitReportLoading.value) return;
+
+    isShopProductLimitReportLoading.value = true;
+    shopProductLimitReportError.value = '';
+    try {
+      final response = await ProductRepository().fetchProductLimitReport(
+        shopId: shopID.value.toString(),
+      );
+      if (response['status_code'] != 200) {
+        throw Exception('Unable to load product report');
+      }
+
+      final body = response['body'];
+      final data = body is Map ? body['data'] : null;
+      if (data is! Map) throw Exception('Invalid product report response');
+      shopProductLimitReport.value = ShopProductLimitReport.fromJson(
+        Map<String, dynamic>.from(data),
+      );
+    } catch (error) {
+      shopProductLimitReportError.value = error.toString();
+      debugPrint('refreshShopProductLimitReport error: $error');
+    } finally {
+      isShopProductLimitReportLoading.value = false;
     }
   }
 

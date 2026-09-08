@@ -80,4 +80,14 @@ class DeliveryRepository {
     final response = await APIManager().getWithHeaderStatus(uri.toString(), {});
     return response;
   }
+
+  Future<Map<String, dynamic>> reportShopOrders({
+    required String shopID,
+  }) async {
+    final response = await APIManager().getWithHeaderStatus(
+      '${ApiClient.shopOrderReport}$shopID/report',
+      {},
+    );
+    return response;
+  }
 }

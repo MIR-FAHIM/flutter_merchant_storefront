@@ -29,6 +29,8 @@ abstract class Routes {
   static const SHOP_CHAT_CONVERSATIONS = _Paths.SHOP_CHAT_CONVERSATIONS;
   static const SHOP_CHAT_THREAD = _Paths.SHOP_CHAT_THREAD;
   static const WEBVIEW = _Paths.WEBVIEW;
+  static const SELLER_CUSTOMER_ADD = _Paths.SELLER_CUSTOMER_ADD;
+  static const SELLER_CUSTOMER_LIST_VIEW = _Paths.SELLER_CUSTOMER_LIST_VIEW;
 }
 
 abstract class _Paths {
@@ -57,6 +59,8 @@ abstract class _Paths {
   static const ORDER_DETAIL = '/ORDER_DETAIL';
   static const DELIVERED_ORDER = '/DELIVERED_ORDER';
   static const MY_DELIVERY = '/MY_DELIVERY';
+  static const SELLER_CUSTOMER_ADD = '/SELLER_CUSTOMER_ADD';
+  static const SELLER_CUSTOMER_LIST_VIEW = '/SELLER_CUSTOMER_LIST_VIEW';
 }
 
 

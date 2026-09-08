@@ -84,5 +84,36 @@
     "buy": "কেনা",
     "sell": "বেচা",
     "buyComingSoon": "কেনার টুল এখানে যুক্ত করা হবে।"
+  },
+  "orderReport": {
+    "title": "অর্ডার রিপোর্ট",
+    "today": "আজ",
+    "yesterday": "গতকাল",
+    "lastWeek": "গত সপ্তাহ",
+    "lastMonth": "গত মাস",
+    "retry": "আবার চেষ্টা করতে ট্যাপ করুন।"
+  },
+  "productLimitReport": {
+    "title": "পণ্য লিমিট রিপোর্ট",
+    "limit": "লিমিট",
+    "added": "যোগ হয়েছে",
+    "remaining": "বাকি",
+    "canAdd": "আপনি আরও পণ্য যোগ করতে পারবেন",
+    "limitFull": "পণ্যের লিমিট শেষ"
+  },
+
+  "sellerCustomers": {
+    "addCustomer": "কাস্টমার যোগ করুন",
+    "description": "নতুন কাস্টমার তৈরি করুন অথবা একটি বিদ্যমান কাস্টমার অ্যাকাউন্ট আপনার সাথে সংযুক্ত করুন।",
+    "createNewCustomer": "নতুন কাস্টমার তৈরি করুন",
+    "name": "নাম",
+    "phone": "ফোন নম্বর",
+    "email": "ইমেইল",
+    "address": "ঠিকানা",
+    "password": "পাসওয়ার্ড",
+    "saveCustomer": "কাস্টমার সংরক্ষণ করুন",
+    "attachExistingCustomer": "বিদ্যমান কাস্টমার সংযুক্ত করুন",
+    "customerUserId": "কাস্টমার ইউজার আইডি",
+    "attachCustomer": "কাস্টমার সংযুক্ত করুন"
   }
 }

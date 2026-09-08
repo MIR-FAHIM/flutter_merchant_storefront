@@ -32,6 +32,9 @@ class ApiClient {
   static const String shopDashboard = '$baseUrl/api/reports/shop/';
   static const String shopDashboardSummary = shopDashboard;
   static const String sellerShopList = '$baseUrl/api/shops/list';
+  static const String sellerCustomerPreferences =
+      '$baseUrl/api/customer-preferences-store';
+  static const String shopProductLimitReport = '$baseUrl/api/shops/';
   static const String shopProductList = '$baseUrl/api/shops/products/';
   static const String sellerStoreProductList = '$baseUrl/api/seller/stores/';
   static const String sellerStoreCategories = '$baseUrl/api/seller/stores/';
@@ -46,6 +49,7 @@ class ApiClient {
   static const String publicStoreFeaturedProducts = '$baseUrl/api/products/list/featured';
   static const String publicStoreTodayDealProducts = '$baseUrl/api/products/list/today-deal';
   static const String shopOrderList = '$baseUrl/api/orders/shop/';
+  static const String shopOrderReport = '$baseUrl/api/orders/shop/';
   static const String subscriptionPackages =
       '$baseUrl/api/subscription-packages';
   static const String stores = '$baseUrl/api/stores/';
