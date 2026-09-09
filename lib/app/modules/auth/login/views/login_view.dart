@@ -57,12 +57,12 @@ class LoginView extends GetView<LoginController> {
                                   SizedBox(
                                     height: _size.width * .04,
                                   ),
-                                  const Center(
+                                  Center(
                                     child: Text(
-                                      'Login to ${CompanyData.appname}',
+                                      '${'login.title'.tr} ${CompanyData.appname}',
                                       style: TextStyle(
                                         color: Colors.green,
-                                        fontSize: 30,
+                                        fontSize: 20,
                                       ),
                                     ),
                                   ),
@@ -70,8 +70,8 @@ class LoginView extends GetView<LoginController> {
                                     height: _size.width * .04,
                                   ),
                                   TextFieldWidget(
-                                    labelText: "Email or mobile".tr,
-                                    hintText: "Email/Mobile".tr,
+                                    labelText: "login.emailOrMobile".tr,
+                                    hintText: "login.emailMobileHint".tr,
                                     keyboardType: TextInputType.text,
                                     readOnly: false,
 
@@ -87,8 +87,8 @@ class LoginView extends GetView<LoginController> {
                                     imageData: 'assets/icons/number_pad.png',
                                   ),
                                   TextFieldWidget(
-                                    labelText: "Password:".tr,
-                                    hintText: "***".tr,
+                                    labelText: "login.password".tr,
+                                    hintText: "login.passwordHint".tr,
                                     keyboardType: TextInputType.text,
                                     obscureText: controller.hidePassword.value,
                                     onChanged: (input) {
@@ -100,7 +100,7 @@ class LoginView extends GetView<LoginController> {
                                     
                                     limit: 15,
                                     counterText: "",
-                                    validator: (input) => input!.length < 4 ? "Should be more than 15 characters".tr : null,
+                                    validator: (input) => input!.length < 4 ? "login.passwordValidation".tr : null,
 
                                     // obscureText:
                                     // Get.put(AuthController()).hidePassword.value,
@@ -152,10 +152,24 @@ class LoginView extends GetView<LoginController> {
                                     },
                                     color: Colors.green,
                                     text: Text(
-                                      "Login".tr,
+                                      "login.submit".tr,
                                       style: Get.textTheme.bodyMedium!.merge(const TextStyle(color: Colors.white)),
                                     ),
                                   ).paddingSymmetric(vertical: _size.width * .04, horizontal: 20),
+
+                                  TextButton(
+                                    onPressed: () {
+                                      Get.toNamed(Routes.SELLER_REGISTER);
+                                    },
+                                    child: Text(
+                                      'login.createStore'.tr,
+                                      style: TextStyle(
+                                        color: Colors.green,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ),
 
                                   SizedBox(
                                     height: _size.width * .08,

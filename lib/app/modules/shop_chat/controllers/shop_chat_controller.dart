@@ -22,6 +22,9 @@ class ShopChatController extends GetxController {
 
   final composerController = TextEditingController();
   final messageScrollController = ScrollController();
+  final Set<int> _readMessageIds = <int>{};
+  final Set<int> _readMessageRequests = <int>{};
+  final Set<int> _conversationReadRequests = <int>{};
 
   int _conversationPage = 1;
   int _conversationLastPage = 1;
@@ -142,9 +145,11 @@ class ShopChatController extends GetxController {
       final sorted = result.items..sort(_sortMessagesAscending);
       if (refresh) {
         messages.assignAll(sorted);
+        _seedReadMessageIds(sorted);
         _scrollToBottom();
       } else {
         messages.insertAll(0, sorted);
+        _seedReadMessageIds(sorted);
       }
       _messagePage = result.currentPage + 1;
       _messageLastPage = result.lastPage;
@@ -212,25 +217,48 @@ class ShopChatController extends GetxController {
   }
 
   Future<void> markConversationRead(int conversationId) async {
+    if (_conversationReadRequests.contains(conversationId)) return;
+    _conversationReadRequests.add(conversationId);
+
     try {
       await _repository.markConversationRead(conversationId);
-      final index = conversations.indexWhere((item) => item.id == conversationId);
+      _replaceConversationUnreadCount(conversationId, 0);
+      _markIncomingMessagesReadLocally();
+    } catch (_) {
+    } finally {
+      _conversationReadRequests.remove(conversationId);
+    }
+  }
+
+  Future<void> markMessageReadIfNeeded(ChatMessage message) async {
+    if (message.id <= 0 || isMine(message) || message.isRead || message.isSeen) {
+      return;
+    }
+    if (_readMessageIds.contains(message.id) ||
+        _readMessageRequests.contains(message.id)) {
+      return;
+    }
+
+    _readMessageRequests.add(message.id);
+    try {
+      await _repository.markMessageRead(message.id);
+      _readMessageIds.add(message.id);
+      final index = messages.indexWhere((item) => item.id == message.id);
       if (index >= 0) {
-        final current = conversations[index];
-        conversations[index] = Conversation(
-          id: current.id,
-          shopId: current.shopId,
-          customerId: current.customerId,
-          shop: current.shop,
-          customer: current.customer,
-          lastMessage: current.lastMessage,
-          unreadCount: 0,
-          status: current.status,
-          createdAt: current.createdAt,
-          updatedAt: current.updatedAt,
+        messages[index] = messages[index].copyWith(
+          isRead: true,
+          isSeen: true,
         );
       }
-    } catch (_) {}
+      final conversationId =
+          message.conversationId ?? selectedConversation.value?.id;
+      if (conversationId != null) {
+        _decrementConversationUnreadCount(conversationId);
+      }
+    } catch (_) {
+    } finally {
+      _readMessageRequests.remove(message.id);
+    }
   }
 
   void setReply(ChatMessage message) => replyTo.value = message;
@@ -238,6 +266,66 @@ class ShopChatController extends GetxController {
   void clearReply() => replyTo.value = null;
 
   bool isMine(ChatMessage message) => message.senderType == ChatSenderType.shop;
+
+  String outgoingReadStatus(ChatMessage message) {
+    if (message.isFailed) return 'Failed';
+    if (message.isPending) return 'Sent';
+    if (message.isRead || message.isSeen) return 'Read';
+    if (message.isDelivered) return 'Delivered';
+    return 'Sent';
+  }
+
+  void _seedReadMessageIds(List<ChatMessage> loadedMessages) {
+    for (final message in loadedMessages) {
+      if (message.isRead || message.isSeen) {
+        _readMessageIds.add(message.id);
+      }
+    }
+  }
+
+  void _markIncomingMessagesReadLocally() {
+    final conversationId = selectedConversation.value?.id;
+    for (var index = 0; index < messages.length; index++) {
+      final message = messages[index];
+      if (isMine(message)) continue;
+      if (conversationId != null && message.conversationId != null &&
+          message.conversationId != conversationId) {
+        continue;
+      }
+      if (!message.isRead || !message.isSeen) {
+        messages[index] = message.copyWith(isRead: true, isSeen: true);
+      }
+      _readMessageIds.add(message.id);
+    }
+  }
+
+  void _decrementConversationUnreadCount(int conversationId) {
+    final index = conversations.indexWhere((item) => item.id == conversationId);
+    if (index < 0) return;
+
+    final current = conversations[index];
+    final nextCount = current.unreadCount > 0 ? current.unreadCount - 1 : 0;
+    _replaceConversationUnreadCount(conversationId, nextCount);
+  }
+
+  void _replaceConversationUnreadCount(int conversationId, int unreadCount) {
+    final index = conversations.indexWhere((item) => item.id == conversationId);
+    if (index < 0) return;
+
+    final current = conversations[index];
+    conversations[index] = Conversation(
+      id: current.id,
+      shopId: current.shopId,
+      customerId: current.customerId,
+      shop: current.shop,
+      customer: current.customer,
+      lastMessage: current.lastMessage,
+      unreadCount: unreadCount,
+      status: current.status,
+      createdAt: current.createdAt,
+      updatedAt: current.updatedAt,
+    );
+  }
 
   void _handleMessageScroll() {
     if (!messageScrollController.hasClients) return;

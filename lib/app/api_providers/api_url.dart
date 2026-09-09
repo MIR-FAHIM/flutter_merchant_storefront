@@ -8,6 +8,7 @@ class ApiClient {
 
   static const String login = '$baseUrl/api/auth/login-seller';
   static const String sellerLogin = '$baseUrl/api/auth/login-seller';
+  static const String createSeller = '$baseUrl/api/users/create-seller';
   static const String changeNotificationStatus =
       '$baseUrl/api/appapi/myNotifications/changeStatus';
 
@@ -29,6 +30,7 @@ class ApiClient {
 
   //shop
   static const String shopDashboard = '$baseUrl/api/reports/shop/';
+  static const String shopDashboardSummary = shopDashboard;
   static const String sellerShopList = '$baseUrl/api/shops/list';
   static const String shopProductList = '$baseUrl/api/shops/products/';
   static const String sellerStoreProductList = '$baseUrl/api/seller/stores/';
@@ -51,5 +53,8 @@ class ApiClient {
   static const String orderDetails = '$baseUrl/api/orders/details/';
   static const String chatBase = '$baseUrl/api/chat';
   static const String chatConversations = '$chatBase/conversations';
+    static const String chatUnreadCount = '$chatBase/unread-count';
   static const String chatMessages = '$chatBase/messages/';
+  static const String messageReadBase = '$chatBase/messages/';
+  static const String conversationReadBase = '$chatBase/conversations/';
 }

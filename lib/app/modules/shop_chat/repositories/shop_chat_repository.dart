@@ -7,6 +7,23 @@ import 'package:get/get.dart';
 class ShopChatRepository {
   final APIManager _apiManager = APIManager();
 
+  Future<int> fetchUnreadCount() async {
+    final response = await _apiManager.getWithHeaderStatus(
+      ApiClient.chatUnreadCount,
+      {},
+    );
+    print("dsfsdsd $response");
+    _throwIfNeeded(response);
+
+    final body = response['body'];
+
+    print("erer chat count is ---- is  $body");
+    final data = body is Map ? body['data'] : null;
+    final count = data is Map ? data['total_unread_count'] : null;
+    if (count is num) return count.toInt();
+    return int.tryParse(count?.toString() ?? '') ?? 0;
+  }
+
   Future<PaginatedResponse<Conversation>> fetchConversations({
     int page = 1,
     int perPage = 20,
@@ -113,7 +130,7 @@ class ShopChatRepository {
 
   Future<void> markMessageRead(int messageId) async {
     final response = await _apiManager.postJsonWithHeaderStatus(
-      '${ApiClient.chatMessages}$messageId/read',
+      '${ApiClient.messageReadBase}$messageId/read',
       {},
       {},
     );
@@ -122,7 +139,7 @@ class ShopChatRepository {
 
   Future<void> markConversationRead(int conversationId) async {
     final response = await _apiManager.postJsonWithHeaderStatus(
-      '${ApiClient.chatConversations}/$conversationId/read',
+      '${ApiClient.conversationReadBase}$conversationId/read',
       {},
       {},
     );

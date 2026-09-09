@@ -4,6 +4,7 @@ import 'package:ecom_delivery_flutter/app/models/profile_model.dart';
 
 import 'package:ecom_delivery_flutter/app/repositories/auth_repositories.dart';
 import 'package:ecom_delivery_flutter/app/repositories/delivery_rep.dart';
+import 'package:ecom_delivery_flutter/app/modules/shop_chat/repositories/shop_chat_repository.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:get/get.dart';
@@ -31,22 +32,78 @@ class HomeController extends GetxController {
   final hideChatBox = false.obs;
 
   final userID = 0.obs;
+  final shopID = 0.obs;
   final deliveryReport = DeliveryReportModel().obs;
   final dashboardReport = DashboardModel().obs;
   final box = GetStorage().obs;
   final contactsResult = <Contact>[].obs;
   final profileData = ProfileData().obs;
+  final unreadChatCount = 0.obs;
+  final isUnreadChatCountLoading = false.obs;
+  final shopSummary = Rxn<ShopSummary>();
+  final isShopSummaryLoading = false.obs;
+  final shopSummaryError = ''.obs;
+
+  final ShopChatRepository _shopChatRepository = ShopChatRepository();
 
   @override
   Future<void> onInit() async {
-    userID.value = Get.find<AuthService>().currentUser.value.data!.user!.id!;
+    final currentUser = Get.find<AuthService>().currentUser.value.data!.user!;
+    userID.value = currentUser.id!;
+    shopID.value = currentUser.shop?.id ?? userID.value;
     getProfile();
+    refreshUnreadCount();
     reportDashboardShopController();
+    refreshShopSummary();
+
     super.onInit();
     print('HomeController.onInit');
   }
 
   Future refreshHome() async {}
+
+  Future<void> refreshUnreadCount() async {
+
+
+    if (isUnreadChatCountLoading.value) return;
+
+    isUnreadChatCountLoading.value = true;
+    try {
+
+      unreadChatCount.value = await _shopChatRepository.fetchUnreadCount();
+
+    } catch (error) {
+      debugPrint('refreshUnreadCount error: $error');
+    } finally {
+      isUnreadChatCountLoading.value = false;
+    }
+  }
+
+  Future<void> refreshShopSummary({String period = 'daily'}) async {
+    if (isShopSummaryLoading.value) return;
+
+    isShopSummaryLoading.value = true;
+    shopSummaryError.value = '';
+    try {
+      final response = await DeliveryRepository().reportShopDashboardSummary(
+        shopID: shopID.value.toString(),
+        period: period,
+      );
+      if (response['status_code'] != 200) {
+        throw Exception('Unable to load shop summary');
+      }
+
+      final body = response['body'];
+      final data = body is Map ? body['data'] : null;
+      if (data is! Map) throw Exception('Invalid shop summary response');
+      shopSummary.value = ShopSummary.fromJson(Map<String, dynamic>.from(data));
+    } catch (error) {
+      shopSummaryError.value = error.toString();
+      debugPrint('refreshShopSummary error: $error');
+    } finally {
+      isShopSummaryLoading.value = false;
+    }
+  }
 
   @override
   void onReady() {

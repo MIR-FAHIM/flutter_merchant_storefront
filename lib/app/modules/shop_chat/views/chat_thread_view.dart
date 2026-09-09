@@ -133,9 +133,13 @@ class _ChatThreadViewState extends State<ChatThreadView> {
                   final offset =
                       controller.isOlderMessagesLoading.value ? index - 1 : index;
                   final message = controller.messages[offset];
+                  controller.markMessageReadIfNeeded(message);
                   return MessageBubble(
                     message: message,
                     isMine: controller.isMine(message),
+                    readStatusText: controller.isMine(message)
+                        ? controller.outgoingReadStatus(message)
+                        : null,
                     onReply: () => controller.setReply(message),
                   );
                 },
