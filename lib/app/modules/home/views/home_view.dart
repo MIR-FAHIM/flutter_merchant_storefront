@@ -88,7 +88,7 @@ class HomeView extends GetView<HomeController> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -104,6 +104,22 @@ class HomeView extends GetView<HomeController> {
               ),
             ),
             actions: [
+              InkWell(
+                onTap:(){
+                  Get.toNamed(Routes.SELLER_CUSTOMER_LIST_VIEW);
+                },
+                child: Container(
+                  height: 46,
+                  width: 46,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.supervised_user_circle, color: Colors.green),
+                ),
+              ),
+              SizedBox(width: 10,),
               Obx(
                 () => Padding(
                   padding: const EdgeInsets.only(right: 10),
@@ -165,21 +181,7 @@ class HomeView extends GetView<HomeController> {
                 ),
               ),
 
-              InkWell(
-                onTap:(){
-                  Get.toNamed(Routes.SELLER_CUSTOMER_LIST_VIEW);
-                },
-                child: Container(
-                  height: 46,
-                  width: 46,
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.supervised_user_circle, color: Colors.green),
-                ),
-              ),
+
               Container(
                 margin: const EdgeInsets.only(right: 14),
                 decoration: BoxDecoration(

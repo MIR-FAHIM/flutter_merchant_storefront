@@ -18,6 +18,7 @@ import 'package:ecom_delivery_flutter/app/modules/root/bindings/root_binding.dar
 import 'package:ecom_delivery_flutter/app/modules/root/views/root_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/seller_customers/bindings/seller_customer_binding.dart';
 import 'package:ecom_delivery_flutter/app/modules/seller_customers/views/seller_customer_add_view.dart';
+import 'package:ecom_delivery_flutter/app/modules/seller_customers/views/seller_customer_detail_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/seller_customers/views/seller_customer_list.dart';
 import 'package:ecom_delivery_flutter/app/modules/seller_packages/bindings/seller_packages_binding.dart';
 import 'package:ecom_delivery_flutter/app/modules/seller_packages/views/seller_packages_view.dart';
@@ -83,7 +84,12 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.SELLER_CUSTOMER_LIST_VIEW,
-      page: () => SellerCustomerListItem (),
+      page: () => const SellerCustomerListView(),
+      binding: SellerCustomerBinding(),
+    ),
+    GetPage(
+      name: _Paths.SELLER_CUSTOMER_DETAIL,
+      page: () => const SellerCustomerDetailView(),
       binding: SellerCustomerBinding(),
     ),
     GetPage(

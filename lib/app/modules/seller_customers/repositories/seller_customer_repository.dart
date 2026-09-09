@@ -1,5 +1,6 @@
 import 'package:ecom_delivery_flutter/app/api_providers/api_manager.dart';
 import 'package:ecom_delivery_flutter/app/api_providers/api_url.dart';
+import 'package:ecom_delivery_flutter/app/models/seller_customer_list_model.dart';
 import 'package:ecom_delivery_flutter/app/models/seller_customer_model.dart';
 
 class SellerCustomerRepository {
@@ -70,6 +71,45 @@ class SellerCustomerRepository {
 
     final result = data['data'];
     return result is Map ? Map<String, dynamic>.from(result) : <String, dynamic>{};
+  }
+
+  Future<SellerCustomerOrderPage> getCustomerOrdersByShop({
+    required int shopId,
+    required int userId,
+    int page = 1,
+  }) async {
+    final uri = Uri.parse(ApiClient.shopUserOrders).replace(
+      queryParameters: {
+        'shop_id': shopId.toString(),
+        'user_id': userId.toString(),
+        'page': page.toString(),
+      },
+    );
+    final response = await _manager.getWithHeaderStatus(uri.toString(), {});
+
+    final statusCode =
+        response['status_code'] is int ? response['status_code'] as int : 500;
+    final body = response['body'];
+    final data = body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
+
+    if (statusCode < 200 || statusCode >= 300) {
+      throw SellerCustomerException(
+        _messageFromPayload(data, fallback: 'Unable to fetch customer orders.'),
+        statusCode: statusCode,
+      );
+    }
+
+    if (data['status']?.toString().toLowerCase() == 'error') {
+      throw SellerCustomerException(
+        _messageFromPayload(data, fallback: 'Unable to fetch customer orders.'),
+        statusCode: statusCode,
+      );
+    }
+
+    final result = data['data'];
+    return SellerCustomerOrderPage.fromJson(
+      result is Map ? Map<String, dynamic>.from(result) : <String, dynamic>{},
+    );
   }
 
   String _messageFromPayload(

@@ -26,6 +26,12 @@ class SellerCustomerController extends GetxController {
   final fetchError = ''.obs;
   final preferredCustomers = <SellerPreferredCustomer>[].obs;
   final preferredCustomersPagination = Rxn<SellerPreferredCustomerPagination>();
+  final selectedCustomer = Rxn<SellerPreferredCustomer>();
+  final customerOrders = <SellerCustomerOrder>[].obs;
+  final isLoadingCustomerOrders = false.obs;
+  final customerOrdersError = ''.obs;
+  int _customerOrderPage = 1;
+  int _customerOrderLastPage = 1;
 
   @override
   void onClose() {
@@ -130,12 +136,65 @@ class SellerCustomerController extends GetxController {
     }
   }
 
+  void setSelectedCustomer(SellerPreferredCustomer customer) {
+    selectedCustomer.value = customer;
+    customerOrders.clear();
+    customerOrdersError.value = '';
+    _customerOrderPage = 1;
+    _customerOrderLastPage = 1;
+  }
+
+  Future<void> fetchCustomerOrders({
+    required int shopId,
+    required int userId,
+    bool refresh = false,
+  }) async {
+    if (isLoadingCustomerOrders.value) return;
+    if (shopId <= 0 || userId <= 0) {
+      customerOrders.clear();
+      customerOrdersError.value = 'Shop or customer information is missing.';
+      return;
+    }
+    if (refresh) {
+      _customerOrderPage = 1;
+      _customerOrderLastPage = 1;
+    } else if (_customerOrderPage > _customerOrderLastPage) {
+      return;
+    }
+
+    try {
+      isLoadingCustomerOrders.value = true;
+      customerOrdersError.value = '';
+
+      final page = await _repository.getCustomerOrdersByShop(
+        shopId: shopId,
+        userId: userId,
+        page: _customerOrderPage,
+      );
+
+      if (refresh) customerOrders.clear();
+      customerOrders.addAll(page.orders);
+      _customerOrderPage = page.currentPage + 1;
+      _customerOrderLastPage = page.lastPage;
+    } on SellerCustomerException catch (error) {
+      if (error.statusCode == 401) {
+        Get.offAllNamed(Routes.LOGIN);
+        return;
+      }
+      customerOrdersError.value = _friendlyError(error.statusCode, error.message);
+    } catch (_) {
+      customerOrdersError.value = 'Unable to load customer orders.';
+    } finally {
+      isLoadingCustomerOrders.value = false;
+    }
+  }
+
   String _friendlyError(int statusCode, String message) {
     switch (statusCode) {
       case 403:
-        return 'You cannot add customer for another seller.';
+        return 'You do not have permission.';
       case 404:
-        return 'Seller or customer not found.';
+        return 'Seller, customer, or order not found.';
       case 422:
         return message;
       default:

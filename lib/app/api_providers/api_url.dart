@@ -49,6 +49,7 @@ class ApiClient {
   static const String publicStoreFeaturedProducts = '$baseUrl/api/products/list/featured';
   static const String publicStoreTodayDealProducts = '$baseUrl/api/products/list/today-deal';
   static const String shopOrderList = '$baseUrl/api/orders/shop/';
+  static const String shopUserOrders = '$baseUrl/api/orders/user-orders-by-shop';
   static const String shopOrderReport = '$baseUrl/api/orders/shop/';
   static const String subscriptionPackages =
       '$baseUrl/api/subscription-packages';

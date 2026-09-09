@@ -31,6 +31,7 @@ abstract class Routes {
   static const WEBVIEW = _Paths.WEBVIEW;
   static const SELLER_CUSTOMER_ADD = _Paths.SELLER_CUSTOMER_ADD;
   static const SELLER_CUSTOMER_LIST_VIEW = _Paths.SELLER_CUSTOMER_LIST_VIEW;
+  static const SELLER_CUSTOMER_DETAIL = _Paths.SELLER_CUSTOMER_DETAIL;
 }
 
 abstract class _Paths {
@@ -61,6 +62,7 @@ abstract class _Paths {
   static const MY_DELIVERY = '/MY_DELIVERY';
   static const SELLER_CUSTOMER_ADD = '/SELLER_CUSTOMER_ADD';
   static const SELLER_CUSTOMER_LIST_VIEW = '/SELLER_CUSTOMER_LIST_VIEW';
+  static const SELLER_CUSTOMER_DETAIL = '/SELLER_CUSTOMER_DETAIL';
 }
 
 

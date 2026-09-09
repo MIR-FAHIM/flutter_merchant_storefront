@@ -211,6 +211,7 @@ class Customer {
   final String? referralCode;
   final int? customerPackageId;
   final int remainingUploads;
+  final int ordersCount;
   final String? createdAt;
   final String? updatedAt;
 
@@ -237,6 +238,7 @@ class Customer {
     this.referralCode,
     this.customerPackageId,
     required this.remainingUploads,
+    required this.ordersCount,
     this.createdAt,
     this.updatedAt,
   });
@@ -265,6 +267,7 @@ class Customer {
       referralCode: json['referral_code'],
       customerPackageId: json['customer_package_id'],
       remainingUploads: json['remaining_uploads'] ?? 0,
+      ordersCount: _toInt(json['orders_count'] ?? json['order_count']),
       createdAt: json['created_at'],
       updatedAt: json['updated_at'],
     );
@@ -294,8 +297,79 @@ class Customer {
       'referral_code': referralCode,
       'customer_package_id': customerPackageId,
       'remaining_uploads': remainingUploads,
+      'orders_count': ordersCount,
+      'order_count': ordersCount,
       'created_at': createdAt,
       'updated_at': updatedAt,
     };
+  }
+}
+
+int _toInt(dynamic value) {
+  if (value == null) return 0;
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse(value.toString()) ?? 0;
+}
+
+class SellerCustomerOrderPage {
+  const SellerCustomerOrderPage({
+    required this.orders,
+    required this.currentPage,
+    required this.lastPage,
+    required this.total,
+  });
+
+  final List<SellerCustomerOrder> orders;
+  final int currentPage;
+  final int lastPage;
+  final int total;
+
+  bool get hasMore => currentPage < lastPage;
+
+  factory SellerCustomerOrderPage.fromJson(Map<String, dynamic> json) {
+    final items = json['data'] is List ? json['data'] as List : <dynamic>[];
+    return SellerCustomerOrderPage(
+      orders: items
+          .whereType<Map>()
+          .map((item) => SellerCustomerOrder.fromJson(
+                Map<String, dynamic>.from(item),
+              ))
+          .toList(),
+      currentPage: _toInt(json['current_page']),
+      lastPage: _toInt(json['last_page']),
+      total: _toInt(json['total']),
+    );
+  }
+}
+
+class SellerCustomerOrder {
+  const SellerCustomerOrder({
+    required this.id,
+    this.orderNumber,
+    this.status,
+    this.paymentStatus,
+    this.total,
+    this.createdAt,
+  });
+
+  final int id;
+  final String? orderNumber;
+  final String? status;
+  final String? paymentStatus;
+  final num? total;
+  final String? createdAt;
+
+  factory SellerCustomerOrder.fromJson(Map<String, dynamic> json) {
+    return SellerCustomerOrder(
+      id: _toInt(json['id']),
+      orderNumber: json['order_number']?.toString(),
+      status: json['status']?.toString(),
+      paymentStatus: json['payment_status']?.toString(),
+      total: json['total'] is num
+          ? json['total'] as num
+          : num.tryParse(json['total']?.toString() ?? ''),
+      createdAt: json['created_at']?.toString(),
+    );
   }
 }

@@ -23,6 +23,7 @@ class ProductController extends GetxController {
   final ProductRepository _productRepository = ProductRepository();
 
   final ScrollController scrollController = ScrollController();
+  final TextEditingController productSearchController = TextEditingController();
 
   final RxList<ProductData> products = <ProductData>[].obs;
   final Rx<ProductData?> selectedProduct = Rx<ProductData?>(null);
@@ -45,6 +46,9 @@ class ProductController extends GetxController {
   final RxString selectedStoreId = ''.obs;
   final RxString selectedCategoryId = ''.obs;
   final RxString selectedBrandId = ''.obs;
+  final RxString productSearchQuery = ''.obs;
+  final RxString productFilterCategoryId = ''.obs;
+  final Rxn<bool> productFilterIsActive = Rxn<bool>();
   final RxString categoryError = ''.obs;
   final RxString addProductError = ''.obs;
   final RxBool isStoresLoading = false.obs;
@@ -66,9 +70,11 @@ class ProductController extends GetxController {
     super.onInit();
 
     shopId = _resolveShopId();
+    selectedStoreId.value = shopId;
 
     scrollController.addListener(_onScroll);
 
+    loadActiveCategories();
     getStoreProductList(isRefresh: true);
   }
 
@@ -76,6 +82,7 @@ class ProductController extends GetxController {
   void onClose() {
     scrollController.removeListener(_onScroll);
     scrollController.dispose();
+    productSearchController.dispose();
     super.onClose();
   }
 
@@ -98,6 +105,27 @@ class ProductController extends GetxController {
 
   Future<void> refreshProducts() async {
     await getStoreProductList(isRefresh: true);
+  }
+
+  Future<void> applyProductFilters() async {
+    productSearchQuery.value = productSearchController.text.trim();
+    await getStoreProductList(isRefresh: true);
+  }
+
+  Future<void> clearProductFilters() async {
+    productSearchController.clear();
+    productSearchQuery.value = '';
+    productFilterCategoryId.value = '';
+    productFilterIsActive.value = null;
+    await getStoreProductList(isRefresh: true);
+  }
+
+  void setProductFilterCategory(String value) {
+    productFilterCategoryId.value = value;
+  }
+
+  void setProductFilterStatus(bool? value) {
+    productFilterIsActive.value = value;
   }
 
   Future<void> getProductDetails({required int productId}) async {
@@ -231,6 +259,9 @@ class ProductController extends GetxController {
         storeId: shopId,
         page: currentPage.value,
         perPage: perPage,
+        search: productSearchQuery.value,
+        categoryId: int.tryParse(productFilterCategoryId.value),
+        isActive: productFilterIsActive.value,
       );
 
       final ProductResponseModel model = ProductResponseModel.fromJson(
@@ -278,6 +309,9 @@ class ProductController extends GetxController {
         storeId: shopId,
         page: nextPage,
         perPage: perPage,
+        search: productSearchQuery.value,
+        categoryId: int.tryParse(productFilterCategoryId.value),
+        isActive: productFilterIsActive.value,
       );
 
       final ProductResponseModel model = ProductResponseModel.fromJson(

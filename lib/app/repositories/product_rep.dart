@@ -30,13 +30,25 @@ class ProductRepository {
     required String storeId,
     required int page,
     int perPage = 12,
+    String? search,
+    int? categoryId,
+    bool? isActive,
   }) async {
     final APIManager manager = APIManager();
 
-    final String url =
-        '${ApiClient.sellerStoreProductList}$storeId/products?page=$page&per_page=$perPage';
+    final uri = Uri.parse('${ApiClient.sellerStoreProductList}$storeId/products')
+        .replace(
+      queryParameters: {
+        'page': page.toString(),
+        'per_page': perPage.toString(),
+        if (search != null && search.trim().isNotEmpty)
+          'search': search.trim(),
+        if (categoryId != null) 'category_id': categoryId.toString(),
+        if (isActive != null) 'is_active': isActive.toString(),
+      },
+    );
 
-    final response = await manager.getWithHeader(url, {});
+    final response = await manager.getWithHeader(uri.toString(), {});
 
     return response;
   }
