@@ -3,6 +3,9 @@ import 'package:ecom_delivery_flutter/app/modules/auth/login/views/login_view.da
 import 'package:ecom_delivery_flutter/app/modules/auth/seller_register/bindings/seller_register_binding.dart';
 import 'package:ecom_delivery_flutter/app/modules/auth/seller_register/views/seller_register_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/auth/seller_register/views/seller_registration_success_view.dart';
+import 'package:ecom_delivery_flutter/app/modules/delivery_man/bindings/delivery_man_binding.dart';
+import 'package:ecom_delivery_flutter/app/modules/delivery_man/views/delivery_man_add_view.dart';
+import 'package:ecom_delivery_flutter/app/modules/delivery_man/views/delivery_man_list_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/home/bindings/home_binding.dart';
 import 'package:ecom_delivery_flutter/app/modules/home/views/home_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/order/binding/order_binding.dart';
@@ -146,6 +149,16 @@ class AppPages {
       name: _Paths.WEBVIEW,
       page: () => WebviewView(),
       binding: WebviewBinding(),
+    ),
+    GetPage(
+      name: _Paths.DELIVERY_MAN_ADD,
+      page: () => const DeliveryManAddView(),
+      binding: DeliveryManBinding(),
+    ),
+    GetPage(
+      name: _Paths.DELIVERY_MAN_LIST,
+      page: () => const DeliveryManListView(),
+      binding: DeliveryManBinding(),
     ),
   ];
 }

@@ -1698,6 +1698,18 @@ class _ShopDashboardDrawer extends StatelessWidget {
                 Get.toNamed(Routes.SELLER_PACKAGES);
               },
             ),
+
+
+
+            _DrawerItem(
+              icon: Icons.workspace_premium_outlined,
+              title: "shopDashboardDrawer.deliveryMan".tr,
+              color: const Color(0xFFFBBF24),
+              onTap: () {
+                Navigator.pop(context);
+                Get.toNamed(Routes.DELIVERY_MAN_LIST);
+              },
+            ),
             const Spacer(),
             _DrawerItem(
               icon: Icons.logout_rounded,

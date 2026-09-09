@@ -32,6 +32,8 @@ abstract class Routes {
   static const SELLER_CUSTOMER_ADD = _Paths.SELLER_CUSTOMER_ADD;
   static const SELLER_CUSTOMER_LIST_VIEW = _Paths.SELLER_CUSTOMER_LIST_VIEW;
   static const SELLER_CUSTOMER_DETAIL = _Paths.SELLER_CUSTOMER_DETAIL;
+  static const DELIVERY_MAN_ADD = _Paths.DELIVERY_MAN_ADD;
+  static const DELIVERY_MAN_LIST = _Paths.DELIVERY_MAN_LIST;
 }
 
 abstract class _Paths {
@@ -63,7 +65,6 @@ abstract class _Paths {
   static const SELLER_CUSTOMER_ADD = '/SELLER_CUSTOMER_ADD';
   static const SELLER_CUSTOMER_LIST_VIEW = '/SELLER_CUSTOMER_LIST_VIEW';
   static const SELLER_CUSTOMER_DETAIL = '/SELLER_CUSTOMER_DETAIL';
+  static const DELIVERY_MAN_ADD = '/delivery-man/add';
+  static const DELIVERY_MAN_LIST = '/delivery-man/list';
 }
-
-
-
