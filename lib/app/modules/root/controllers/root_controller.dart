@@ -41,8 +41,6 @@ class RootController extends GetxController {
     HomeView(),
     OrderListView(),
     ProductListView(),
-    //MyAttendanceReportPage(),
-
     ProfileView(),
 
   ];

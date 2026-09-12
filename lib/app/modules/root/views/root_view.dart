@@ -14,6 +14,11 @@ class RootView extends GetView<RootController> {
     return Obx(() {
       return WillPopScope(
         onWillPop: () async {
+          if (controller.currentIndex.value != 0) {
+            controller.currentIndex.value = 0;
+            return false;
+          }
+
           final value = await showDialog(
             context: context,
             builder: (context) {

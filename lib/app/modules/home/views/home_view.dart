@@ -79,20 +79,112 @@ class HomeView extends GetView<HomeController> {
             elevation: 0,
             backgroundColor: const Color(0xFF111213),
             iconTheme: const IconThemeData(color: Colors.white),
-            title: const Text(
-              "Shop Dashboard",
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-                fontSize: 20,
+            title: ElevatedButton(
+              onPressed: () {
+              Get.toNamed(Routes.SELLER_CUSTOMER_ADD);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 0,
+              ),
+              child: const Text(
+                'কাস্টমার যুক্ত করুন',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 12,
+                  color: Colors.black
+                ),
               ),
             ),
             actions: [
+              InkWell(
+                onTap:(){
+                  Get.toNamed(Routes.SELLER_CUSTOMER_LIST_VIEW);
+                },
+                child: Container(
+                  height: 46,
+                  width: 46,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.supervised_user_circle, color: Colors.green),
+                ),
+              ),
+              SizedBox(width: 10,),
+              Obx(
+                () => Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: InkWell(
+                    onTap: () async {
+                      await controller.refreshUnreadCount();
+                      Get.toNamed(Routes.SHOP_CHAT_CONVERSATIONS);
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+
+
+                        Container(
+                          height: 46,
+                          width: 46,
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.chat, color: Colors.green),
+                        ),
+                        if (controller.unreadChatCount.value > 0)
+                          Positioned(
+                            top: -8,
+                            right: -8,
+                            child: Container(
+                              constraints: const BoxConstraints(minWidth: 20),
+                              height: 20,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 5),
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: Colors.redAccent,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Text(
+                                controller.unreadChatCount.value > 99
+                                    ? '99+'
+                                    : controller.unreadChatCount.value
+                                        .toString(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+
               Container(
                 margin: const EdgeInsets.only(right: 14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1F2022),
-                  borderRadius: BorderRadius.circular(14),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: const Color(0xFF2F3033),
                   ),
@@ -103,7 +195,7 @@ class HomeView extends GetView<HomeController> {
                   },
                   icon: Icon(
                     Icons.notifications_none_rounded,
-                    color: AppColors.primaryColor,
+                    color: Colors.green,
                   ),
                 ),
               ),
@@ -112,236 +204,242 @@ class HomeView extends GetView<HomeController> {
           body: dashboard == null
               ? const _DashboardLoading()
               : RefreshIndicator(
-            onRefresh: () async {
-              await controller.refreshUnreadCount();
-              await controller.reportDashboardShopController();
-
-            },
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(
-                parent: BouncingScrollPhysics(),
-              ),
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Obx(
-
-                     () {
-                      return _DashboardHeroCard(
-                        unreadChatCount: controller.unreadChatCount.value,
-                        summary: controller.shopSummary.value,
-                        isSummaryLoading: controller.isShopSummaryLoading.value,
-                        onPeriodChanged: controller.refreshShopSummary,
-                        onChatTap: () async {
-                          await controller.refreshUnreadCount();
-                          Get.toNamed(Routes.SHOP_CHAT_CONVERSATIONS);
-                        },
-                      );
-                    }
-                  ),
-
-                  const SizedBox(height: 18),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _MetricCard(
-                          title: "Orders",
-                          value: _FormatUtil.compactNumber(
-                            dashboard.ordersCount ?? 0,
-                          ),
-                          subtitle: "Total received orders",
-                          icon: Icons.shopping_bag_outlined,
-                          iconColor: const Color(0xFF34D399),
-                          backgroundColor: const Color(0xFF064E3B),
-                          onTap: () {
-                            Get.toNamed(Routes.MY_DELIVERY);
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _MetricCard(
-                          title: "Products",
-                          value: _FormatUtil.compactNumber(
-                            dashboard.productsCount ?? 0,
-                          ),
-                          subtitle: "Listed products",
-                          icon: Icons.inventory_2_outlined,
-                          iconColor: const Color(0xFF60A5FA),
-                          backgroundColor: const Color(0xFF1E3A5F),
-                          onTap: () {
-                            Get.toNamed(Routes.PRODUCT_LIST);
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _MetricCard(
-                          title: "Shops",
-                          value: _FormatUtil.compactNumber(
-                            dashboard.shopsCount ?? 0,
-                          ),
-                          subtitle: "Active shop profile",
-                          icon: Icons.storefront_outlined,
-                          iconColor: const Color(0xFFA78BFA),
-                          backgroundColor: const Color(0xFF312E81),
-                          onTap: () {
-                            Get.snackbar(
-                              "Shop",
-                              "Connect shop profile route here",
-                              snackPosition: SnackPosition.BOTTOM,
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _MetricCard(
-                          title: "Order Amount",
-                          value: _FormatUtil.moneyShort(
-                            dashboard.ordersAmount ?? 0,
-                          ),
-                          subtitle: "Total order value",
-                          icon: Icons.payments_outlined,
-                          iconColor: const Color(0xFFFBBF24),
-                          backgroundColor: const Color(0xFF4A3413),
-                          onTap: () {},
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 22),
-
-                  const _SectionTitle(
-                    title: "Order Period Summary",
-                    subtitle: "Orders grouped by business period",
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  _OrderPeriodCard(
-                    today: dashboard.ordersByPeriod?.today ??
-                        dashboard.todayTotalOrders ??
-                        0,
-                    lastWeek: dashboard.ordersByPeriod?.lastWeek ??
-                        dashboard.lastWeekTotalOrders ??
-                        0,
-                    lastMonth: dashboard.ordersByPeriod?.lastMonth ??
-                        dashboard.lastMonthTotalOrders ??
-                        0,
-                    year: dashboard.ordersByPeriod?.year ??
-                        dashboard.yearTotalOrders ??
-                        0,
-                  ),
-
-                  const SizedBox(height: 22),
-
-                  const _SectionTitle(
-                    title: "Quick Actions",
-                    subtitle: "Manage shop activity faster",
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  GridView.count(
-                    crossAxisCount: 3,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
-                    childAspectRatio: 1.05,
-                    children: [
-                      _QuickActionCard(
-                        title: "Orders",
-                        icon: Icons.receipt_long_outlined,
-                        color: const Color(0xFF34D399),
-                        onTap: () {
-                          Get.toNamed(Routes.MY_DELIVERY);
-                        },
-                      ),
-                      _QuickActionCard(
-                        title: "Products",
-                        icon: Icons.add_box_outlined,
-                        color: const Color(0xFF60A5FA),
-                        onTap: () {
-                          Get.toNamed(Routes.PRODUCT_LIST);
-                        },
-                      ),
-                      _QuickActionCard(
-                        title: "Categories",
-                        icon: Icons.category_outlined,
-                        color: const Color(0xFF8B5CF6),
-                        onTap: () {
-                          Get.toNamed(Routes.MARKETPLACE_CATEGORIES);
-                        },
-                      ),
-                      _QuickActionCard(
-                        title: "Chat",
-                        icon: Icons.forum_outlined,
-                        color: const Color(0xFF2DD4BF),
-                        onTap: () {
-                          Get.toNamed(Routes.SHOP_CHAT_CONVERSATIONS);
-                        },
-                      ),
-                      _QuickActionCard(
-                        title: "Earnings",
-                        icon: Icons.account_balance_wallet_outlined,
-                        color: const Color(0xFFFBBF24),
-                        onTap: () {
-                          Get.snackbar(
-                            "Earnings",
-                            "Connect earning page route here",
-                            snackPosition: SnackPosition.BOTTOM,
+                  onRefresh: () async {
+                    await controller.refreshUnreadCount();
+                    await controller.reportDashboardShopController();
+                    await controller.refreshShopOrderReport();
+                    await controller.refreshShopProductLimitReport();
+                  },
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: BouncingScrollPhysics(),
+                    ),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Obx(() {
+                          return _DashboardHeroCard(
+                            summary: controller.shopSummary.value,
+                            isSummaryLoading:
+                                controller.isShopSummaryLoading.value,
+                            onPeriodChanged: controller.refreshShopSummary,
                           );
-                        },
-                      ),
-                      _QuickActionCard(
-                        title: "Packages",
-                        icon: Icons.workspace_premium_outlined,
-                        color: const Color(0xFFFBBF24),
-                        onTap: () {
-                          Get.toNamed(Routes.SELLER_PACKAGES);
-                        },
-                      ),
-                      _QuickActionCard(
-                        title: "Store QR",
-                        icon: Icons.qr_code_2_rounded,
-                        color: const Color(0xFF2DD4BF),
-                        onTap: () {
-                          Get.toNamed(Routes.SELLER_STORE_QR);
-                        },
-                      ),
-                    ],
+                        }),
+                        const SizedBox(height: 18),
+                        // Container(
+                        //   padding: const EdgeInsets.all(14),
+                        //   decoration: BoxDecoration(
+                        //     color: Colors.white,
+                        //     borderRadius: BorderRadius.circular(22),
+                        //     border: Border.all(
+                        //       color: const Color(0xFFE0E0E0),
+                        //       width: 1.5,
+                        //     ),
+                        //   ),
+                        //   child: Row(
+                        //     children: [
+                        //       Expanded(
+                        //         child: _DashboardModeCard(
+                        //           title: 'dashboardActions.buy'.tr,
+                        //           imagePath: 'assets/images/shopping-cart.png',
+                        //           onTap: () {
+                        //             Get.snackbar(
+                        //               'dashboardActions.buy'.tr,
+                        //               'dashboardActions.buyComingSoon'.tr,
+                        //               snackPosition: SnackPosition.BOTTOM,
+                        //             );
+                        //           },
+                        //         ),
+                        //       ),
+                        //       const SizedBox(width: 14),
+                        //       Expanded(
+                        //         child: _DashboardModeCard(
+                        //           title: 'dashboardActions.sell'.tr,
+                        //           imagePath: 'assets/icons/shopping-bag.png',
+                        //           onTap: () {
+                        //             Get.toNamed(Routes.PRODUCT_ADD);
+                        //           },
+                        //         ),
+                        //       ),
+                        //     ],
+                        //   ),
+                        // ),
+                        const SizedBox(height: 18),
+                        Obx(
+                          () => _SimpleOrderReportCard(
+                            report: controller.shopOrderReport.value,
+                            isLoading:
+                                controller.isShopOrderReportLoading.value,
+                            errorMessage: controller.shopOrderReportErrorText,
+                            onTap: () => Get.toNamed(Routes.ORDER_SHOP_LIST),
+                            onRetry: controller.refreshShopOrderReport,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        Obx(
+                          () => _SimpleProductLimitReportCard(
+                            report: controller.shopProductLimitReport.value,
+                            isLoading: controller
+                                .isShopProductLimitReportLoading.value,
+                            errorMessage:
+                                controller.shopProductLimitReportErrorText,
+                            onTap: () => Get.toNamed(Routes.PRODUCT_LIST),
+                            onRetry: controller.refreshShopProductLimitReport,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+
+
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _MetricCard(
+                                title: "Shops",
+                                value: _FormatUtil.compactNumber(
+                                  dashboard.shopsCount ?? 0,
+                                ),
+                                subtitle: "Active shop profile",
+                                icon: Icons.storefront_outlined,
+                                iconColor: const Color(0xFFA78BFA),
+                                backgroundColor: const Color(0xFF312E81),
+                                onTap: () {
+                                  Get.snackbar(
+                                    "Shop",
+                                    "Connect shop profile route here",
+                                    snackPosition: SnackPosition.BOTTOM,
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _MetricCard(
+                                title: "Order Amount",
+                                value: _FormatUtil.moneyShort(
+                                  dashboard.ordersAmount ?? 0,
+                                ),
+                                subtitle: "Total order value",
+                                icon: Icons.payments_outlined,
+                                iconColor: const Color(0xFFFBBF24),
+                                backgroundColor: const Color(0xFF4A3413),
+                                onTap: () {},
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 22),
+                        const _SectionTitle(
+                          title: "Order Period Summary",
+                          subtitle: "Orders grouped by business period",
+                        ),
+                        const SizedBox(height: 12),
+                        _OrderPeriodCard(
+                          today: dashboard.ordersByPeriod?.today ??
+                              dashboard.todayTotalOrders ??
+                              0,
+                          lastWeek: dashboard.ordersByPeriod?.lastWeek ??
+                              dashboard.lastWeekTotalOrders ??
+                              0,
+                          lastMonth: dashboard.ordersByPeriod?.lastMonth ??
+                              dashboard.lastMonthTotalOrders ??
+                              0,
+                          year: dashboard.ordersByPeriod?.year ??
+                              dashboard.yearTotalOrders ??
+                              0,
+                        ),
+                        const SizedBox(height: 22),
+                        const _SectionTitle(
+                          title: "Quick Actions",
+                          subtitle: "Manage shop activity faster",
+                        ),
+                        const SizedBox(height: 12),
+                        GridView.count(
+                          crossAxisCount: 3,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          mainAxisSpacing: 10,
+                          crossAxisSpacing: 10,
+                          childAspectRatio: 1.05,
+                          children: [
+                            _QuickActionCard(
+                              title: "Orders",
+                              icon: Icons.receipt_long_outlined,
+                              color: const Color(0xFF34D399),
+                              onTap: () {
+                                Get.toNamed(Routes.MY_DELIVERY);
+                              },
+                            ),
+                            _QuickActionCard(
+                              title: "Products",
+                              icon: Icons.add_box_outlined,
+                              color: const Color(0xFF60A5FA),
+                              onTap: () {
+                                Get.toNamed(Routes.PRODUCT_LIST);
+                              },
+                            ),
+                            _QuickActionCard(
+                              title: "Categories",
+                              icon: Icons.category_outlined,
+                              color: const Color(0xFF8B5CF6),
+                              onTap: () {
+                                Get.toNamed(Routes.MARKETPLACE_CATEGORIES);
+                              },
+                            ),
+                            _QuickActionCard(
+                              title: "Chat",
+                              icon: Icons.forum_outlined,
+                              color: const Color(0xFF2DD4BF),
+                              onTap: () {
+                                Get.toNamed(Routes.SHOP_CHAT_CONVERSATIONS);
+                              },
+                            ),
+                            _QuickActionCard(
+                              title: "Earnings",
+                              icon: Icons.account_balance_wallet_outlined,
+                              color: const Color(0xFFFBBF24),
+                              onTap: () {
+                                Get.snackbar(
+                                  "Earnings",
+                                  "Connect earning page route here",
+                                  snackPosition: SnackPosition.BOTTOM,
+                                );
+                              },
+                            ),
+                            _QuickActionCard(
+                              title: "Packages",
+                              icon: Icons.workspace_premium_outlined,
+                              color: const Color(0xFFFBBF24),
+                              onTap: () {
+                                Get.toNamed(Routes.SELLER_PACKAGES);
+                              },
+                            ),
+                            _QuickActionCard(
+                              title: "Store QR",
+                              icon: Icons.qr_code_2_rounded,
+                              color: const Color(0xFF2DD4BF),
+                              onTap: () {
+                                Get.toNamed(Routes.SELLER_STORE_QR);
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 22),
+                        const _SectionTitle(
+                          title: "Business Snapshot",
+                          subtitle: "Current shop performance at a glance",
+                        ),
+                        const SizedBox(height: 12),
+                        _BusinessSnapshotCard(
+                          shopsCount: dashboard.shopsCount ?? 0,
+                          productsCount: dashboard.productsCount ?? 0,
+                          ordersCount: dashboard.ordersCount ?? 0,
+                          ordersAmount: dashboard.ordersAmount ?? 0,
+                        ),
+                      ],
+                    ),
                   ),
-
-                  const SizedBox(height: 22),
-
-                  const _SectionTitle(
-                    title: "Business Snapshot",
-                    subtitle: "Current shop performance at a glance",
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  _BusinessSnapshotCard(
-                    shopsCount: dashboard.shopsCount ?? 0,
-                    productsCount: dashboard.productsCount ?? 0,
-                    ordersCount: dashboard.ordersCount ?? 0,
-                    ordersAmount: dashboard.ordersAmount ?? 0,
-                  ),
-                ],
-              ),
-            ),
-          ),
+                ),
         );
       }),
     );
@@ -350,15 +448,11 @@ class HomeView extends GetView<HomeController> {
 
 class _DashboardHeroCard extends StatefulWidget {
   const _DashboardHeroCard({
-    required this.unreadChatCount,
-    required this.onChatTap,
     required this.summary,
     required this.isSummaryLoading,
     required this.onPeriodChanged,
   });
 
-  final int unreadChatCount;
-  final Future<void> Function() onChatTap;
   final ShopSummary? summary;
   final bool isSummaryLoading;
   final Future<void> Function({String period}) onPeriodChanged;
@@ -386,9 +480,8 @@ class _DashboardHeroCardState extends State<_DashboardHeroCard> {
             due: 3250,
           );
     final selectedPeriod = _showMonthly ? 'monthly' : 'daily';
-    final apiMetrics = widget.summary?.period == selectedPeriod
-      ? widget.summary
-      : null;
+    final apiMetrics =
+        widget.summary?.period == selectedPeriod ? widget.summary : null;
     final metrics = apiMetrics == null
         ? demoMetrics
         : _DemoPeriodMetrics(
@@ -425,58 +518,47 @@ class _DashboardHeroCardState extends State<_DashboardHeroCard> {
           Row(
             children: [
               Expanded(
-                child: Text(
-                  "dashboardHero.welcome".tr,
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "dashboardHero.storeQrTitle".tr,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      "dashboardHero.storeQrSubtitle".tr,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              const SizedBox(width: 12),
               InkWell(
-                onTap: widget.onChatTap,
-                borderRadius: BorderRadius.circular(16),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      height: 46,
-                      width: 46,
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Icon(Icons.chat, color: Colors.green),
-                    ),
-                    if (widget.unreadChatCount > 0)
-                      Positioned(
-                        top: -8,
-                        right: -8,
-                        child: Container(
-                          constraints: const BoxConstraints(minWidth: 20),
-                          height: 20,
-                          padding: const EdgeInsets.symmetric(horizontal: 5),
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: Colors.redAccent,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.white, width: 2),
-                          ),
-                          child: Text(
-                            widget.unreadChatCount > 99
-                                ? '99+'
-                                : widget.unreadChatCount.toString(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
+                onTap: () => Get.toNamed(Routes.SELLER_STORE_QR),
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  height: 48,
+                  width: 48,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    Icons.qr_code_2_rounded,
+                    color: AppColors.primaryColor,
+                    size: 28,
+                  ),
                 ),
               ),
             ],
@@ -495,8 +577,8 @@ class _DashboardHeroCardState extends State<_DashboardHeroCard> {
             widget.isSummaryLoading
                 ? 'Loading report...'
                 : _showMonthly
-              ? "dashboardHero.monthlySummary".tr
-              : "dashboardHero.dailySummary".tr,
+                    ? "dashboardHero.monthlySummary".tr
+                    : "dashboardHero.dailySummary".tr,
             style: const TextStyle(
               color: Colors.white70,
               fontSize: 12.5,
@@ -547,30 +629,30 @@ class _DashboardHeroCardState extends State<_DashboardHeroCard> {
                   mainAxisSpacing: 10,
                   childAspectRatio: 1.65,
                   children: [
-                _HeroMetricTile(
-                  title: 'dashboardHero.totalSales'.tr,
-                  value: _FormatUtil.moneyShort(metrics.sales),
-                  icon: Icons.trending_up_rounded,
-                  color: const Color(0xFFBBF7D0),
-                ),
-                _HeroMetricTile(
-                  title: 'dashboardHero.orderCount'.tr,
-                  value: _FormatUtil.compactNumber(metrics.orders),
-                  icon: Icons.receipt_long_outlined,
-                  color: const Color(0xFFBFDBFE),
-                ),
-                _HeroMetricTile(
-                  title: 'dashboardHero.paidAmount'.tr,
-                  value: _FormatUtil.moneyShort(metrics.paid),
-                  icon: Icons.check_circle_outline_rounded,
-                  color: const Color(0xFFFDE68A),
-                ),
-                _HeroMetricTile(
-                  title: 'dashboardHero.dueAmount'.tr,
-                  value: _FormatUtil.moneyShort(metrics.due),
-                  icon: Icons.pending_actions_rounded,
-                  color: const Color(0xFFFECACA),
-                ),
+                    _HeroMetricTile(
+                      title: 'dashboardHero.totalSales'.tr,
+                      value: _FormatUtil.moneyShort(metrics.sales),
+                      icon: Icons.trending_up_rounded,
+                      color: const Color(0xFFBBF7D0),
+                    ),
+                    _HeroMetricTile(
+                      title: 'dashboardHero.orderCount'.tr,
+                      value: _FormatUtil.compactNumber(metrics.orders),
+                      icon: Icons.receipt_long_outlined,
+                      color: const Color(0xFFBFDBFE),
+                    ),
+                    _HeroMetricTile(
+                      title: 'dashboardHero.paidAmount'.tr,
+                      value: _FormatUtil.moneyShort(metrics.paid),
+                      icon: Icons.check_circle_outline_rounded,
+                      color: const Color(0xFFFDE68A),
+                    ),
+                    _HeroMetricTile(
+                      title: 'dashboardHero.dueAmount'.tr,
+                      value: _FormatUtil.moneyShort(metrics.due),
+                      icon: Icons.pending_actions_rounded,
+                      color: const Color(0xFFFECACA),
+                    ),
                   ],
                 ),
               ),
@@ -610,6 +692,357 @@ class _DemoPeriodMetrics {
   final int orders;
   final double paid;
   final double due;
+}
+
+class _DashboardModeCard extends StatelessWidget {
+  const _DashboardModeCard({
+    required this.title,
+    required this.imagePath,
+    required this.onTap,
+  });
+
+  final String title;
+  final String imagePath;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        height: 118,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF5F5F5),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              imagePath,
+              height: 42,
+              width: 42,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Color(0xFF2F3B4F),
+                fontSize: 25,
+                fontWeight: FontWeight.w700,
+                height: 1,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SimpleOrderReportCard extends StatelessWidget {
+  const _SimpleOrderReportCard({
+    required this.report,
+    required this.isLoading,
+    required this.errorMessage,
+    required this.onTap,
+    required this.onRetry,
+  });
+
+
+  final ShopOrderSimpleReport? report;
+  final bool isLoading;
+  final String errorMessage;
+  final VoidCallback onTap;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = [
+      _SimpleOrderReportItem(
+        label: 'orderReport.today'.tr,
+        value: report?.todayTotalOrder ?? 0,
+        color: const Color(0xFF34D399),
+      ),
+      _SimpleOrderReportItem(
+        label: 'orderReport.yesterday'.tr,
+        value: report?.yesterdayTotalOrder ?? 0,
+        color: const Color(0xFF60A5FA),
+      ),
+      _SimpleOrderReportItem(
+        label: 'orderReport.lastWeek'.tr,
+        value: report?.lastWeekTotalOrder ?? 0,
+        color: const Color(0xFFFBBF24),
+      ),
+      _SimpleOrderReportItem(
+        label: 'orderReport.lastMonth'.tr,
+        value: report?.lastMonthTotalOrder ?? 0,
+        color: const Color(0xFFA78BFA),
+      ),
+    ];
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1B1C1E),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFF2E3033)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.receipt_long_outlined,
+                  color: Color(0xFF34D399),
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'orderReport.title'.tr,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                if (isLoading)
+                  const SizedBox(
+                    height: 16,
+                    width: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                else
+                  const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: Color(0xFF9CA3AF),
+                    size: 15,
+                  ),
+              ],
+            ),
+            if (errorMessage.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              InkWell(
+                onTap: onRetry,
+                child: Text(
+                  '$errorMessage ${'orderReport.retry'.tr}',
+                  style: const TextStyle(
+                    color: Colors.orangeAccent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ] else ...[
+              const SizedBox(height: 14),
+              Row(
+                children: items
+                    .map(
+                      (item) => Expanded(
+                        child: _OrderReportMetric(item: item),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SimpleOrderReportItem {
+  const _SimpleOrderReportItem({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final int value;
+  final Color color;
+}
+
+class _OrderReportMetric extends StatelessWidget {
+  const _OrderReportMetric({required this.item});
+
+  final _SimpleOrderReportItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          _FormatUtil.compactNumber(item.value),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: item.color,
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          item.label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Color(0xFF9CA3AF),
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SimpleProductLimitReportCard extends StatelessWidget {
+  const _SimpleProductLimitReportCard({
+    required this.report,
+    required this.isLoading,
+    required this.errorMessage,
+    required this.onTap,
+    required this.onRetry,
+  });
+
+  final ShopProductLimitReport? report;
+  final bool isLoading;
+  final String errorMessage;
+  final VoidCallback onTap;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = [
+      _SimpleOrderReportItem(
+        label: 'productLimitReport.limit'.tr,
+        value: report?.productLimit ?? 0,
+        color: const Color(0xFF60A5FA),
+      ),
+      _SimpleOrderReportItem(
+        label: 'productLimitReport.added'.tr,
+        value: report?.totalProductAdded ?? 0,
+        color: const Color(0xFF34D399),
+      ),
+
+    ];
+    final canAddMore = report?.canAddMoreProduct ?? false;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1B1C1E),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFF2E3033)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.inventory_2_outlined,
+                  color: Color(0xFF60A5FA),
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'productLimitReport.title'.tr,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                if (isLoading)
+                  const SizedBox(
+                    height: 16,
+                    width: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                else
+                  const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: Color(0xFF9CA3AF),
+                    size: 15,
+                  ),
+              ],
+            ),
+            if (errorMessage.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              InkWell(
+                onTap: onRetry,
+                child: Text(
+                  '$errorMessage ${'orderReport.retry'.tr}',
+                  style: const TextStyle(
+                    color: Colors.orangeAccent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ] else ...[
+              const SizedBox(height: 14),
+              Row(
+                children: items
+                    .map(
+                      (item) => Expanded(
+                        child: _OrderReportMetric(item: item),
+                      ),
+                    )
+                    .toList(),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: canAddMore
+                      ? const Color(0xFF064E3B)
+                      : const Color(0xFF4A1D1D),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  canAddMore
+                      ? 'productLimitReport.canAdd'.tr
+                      : 'productLimitReport.limitFull'.tr,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _PeriodToggle extends StatelessWidget {
@@ -963,7 +1396,7 @@ class _BusinessSnapshotCard extends StatelessWidget {
             endIndent: 16,
           ),
           InkWell(
-            onTap: (){
+            onTap: () {
               Get.toNamed(Routes.PRODUCT_LIST);
             },
             child: _SnapshotTile(
@@ -1228,7 +1661,6 @@ class _ShopDashboardDrawer extends StatelessWidget {
                 Navigator.pop(context);
               },
             ),
-
             _DrawerItem(
               icon: Icons.inventory_2_outlined,
               title: "shopDashboardDrawer.products".tr,
@@ -1348,7 +1780,7 @@ class _FormatUtil {
 
     final String formattedInteger = integerPart.replaceAllMapped(
       RegExp(r'\B(?=(\d{3})+(?!\d))'),
-          (match) => ',',
+      (match) => ',',
     );
 
     return '৳$formattedInteger.$decimalPart';

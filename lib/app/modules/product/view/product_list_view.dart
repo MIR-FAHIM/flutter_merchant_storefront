@@ -50,112 +50,278 @@ class ProductListView extends GetView<ProductController> {
           style: TextStyle(fontWeight: FontWeight.w900),
         ),
       ),
-      body: Obx(() {
-        if (controller.isInitialLoading.value) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        }
+      body: Column(
+        children: [
+          _ProductFilterBar(controller: controller),
+          Expanded(
+            child: Obx(() {
+              if (controller.isInitialLoading.value) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
 
-        if (controller.errorMessage.value.isNotEmpty &&
-            controller.products.isEmpty) {
-          return _ProductErrorView(
-            message: controller.errorMessage.value,
-            onRetry: controller.refreshProducts,
-          );
-        }
+              if (controller.errorMessage.value.isNotEmpty &&
+                  controller.products.isEmpty) {
+                return _ProductErrorView(
+                  message: controller.errorMessage.value,
+                  onRetry: controller.refreshProducts,
+                );
+              }
 
-        if (controller.products.isEmpty) {
-          return _ProductEmptyView(
-            onRefresh: controller.refreshProducts,
-          );
-        }
+              if (controller.products.isEmpty) {
+                return _ProductEmptyView(
+                  onRefresh: controller.refreshProducts,
+                );
+              }
 
-        return RefreshIndicator(
-          onRefresh: controller.refreshProducts,
-          child: CustomScrollView(
-            controller: controller.scrollController,
-            physics: const AlwaysScrollableScrollPhysics(
-              parent: BouncingScrollPhysics(),
-            ),
-            slivers: [
-              SliverToBoxAdapter(
-                child: _ProductListHeader(
-                  total: controller.totalProducts.value,
-                  showing: controller.products.length,
-                ),
-              ),
-
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
-                sliver: SliverGrid(
-                  delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                      final product = controller.products[index];
-
-                      return ProductCard(
-                        product: product,
-                        onTap: () {
-                          Get.toNamed(
-                            Routes.PRODUCT_DETAILS,
-                            arguments: {
-                              'product_id': product.id,
-                            },
-                          );
-                        },
-                      );
-                    },
-                    childCount: controller.products.length,
+              return RefreshIndicator(
+                onRefresh: controller.refreshProducts,
+                child: CustomScrollView(
+                  controller: controller.scrollController,
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics(),
                   ),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 0.62,
-                  ),
-                ),
-              ),
-
-              SliverToBoxAdapter(
-                child: Obx(() {
-                  if (!controller.isMoreLoading.value) {
-                    return const SizedBox(height: 24);
-                  }
-
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 18),
-                    child: Center(
-                      child: CircularProgressIndicator(),
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: _ProductListHeader(
+                        total: controller.totalProducts.value,
+                        showing: controller.products.length,
+                      ),
                     ),
-                  );
-                }),
-              ),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
+                      sliver: SliverGrid(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final product = controller.products[index];
 
-              SliverToBoxAdapter(
-                child: Obx(() {
-                  if (controller.hasMore) {
-                    return const SizedBox.shrink();
-                  }
-
-                  return const Padding(
-                    padding: EdgeInsets.only(bottom: 24),
-                    child: Center(
-                      child: Text(
-                        'No more products',
-                        style: TextStyle(
-                          color: Color(0xFF9CA3AF),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
+                            return ProductCard(
+                              product: product,
+                              onTap: () {
+                                Get.toNamed(
+                                  Routes.PRODUCT_DETAILS,
+                                  arguments: {
+                                    'product_id': product.id,
+                                  },
+                                );
+                              },
+                            );
+                          },
+                          childCount: controller.products.length,
+                        ),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 0.62,
                         ),
                       ),
                     ),
-                  );
-                }),
-              ),
-            ],
+                    SliverToBoxAdapter(
+                      child: Obx(() {
+                        if (!controller.isMoreLoading.value) {
+                          return const SizedBox(height: 24);
+                        }
+
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 18),
+                          child: Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                      }),
+                    ),
+                    SliverToBoxAdapter(
+                      child: Obx(() {
+                        if (controller.hasMore) {
+                          return const SizedBox.shrink();
+                        }
+
+                        return const Padding(
+                          padding: EdgeInsets.only(bottom: 24),
+                          child: Center(
+                            child: Text(
+                              'No more products',
+                              style: TextStyle(
+                                color: Color(0xFF9CA3AF),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                  ],
+                ),
+              );
+            }),
           ),
-        );
-      }),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProductFilterBar extends StatelessWidget {
+  const _ProductFilterBar({
+    required this.controller,
+  });
+
+  final ProductController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(14, 8, 14, 6),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: ProductListView._cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ProductListView._borderColor),
+      ),
+      child: Column(
+        children: [
+          TextField(
+            controller: controller.productSearchController,
+            textInputAction: TextInputAction.search,
+            onSubmitted: (_) => controller.applyProductFilters(),
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: 'Search product name or slug',
+              hintStyle: const TextStyle(color: Color(0xFF6B7280)),
+              prefixIcon: const Icon(
+                Icons.search_rounded,
+                color: Color(0xFF9CA3AF),
+              ),
+              suffixIcon: IconButton(
+                tooltip: 'Search',
+                onPressed: controller.applyProductFilters,
+                icon: const Icon(Icons.arrow_forward_rounded),
+              ),
+              filled: true,
+              fillColor: const Color(0xFF111213),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Obx(() {
+            return Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: controller.productFilterCategoryId.value,
+                    dropdownColor: ProductListView._cardColor,
+                    isExpanded: true,
+                    decoration: _filterDecoration(
+                      icon: Icons.category_outlined,
+                      hint: 'Category',
+                    ),
+                    items: [
+                      const DropdownMenuItem<String>(
+                        value: '',
+                        child: Text('All Categories'),
+                      ),
+                      ...controller.activeCategories.map(
+                        (category) => DropdownMenuItem<String>(
+                          value: category.id.toString(),
+                          child: Text(
+                            category.name,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      controller.setProductFilterCategory(value ?? '');
+                      controller.applyProductFilters();
+                    },
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                SizedBox(
+                  width: 132,
+                  child: DropdownButtonFormField<String>(
+                    value: controller.productFilterIsActive.value == null
+                        ? 'all'
+                        : controller.productFilterIsActive.value == true
+                            ? 'active'
+                            : 'inactive',
+                    dropdownColor: ProductListView._cardColor,
+                    decoration: _filterDecoration(
+                      icon: Icons.tune_rounded,
+                      hint: 'Status',
+                    ),
+                    items: const [
+                      DropdownMenuItem<String>(
+                        value: 'all',
+                        child: Text('All'),
+                      ),
+                      DropdownMenuItem<String>(
+                        value: 'active',
+                        child: Text('Active'),
+                      ),
+                      DropdownMenuItem<String>(
+                        value: 'inactive',
+                        child: Text('Inactive'),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      controller.setProductFilterStatus(
+                        value == 'all' ? null : value == 'active',
+                      );
+                      controller.applyProductFilters();
+                    },
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Clear filters',
+                  onPressed: controller.clearProductFilters,
+                  icon: const Icon(Icons.close_rounded),
+                  color: const Color(0xFF9CA3AF),
+                ),
+              ],
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  InputDecoration _filterDecoration({
+    required IconData icon,
+    required String hint,
+  }) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(color: Color(0xFF6B7280), fontSize: 12),
+      prefixIcon: Icon(icon, color: const Color(0xFF9CA3AF), size: 18),
+      filled: true,
+      fillColor: const Color(0xFF111213),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
     );
   }
 }

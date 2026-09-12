@@ -15,6 +15,7 @@ class OrderDetailView extends GetView<OrderController> {
     if (controller.orderStatusOptions.isEmpty && !controller.isStatusLoading.value) {
       controller.loadOrderStatuses();
     }
+    final requestedOrderId = _orderIdFromArguments(Get.arguments);
 
     return Scaffold(
       backgroundColor: _bgColor,
@@ -34,7 +35,27 @@ class OrderDetailView extends GetView<OrderController> {
         final item = controller.selectedOrderItem.value;
         final order = controller.selectedOrder.value ?? item?.order;
 
+        if (item == null &&
+            order == null &&
+            requestedOrderId != null &&
+            !controller.isDetailLoading.value &&
+            controller.detailErrorMessage.value.isEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!controller.isDetailLoading.value &&
+                controller.detailErrorMessage.value.isEmpty) {
+              controller.getOrderDetails(requestedOrderId.toString());
+            }
+          });
+        }
+
         if (item == null && order == null && controller.isDetailLoading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (item == null &&
+            order == null &&
+            requestedOrderId != null &&
+            controller.detailErrorMessage.value.isEmpty) {
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -186,6 +207,13 @@ class OrderDetailView extends GetView<OrderController> {
         '${date.year} '
         '${date.hour.toString().padLeft(2, '0')}:'
         '${date.minute.toString().padLeft(2, '0')}';
+  }
+
+  int? _orderIdFromArguments(dynamic args) {
+    if (args is Map) {
+      return int.tryParse((args['order_id'] ?? args['id'] ?? '').toString());
+    }
+    return int.tryParse((args ?? '').toString());
   }
 }
 

@@ -267,15 +267,76 @@ class OrderMessageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _RichMessageCard(
-      icon: Icons.receipt_long_outlined,
-      title: order.orderNumber ?? 'Order',
-      subtitle: [
-        if ((order.status ?? '').isNotEmpty) order.status!,
-        if ((order.total ?? '').isNotEmpty) '৳ ${order.total}',
-      ].join(' • '),
-      buttonText: 'Order Shared',
-      onTap: null,
+    final subtitle = [
+      if ((order.status ?? '').isNotEmpty) order.status!,
+      if ((order.total ?? '').isNotEmpty) '৳ ${order.total}',
+    ].join(' • ');
+
+    return InkWell(
+      onTap: order.id == null
+          ? null
+          : () => Get.toNamed(
+                Routes.ORDER_SHOP_DETAIL,
+                arguments: {'order_id': order.id},
+              ),
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(
+              Icons.receipt_long_outlined,
+              size: 18,
+              color: Color(0xFF0F766E),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    order.orderNumber ?? 'Order',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Color(0xFF111827),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  if (subtitle.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF4B5563),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                  if (order.id != null) ...[
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Tap to view order details',
+                      style: TextStyle(
+                        color: Color(0xFF0F766E),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
