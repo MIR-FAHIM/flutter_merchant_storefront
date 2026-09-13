@@ -1,7 +1,10 @@
 import 'package:ecom_delivery_flutter/app/modules/order/controller/order_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import 'widgets/order_status_badge.dart';
 
 class OrderDetailView extends GetView<OrderController> {
   const OrderDetailView({super.key});
@@ -28,6 +31,7 @@ class OrderDetailView extends GetView<OrderController> {
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w900,
+            fontSize: 20,
           ),
         ),
       ),
@@ -49,46 +53,73 @@ class OrderDetailView extends GetView<OrderController> {
         }
 
         if (item == null && order == null && controller.isDetailLoading.value) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: CircularProgressIndicator(color: Color(0xFF34D399)),
+          );
         }
 
         if (item == null &&
             order == null &&
             requestedOrderId != null &&
             controller.detailErrorMessage.value.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: CircularProgressIndicator(color: Color(0xFF34D399)),
+          );
         }
 
         if (item == null && order == null) {
-          return const Center(
-            child: Text(
-              'Order details not found',
-              style: TextStyle(
-                color: Color(0xFF9CA3AF),
-                fontWeight: FontWeight.w700,
-              ),
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline_rounded, color: Color(0xFF6B7280), size: 48),
+                const SizedBox(height: 12),
+                const Text(
+                  'Order details not found',
+                  style: TextStyle(
+                    color: Color(0xFF9CA3AF),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF34D399),
+                    foregroundColor: Colors.black,
+                  ),
+                  onPressed: () => Get.back(),
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  label: const Text('Go Back'),
+                ),
+              ],
             ),
           );
         }
 
+        final DateTime? createdDate = item?.createdAt ?? order?.createdAt;
+
         return SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (controller.isDetailLoading.value)
-                const LinearProgressIndicator(),
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 12),
+                  child: LinearProgressIndicator(color: Color(0xFF34D399), backgroundColor: Color(0xFF1B1C1E)),
+                ),
 
               if (controller.detailErrorMessage.value.isNotEmpty) ...[
-                const SizedBox(height: 12),
                 _ErrorBanner(message: controller.detailErrorMessage.value),
+                const SizedBox(height: 14),
               ],
 
-              const SizedBox(height: 12),
-
+              // Top Order Hero Header Card
               _HeroOrderCard(
-                orderNumber: order?.orderNumber ?? 'Order #${item?.orderId ?? '-'}',
+                orderNumber: order?.orderNumber ?? 'Order #${item?.orderId ?? item?.id ?? '-'}',
+                dateStr: _formatDateTime(createdDate),
                 total: order?.total ?? item?.lineTotal ?? 0,
                 status: order?.status ?? item?.status ?? 'N/A',
                 paymentStatus: order?.paymentStatus ?? 'N/A',
@@ -96,6 +127,7 @@ class OrderDetailView extends GetView<OrderController> {
 
               const SizedBox(height: 16),
 
+              // Smart Status Manager Card
               _StatusUpdateCard(
                 statusOptions: controller.orderStatusOptions,
                 selectedStatus: controller.selectedOrderStatus.value,
@@ -106,9 +138,7 @@ class OrderDetailView extends GetView<OrderController> {
                 },
                 onUpdate: () {
                   final String orderId = (order?.id ?? item?.orderId ?? 0).toString();
-                  if (orderId == '0' || orderId.isEmpty) {
-                    return;
-                  }
+                  if (orderId == '0' || orderId.isEmpty) return;
 
                   controller.changeOrderStatus(
                     orderId: orderId,
@@ -120,74 +150,45 @@ class OrderDetailView extends GetView<OrderController> {
                 successMessage: controller.statusUpdateMessage.value,
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
 
-              _SectionTitle(title: 'Product Information'),
-
-              const SizedBox(height: 10),
-
-              _InfoCard(
-                children: [
-                  _InfoRow(label: 'Product', value: item?.productName),
-                  _InfoRow(label: 'SKU', value: item?.sku),
-                  _InfoRow(label: 'Quantity', value: '${item?.qty ?? 0}'),
-                  _InfoRow(label: 'Unit Price', value: _money(item?.unitPrice ?? 0)),
-                  _InfoRow(label: 'Line Total', value: _money(item?.lineTotal ?? 0)),
-                  _InfoRow(label: 'Item Status', value: item?.status),
-                  _InfoRow(
-                    label: 'Seller Settled',
-                    value: item?.isSettleWithSeller == 1 ? 'Yes' : 'No',
-                  ),
-                ],
+              // Product Information Card
+              _SectionHeader(
+                title: 'Product Information',
+                icon: Icons.inventory_2_outlined,
               ),
-
-              const SizedBox(height: 16),
-
-              _SectionTitle(title: 'Customer Information'),
-
               const SizedBox(height: 10),
+              _ProductInfoCard(item: item),
 
-              _InfoCard(
-                children: [
-                  _InfoRow(label: 'Customer', value: order?.customerName ?? order?.user?.name),
-                  _InfoRow(label: 'Phone', value: order?.customerPhone ?? order?.user?.phone),
-                  _InfoRow(label: 'Email', value: order?.user?.email),
-                  _InfoRow(label: 'Shipping Address', value: order?.shippingAddress),
-                  _InfoRow(label: 'Zone', value: order?.zone),
-                  _InfoRow(label: 'Note', value: order?.note),
-                ],
+              const SizedBox(height: 18),
+
+              // Customer & Delivery Information Card
+              _SectionHeader(
+                title: 'Customer Details',
+                icon: Icons.person_outline_rounded,
               ),
-
-              const SizedBox(height: 16),
-
-              _SectionTitle(title: 'Payment Summary'),
-
               const SizedBox(height: 10),
+              _CustomerInfoCard(order: order),
 
-              _InfoCard(
-                children: [
-                  _InfoRow(label: 'Subtotal', value: _money(order?.subtotal ?? 0)),
-                  _InfoRow(label: 'Shipping Fee', value: _money(order?.shippingFee ?? 0)),
-                  _InfoRow(label: 'Discount', value: _money(order?.discount ?? 0)),
-                  _InfoRow(label: 'Total', value: _money(order?.total ?? 0)),
-                  _InfoRow(label: 'Payment Status', value: order?.paymentStatus),
-                  _InfoRow(label: 'Platform', value: order?.platform),
-                ],
+              const SizedBox(height: 18),
+
+              // Payment & Financial Summary Card
+              _SectionHeader(
+                title: 'Payment Breakdown',
+                icon: Icons.receipt_long_outlined,
               ),
-
-              const SizedBox(height: 16),
-
-              _SectionTitle(title: 'Order Timeline'),
-
               const SizedBox(height: 10),
+              _PaymentSummaryCard(order: order, item: item),
 
-              _InfoCard(
-                children: [
-                  _InfoRow(label: 'Created At', value: _formatDateTime(order?.createdAt ?? item?.createdAt)),
-                  _InfoRow(label: 'Updated At', value: _formatDateTime(order?.updatedAt ?? item?.updatedAt)),
-                  _InfoRow(label: 'Payment Group', value: order?.paymentGroupId),
-                ],
+              const SizedBox(height: 18),
+
+              // Order Timeline Card
+              _SectionHeader(
+                title: 'Order Timeline',
+                icon: Icons.history_rounded,
               ),
+              const SizedBox(height: 10),
+              _TimelineCard(order: order, item: item),
             ],
           ),
         );
@@ -202,11 +203,17 @@ class OrderDetailView extends GetView<OrderController> {
   static String _formatDateTime(DateTime? date) {
     if (date == null) return 'N/A';
 
-    return '${date.day.toString().padLeft(2, '0')}/'
-        '${date.month.toString().padLeft(2, '0')}/'
-        '${date.year} '
-        '${date.hour.toString().padLeft(2, '0')}:'
-        '${date.minute.toString().padLeft(2, '0')}';
+    final months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    final String month = months[date.month - 1];
+    final String day = date.day.toString().padLeft(2, '0');
+    final String hour = (date.hour > 12 ? date.hour - 12 : (date.hour == 0 ? 12 : date.hour)).toString().padLeft(2, '0');
+    final String minute = date.minute.toString().padLeft(2, '0');
+    final String period = date.hour >= 12 ? 'PM' : 'AM';
+
+    return '$day $month ${date.year}, $hour:$minute $period';
   }
 
   int? _orderIdFromArguments(dynamic args) {
@@ -214,6 +221,162 @@ class OrderDetailView extends GetView<OrderController> {
       return int.tryParse((args['order_id'] ?? args['id'] ?? '').toString());
     }
     return int.tryParse((args ?? '').toString());
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({
+    required this.title,
+    required this.icon,
+  });
+
+  final String title;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: const Color(0xFF34D399), size: 18),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.1,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HeroOrderCard extends StatelessWidget {
+  const _HeroOrderCard({
+    required this.orderNumber,
+    required this.dateStr,
+    required this.total,
+    required this.status,
+    required this.paymentStatus,
+  });
+
+  final String orderNumber;
+  final String dateStr;
+  final double total;
+  final String status;
+  final String paymentStatus;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF0F766E),
+            Color(0xFF064E3B),
+            Color(0xFF14532D),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x33000000),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                orderNumber,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              if (dateStr.isNotEmpty && dateStr != 'N/A')
+                Text(
+                  dateStr,
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            '৳${total.toStringAsFixed(2)}',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 30,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OrderStatusBadge(status: status),
+              if (paymentStatus.isNotEmpty) ...[
+                _HeroChip(label: 'Payment: $paymentStatus', icon: Icons.payments_outlined),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroChip extends StatelessWidget {
+  const _HeroChip({
+    required this.label,
+    required this.icon,
+  });
+
+  final String label;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white, size: 13),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -242,14 +405,18 @@ class _StatusUpdateCard extends StatelessWidget {
         .map(
           (item) => DropdownMenuItem<String>(
             value: item.name.toLowerCase(),
-            child: Text(item.name),
+            child: Row(
+              children: [
+                OrderStatusBadge(status: item.name, isCompact: true),
+              ],
+            ),
           ),
         )
         .toList();
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: OrderDetailView._cardColor,
         borderRadius: BorderRadius.circular(18),
@@ -258,13 +425,19 @@ class _StatusUpdateCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Order Status',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w900,
-            ),
+          Row(
+            children: [
+              const Icon(Icons.edit_note_rounded, color: Color(0xFF34D399), size: 20),
+              const SizedBox(width: 8),
+              const Text(
+                'Update Order Status',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
@@ -273,8 +446,13 @@ class _StatusUpdateCard extends StatelessWidget {
                 : (items.isNotEmpty ? items.first.value : null),
             decoration: InputDecoration(
               filled: true,
-              fillColor: const Color(0xFF121417),
+              fillColor: const Color(0xFF141517),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFF2E3033)),
+              ),
+              enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: const BorderSide(color: Color(0xFF2E3033)),
               ),
@@ -289,31 +467,56 @@ class _StatusUpdateCard extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF34D399),
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
               onPressed: isUpdating ? null : onUpdate,
               icon: isUpdating
                   ? const SizedBox(
-                      width: 15,
-                      height: 15,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
                     )
-                  : const Icon(Icons.sync_rounded),
-              label: Text(isUpdating ? 'Updating...' : 'Update Status'),
+                  : const Icon(Icons.sync_rounded, size: 18),
+              label: Text(
+                isUpdating ? 'Updating Status...' : 'Apply Status Change',
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
+              ),
             ),
           ),
           if (errorMessage.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 10),
-              child: Text(
-                errorMessage,
-                style: const TextStyle(color: Colors.redAccent, fontSize: 12.5),
+              child: Row(
+                children: [
+                  const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 16),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      errorMessage,
+                      style: const TextStyle(color: Colors.redAccent, fontSize: 12.5),
+                    ),
+                  ),
+                ],
               ),
             ),
           if (successMessage.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 10),
-              child: Text(
-                successMessage,
-                style: const TextStyle(color: Color(0xFF34D399), fontSize: 12.5),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle_outline_rounded, color: Color(0xFF34D399), size: 16),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      successMessage,
+                      style: const TextStyle(color: Color(0xFF34D399), fontSize: 12.5, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
               ),
             ),
         ],
@@ -322,164 +525,97 @@ class _StatusUpdateCard extends StatelessWidget {
   }
 }
 
-class _HeroOrderCard extends StatelessWidget {
-  const _HeroOrderCard({
-    required this.orderNumber,
-    required this.total,
-    required this.status,
-    required this.paymentStatus,
-  });
+class _ProductInfoCard extends StatelessWidget {
+  const _ProductInfoCard({required this.item});
 
-  final String orderNumber;
-  final double total;
-  final String status;
-  final String paymentStatus;
+  final dynamic item;
 
   @override
   Widget build(BuildContext context) {
+    if (item == null) return const SizedBox.shrink();
+
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFF0F766E),
-            Color(0xFF14532D),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            orderNumber,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '৳${total.toStringAsFixed(2)}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _HeroChip(label: status, icon: Icons.inventory_outlined),
-              _HeroChip(label: paymentStatus, icon: Icons.payments_outlined),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HeroChip extends StatelessWidget {
-  const _HeroChip({
-    required this.label,
-    required this.icon,
-  });
-
-  final String label;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: Colors.white, size: 15),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoCard extends StatelessWidget {
-  const _InfoCard({
-    required this.children,
-  });
-
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: OrderDetailView._cardColor,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: OrderDetailView._borderColor),
       ),
-      child: Column(children: children),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({
-    required this.label,
-    required this.value,
-  });
-
-  final String label;
-  final String? value;
-
-  @override
-  Widget build(BuildContext context) {
-    final String finalValue =
-    value == null || value!.trim().isEmpty ? 'N/A' : value!.trim();
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 112,
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: Color(0xFF9CA3AF),
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF26282B),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF373A40)),
+                ),
+                child: const Icon(
+                  Icons.shopping_bag_outlined,
+                  color: Color(0xFF34D399),
+                  size: 24,
+                ),
               ),
-            ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.productName ?? 'Unnamed Product',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        height: 1.3,
+                      ),
+                    ),
+                    if (item.sku != null && item.sku!.toString().isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'SKU: ${item.sku}',
+                        style: const TextStyle(
+                          color: Color(0xFF9CA3AF),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              finalValue,
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12.5,
-                height: 1.35,
-                fontWeight: FontWeight.w800,
+          const SizedBox(height: 14),
+          const Divider(height: 1, color: OrderDetailView._borderColor),
+          const SizedBox(height: 14),
+          _DetailRow(label: 'Quantity', value: '${item.qty ?? 0} pcs'),
+          _DetailRow(label: 'Unit Price', value: OrderDetailView._money(item.unitPrice ?? 0)),
+          _DetailRow(label: 'Line Total', value: OrderDetailView._money(item.lineTotal ?? 0), isHighlighted: true),
+          _DetailRow(
+            label: 'Seller Settlement',
+            valueWidget: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: item.isSettleWithSeller == 1
+                    ? const Color(0x2610B981)
+                    : const Color(0x26F59E0B),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                item.isSettleWithSeller == 1 ? 'Settled' : 'Pending Settlement',
+                style: TextStyle(
+                  color: item.isSettleWithSeller == 1
+                      ? const Color(0xFF10B981)
+                      : const Color(0xFFF59E0B),
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
@@ -489,21 +625,317 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({
-    required this.title,
-  });
+class _CustomerInfoCard extends StatelessWidget {
+  const _CustomerInfoCard({required this.order});
 
-  final String title;
+  final dynamic order;
+
+  Future<void> _makeCall(String phone) async {
+    final Uri uri = Uri.parse('tel:$phone');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 16,
-        fontWeight: FontWeight.w900,
+    final String customerName = order?.customerName ?? order?.user?.name ?? 'N/A';
+    final String phone = order?.customerPhone ?? order?.user?.phone ?? '';
+    final String email = order?.user?.email ?? '';
+    final String address = order?.shippingAddress ?? '';
+    final String zone = order?.zone ?? '';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: OrderDetailView._cardColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: OrderDetailView._borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _DetailRow(label: 'Name', value: customerName, icon: Icons.person_rounded),
+          if (phone.isNotEmpty)
+            _DetailRow(
+              label: 'Phone',
+              value: phone,
+              icon: Icons.phone_rounded,
+              actionWidget: InkWell(
+                onTap: () => _makeCall(phone),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0x2634D399),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.call, size: 12, color: Color(0xFF34D399)),
+                      SizedBox(width: 4),
+                      Text('Call', style: TextStyle(color: Color(0xFF34D399), fontSize: 11, fontWeight: FontWeight.w700)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          if (email.isNotEmpty)
+            _DetailRow(label: 'Email', value: email, icon: Icons.email_rounded),
+          if (address.isNotEmpty)
+            _DetailRow(
+              label: 'Address',
+              value: address,
+              icon: Icons.location_on_rounded,
+              actionWidget: InkWell(
+                onTap: () {
+                  Clipboard.setData(ClipboardData(text: address));
+                  Get.snackbar(
+                    'Copied',
+                    'Address copied to clipboard',
+                    snackPosition: SnackPosition.BOTTOM,
+                    backgroundColor: const Color(0xFF1B1C1E),
+                    colorText: Colors.white,
+                    duration: const Duration(seconds: 2),
+                  );
+                },
+                child: const Icon(Icons.copy_rounded, size: 16, color: Color(0xFF9CA3AF)),
+              ),
+            ),
+          if (zone.isNotEmpty)
+            _DetailRow(label: 'Zone', value: zone, icon: Icons.map_rounded),
+          if (order?.note != null && order!.note.toString().isNotEmpty)
+            _DetailRow(label: 'Customer Note', value: order.note, icon: Icons.note_rounded),
+        ],
+      ),
+    );
+  }
+}
+
+class _PaymentSummaryCard extends StatelessWidget {
+  const _PaymentSummaryCard({
+    required this.order,
+    required this.item,
+  });
+
+  final dynamic order;
+  final dynamic item;
+
+  @override
+  Widget build(BuildContext context) {
+    final double subtotal = order?.subtotal ?? item?.lineTotal ?? 0;
+    final double shippingFee = order?.shippingFee ?? 0;
+    final double discount = order?.discount ?? 0;
+    final double total = order?.total ?? item?.lineTotal ?? 0;
+    final String paymentStatus = order?.paymentStatus ?? 'N/A';
+    final String platform = order?.platform ?? 'N/A';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: OrderDetailView._cardColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: OrderDetailView._borderColor),
+      ),
+      child: Column(
+        children: [
+          _DetailRow(label: 'Subtotal', value: OrderDetailView._money(subtotal)),
+          _DetailRow(label: 'Shipping Fee', value: OrderDetailView._money(shippingFee)),
+          if (discount > 0)
+            _DetailRow(label: 'Discount', value: '-${OrderDetailView._money(discount)}'),
+          const Divider(height: 16, color: OrderDetailView._borderColor),
+          _DetailRow(
+            label: 'Total Amount',
+            value: OrderDetailView._money(total),
+            isHighlighted: true,
+          ),
+          const SizedBox(height: 6),
+          _DetailRow(
+            label: 'Payment Status',
+            valueWidget: OrderStatusBadge(status: paymentStatus, isCompact: true),
+          ),
+          _DetailRow(label: 'Payment Platform', value: platform),
+        ],
+      ),
+    );
+  }
+}
+
+class _TimelineCard extends StatelessWidget {
+  const _TimelineCard({
+    required this.order,
+    required this.item,
+  });
+
+  final dynamic order;
+  final dynamic item;
+
+  @override
+  Widget build(BuildContext context) {
+    final DateTime? created = order?.createdAt ?? item?.createdAt;
+    final DateTime? updated = order?.updatedAt ?? item?.updatedAt;
+    final String paymentGroupId = order?.paymentGroupId ?? 'N/A';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: OrderDetailView._cardColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: OrderDetailView._borderColor),
+      ),
+      child: Column(
+        children: [
+          _TimelineItem(
+            title: 'Order Placed',
+            subtitle: OrderDetailView._formatDateTime(created),
+            icon: Icons.add_shopping_cart_rounded,
+            isFirst: true,
+          ),
+          _TimelineItem(
+            title: 'Last Updated',
+            subtitle: OrderDetailView._formatDateTime(updated),
+            icon: Icons.update_rounded,
+          ),
+          if (paymentGroupId != 'N/A' && paymentGroupId.isNotEmpty)
+            _TimelineItem(
+              title: 'Payment Group ID',
+              subtitle: paymentGroupId,
+              icon: Icons.numbers_rounded,
+              isLast: true,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TimelineItem extends StatelessWidget {
+  const _TimelineItem({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    this.isFirst = false,
+    this.isLast = false,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final bool isFirst;
+  final bool isLast;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: const BoxDecoration(
+                color: Color(0xFF26282B),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 14, color: const Color(0xFF34D399)),
+            ),
+            if (!isLast)
+              Container(
+                width: 2,
+                height: 24,
+                color: const Color(0xFF2E3033),
+              ),
+          ],
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    color: Color(0xFF9CA3AF),
+                    fontSize: 11.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({
+    required this.label,
+    this.value,
+    this.valueWidget,
+    this.icon,
+    this.actionWidget,
+    this.isHighlighted = false,
+  });
+
+  final String label;
+  final String? value;
+  final Widget? valueWidget;
+  final IconData? icon;
+  final Widget? actionWidget;
+  final bool isHighlighted;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 7),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 15, color: const Color(0xFF9CA3AF)),
+            const SizedBox(width: 8),
+          ],
+          SizedBox(
+            width: 110,
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: Color(0xFF9CA3AF),
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: valueWidget ??
+                Text(
+                  value == null || value!.trim().isEmpty ? 'N/A' : value!.trim(),
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    color: isHighlighted ? const Color(0xFF34D399) : Colors.white,
+                    fontSize: isHighlighted ? 14 : 13,
+                    fontWeight: isHighlighted ? FontWeight.w900 : FontWeight.w700,
+                  ),
+                ),
+          ),
+          if (actionWidget != null) ...[
+            const SizedBox(width: 8),
+            actionWidget!,
+          ],
+        ],
       ),
     );
   }
@@ -526,13 +958,21 @@ class _ErrorBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Colors.redAccent.withValues(alpha: 0.35)),
       ),
-      child: Text(
-        message,
-        style: const TextStyle(
-          color: Colors.redAccent,
-          fontWeight: FontWeight.w700,
-          fontSize: 12.5,
-        ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                color: Colors.redAccent,
+                fontWeight: FontWeight.w700,
+                fontSize: 12.5,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
