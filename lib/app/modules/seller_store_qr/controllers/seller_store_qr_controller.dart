@@ -324,9 +324,37 @@ class SellerStoreQrController extends GetxController {
 
       if (showSuccess) {
         Get.showSnackbar(
-          Ui.SuccessSnackBar(
-            message: 'QR frame downloaded: ${file.path}',
-            title: 'Success'.tr,
+          GetSnackBar(
+            titleText: Text(
+              'QR Frame Downloaded'.tr,
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+            ),
+            messageText: Text(
+              'Saved to: ${file.path}',
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+            duration: const Duration(seconds: 6),
+            mainButton: TextButton.icon(
+              onPressed: () {
+                Get.back();
+                SharePlus.instance.share(
+                  ShareParams(
+                    text: 'Shop from $selectedStoreName: $publicStoreUrl',
+                    subject: '$selectedStoreName Store QR',
+                    files: [XFile(file.path)],
+                  ),
+                );
+              },
+              icon: const Icon(Icons.share_rounded, size: 16, color: Color(0xFF34D399)),
+              label: const Text(
+                'SHARE / SAVE',
+                style: TextStyle(color: Color(0xFF34D399), fontWeight: FontWeight.bold, fontSize: 12),
+              ),
+            ),
+            backgroundColor: const Color(0xFF1B1C1E),
+            borderColor: const Color(0xFF34D399),
+            borderRadius: 12,
+            margin: const EdgeInsets.all(12),
           ),
         );
       }
@@ -344,6 +372,12 @@ class SellerStoreQrController extends GetxController {
 
   Future<Directory> _downloadDirectory() async {
     try {
+      if (Platform.isAndroid) {
+        final publicDownloadDir = Directory('/storage/emulated/0/Download');
+        if (await publicDownloadDir.exists()) {
+          return publicDownloadDir;
+        }
+      }
       return await getDownloadsDirectory() ??
           await getApplicationDocumentsDirectory();
     } catch (_) {
