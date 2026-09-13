@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:ecom_delivery_flutter/app/api_providers/company_data.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -7,10 +8,12 @@ class SellerStoreQrFrame extends StatelessWidget {
     super.key,
     required this.storeName,
     required this.storeUrl,
+    this.qrBytes,
   });
 
   final String storeName;
   final String storeUrl;
+  final Uint8List? qrBytes;
 
   @override
   Widget build(BuildContext context) {
@@ -90,23 +93,19 @@ class SellerStoreQrFrame extends StatelessWidget {
                     width: 2,
                   ),
                 ),
-                child: QrImageView(
-                  data: storeUrl,
-                  version: QrVersions.auto,
-                  size: 230,
-                  backgroundColor: Colors.white,
-                  eyeStyle: const QrEyeStyle(
-                    eyeShape: QrEyeShape.square,
-                    color: Color(0xFF062B4F),
-                  ),
-                  dataModuleStyle: const QrDataModuleStyle(
-                    dataModuleShape: QrDataModuleShape.square,
-                    color: Color(0xFF062B4F),
-                  ),
-                ),
+                child: qrBytes != null && qrBytes!.isNotEmpty
+                    ? Image.memory(
+                        qrBytes!,
+                        width: 230,
+                        height: 230,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) {
+                          return _buildVectorQr();
+                        },
+                      )
+                    : _buildVectorQr(),
               ),
               const Spacer(),
-
               const SizedBox(height: 8),
               Text(
                 storeUrl,
@@ -122,6 +121,23 @@ class SellerStoreQrFrame extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildVectorQr() {
+    return QrImageView(
+      data: storeUrl,
+      version: QrVersions.auto,
+      size: 230,
+      backgroundColor: Colors.white,
+      eyeStyle: const QrEyeStyle(
+        eyeShape: QrEyeShape.square,
+        color: Color(0xFF062B4F),
+      ),
+      dataModuleStyle: const QrDataModuleStyle(
+        dataModuleShape: QrDataModuleShape.square,
+        color: Color(0xFF062B4F),
       ),
     );
   }

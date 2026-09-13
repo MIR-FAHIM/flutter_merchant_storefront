@@ -16,7 +16,7 @@ class SellerStoreQrView extends GetView<SellerStoreQrController> {
         backgroundColor: const Color(0xFF111213),
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
-          'Store QR Download',
+          'Store QR Management',
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w900,
@@ -49,18 +49,20 @@ class SellerStoreQrView extends GetView<SellerStoreQrController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
-
+              if (controller.stores.length > 1) ...[
+                _StoreDropdown(controller: controller),
+                const SizedBox(height: 14),
+              ],
 
               if (controller.hasSelectedStore &&
                   !controller.selectedStoreHasSlug) ...[
-                const SizedBox(height: 14),
                 const _WarningMessage(
                   message:
                       'This store does not have a public slug yet. Please update the store profile first.',
                 ),
+                const SizedBox(height: 14),
               ],
-              const SizedBox(height: 18),
+
               RepaintBoundary(
                 key: controller.posterKey,
                 child: SellerStoreQrFrame(
@@ -68,6 +70,7 @@ class SellerStoreQrView extends GetView<SellerStoreQrController> {
                   storeUrl: controller.selectedStoreHasSlug
                       ? controller.publicStoreUrl
                       : 'https://myzoo.asia/store',
+                  qrBytes: controller.storeQrBytes.value,
                 ),
               ),
               const SizedBox(height: 18),
@@ -161,10 +164,24 @@ class _ActionButtons extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 10),
-        _SecondaryActionButton(
-          icon: Icons.open_in_browser_rounded,
-          label: 'Open Public Store',
-          onTap: isDisabled ? null : controller.openPublicStore,
+        Row(
+          children: [
+            Expanded(
+              child: _SecondaryActionButton(
+                icon: Icons.open_in_browser_rounded,
+                label: 'Open Store',
+                onTap: isDisabled ? null : controller.openPublicStore,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _SecondaryActionButton(
+                icon: Icons.qr_code_scanner_rounded,
+                label: 'Scan Store QR',
+                onTap: controller.scanStoreQr,
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -228,7 +245,7 @@ class _SecondaryActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 56,
+      height: 54,
       child: OutlinedButton.icon(
         onPressed: onTap,
         icon: Icon(icon, size: 19),

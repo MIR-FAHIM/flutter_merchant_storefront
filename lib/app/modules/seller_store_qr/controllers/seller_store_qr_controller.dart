@@ -22,7 +22,9 @@ class SellerStoreQrController extends GetxController {
 
   final stores = <SellerStoreModel>[].obs;
   final selectedStore = Rxn<SellerStoreModel>();
+  final storeQrBytes = Rxn<Uint8List>();
   final isLoading = false.obs;
+  final isLoadingQrImage = false.obs;
   final isSaving = false.obs;
   final errorText = ''.obs;
 
@@ -42,6 +44,8 @@ class SellerStoreQrController extends GetxController {
           : 'MyZoo Store';
 
   String get selectedStoreSlug => selectedStore.value?.slug?.trim() ?? '';
+
+  int get selectedStoreId => selectedStore.value?.id ?? 0;
 
   bool get hasSelectedStore => selectedStore.value != null;
 
@@ -70,6 +74,10 @@ class SellerStoreQrController extends GetxController {
 
       stores.assignAll(parsedStores);
       selectedStore.value = parsedStores.isNotEmpty ? parsedStores.first : null;
+
+      if (selectedStore.value != null) {
+        await fetchStoreQrImage();
+      }
     } catch (e) {
       errorText.value = e.toString();
       Get.showSnackbar(
@@ -82,6 +90,32 @@ class SellerStoreQrController extends GetxController {
 
   void selectStore(SellerStoreModel? store) {
     selectedStore.value = store;
+    storeQrBytes.value = null;
+    if (store != null) {
+      fetchStoreQrImage();
+    }
+  }
+
+  Future<void> fetchStoreQrImage() async {
+    if (selectedStoreId <= 0) return;
+
+    final token = Get.find<AuthService>().currentUser.value.data?.token;
+    if (token == null || token.trim().isEmpty) return;
+
+    try {
+      isLoadingQrImage.value = true;
+      final bytes = await _repository.fetchStoreQrImage(
+        storeId: selectedStoreId.toString(),
+        token: token,
+      );
+      if (bytes != null && bytes.isNotEmpty) {
+        storeQrBytes.value = bytes;
+      }
+    } catch (e) {
+      debugPrint('fetchStoreQrImage error: $e');
+    } finally {
+      isLoadingQrImage.value = false;
+    }
   }
 
   Future<void> copyStoreUrl() async {
@@ -137,6 +171,104 @@ class SellerStoreQrController extends GetxController {
     if (!_ensureStoreUrl()) return;
 
     await _capturePosterFile(showSuccess: true);
+  }
+
+  void scanStoreQr() {
+    final TextEditingController scanInputController = TextEditingController();
+
+    Get.dialog(
+      Dialog(
+        backgroundColor: const Color(0xFF1B1C1E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF064E3B),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.qr_code_scanner_rounded,
+                  color: Color(0xFF34D399),
+                  size: 36,
+                ),
+              ),
+              const SizedBox(height: 14),
+              const Text(
+                'Scan or Lookup Store QR',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Enter or scan Store Code/URL to open store profile.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12.5),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: scanInputController,
+                style: const TextStyle(color: Colors.white, fontSize: 13.5),
+                decoration: InputDecoration(
+                  hintText: 'Enter Store URL or Store ID...',
+                  hintStyle: const TextStyle(color: Color(0xFF6B7280), fontSize: 13),
+                  filled: true,
+                  fillColor: const Color(0xFF141517),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF2E3033)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF34D399), width: 1.5),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Get.back(),
+                      child: const Text('Cancel', style: TextStyle(color: Color(0xFF9CA3AF))),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF34D399),
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: () {
+                        final input = scanInputController.text.trim();
+                        Get.back();
+                        if (input.isNotEmpty) {
+                          final String targetUrl = input.startsWith('http')
+                              ? input
+                              : '$publicStoreBaseUrl/$input';
+                          launchUrl(Uri.parse(targetUrl), mode: LaunchMode.externalApplication);
+                        }
+                      },
+                      child: const Text('Open Store', style: TextStyle(fontWeight: FontWeight.w900)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   bool _ensureStoreUrl() {

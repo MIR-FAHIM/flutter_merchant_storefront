@@ -1644,14 +1644,33 @@ class _ShopDashboardDrawer extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    "shopDashboardDrawer.description".tr,
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+                  Obx(() {
+                    final homeController = Get.isRegistered<HomeController>() ? Get.find<HomeController>() : null;
+                    final profileData = homeController?.profileData.value;
+                    final packageName = profileData?.shop?.package?.package?.name ?? 'Free';
+
+                    return Text.rich(
+                      TextSpan(
+                        text: "You are in ",
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: packageName,
+                            style: const TextStyle(
+                              color: Colors.amberAccent,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+
+                        ],
+                      ),
+                    );
+                  }),
                 ],
               ),
             ),

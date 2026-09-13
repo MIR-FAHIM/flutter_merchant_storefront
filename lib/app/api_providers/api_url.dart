@@ -51,6 +51,7 @@ class ApiClient {
   static const String subscriptionPackages =
       '$baseUrl/api/subscription-packages';
   static const String stores = '$baseUrl/api/stores/';
+  static String storeQrAppUrl(String storeId) => '$baseUrl/api/stores/$storeId/qr/app';
 
   static const String orderDetails = '$baseUrl/api/orders/details/';
   static const String chatBase = '$baseUrl/api/chat';
