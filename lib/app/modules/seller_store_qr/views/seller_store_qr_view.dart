@@ -67,6 +67,7 @@ class SellerStoreQrView extends GetView<SellerStoreQrController> {
                 key: controller.posterKey,
                 child: SellerStoreQrFrame(
                   storeName: controller.selectedStoreName,
+                  storeCode: controller.selectedStoreCode,
                   storeUrl: controller.selectedStoreHasSlug
                       ? controller.publicStoreUrl
                       : 'https://myzoo.asia/store',

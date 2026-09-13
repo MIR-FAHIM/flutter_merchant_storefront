@@ -43,7 +43,9 @@ class SellerStoreQrController extends GetxController {
           ? selectedStore.value!.name
           : 'MyZoo Store';
 
+
   String get selectedStoreSlug => selectedStore.value?.slug?.trim() ?? '';
+  String get selectedStoreCode => selectedStore.value?.code?.trim() ?? '';
 
   int get selectedStoreId => selectedStore.value?.id ?? 0;
 

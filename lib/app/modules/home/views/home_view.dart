@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:ecom_delivery_flutter/app/api_providers/company_data.dart';
 import 'package:ecom_delivery_flutter/app/models/dashboard_model.dart';
+import 'package:ecom_delivery_flutter/app/modules/seller_tips/views/seller_tips_list_view.dart';
 import 'package:ecom_delivery_flutter/app/routes/app_pages.dart';
 import 'package:ecom_delivery_flutter/app/services/auth_service.dart';
 import 'package:ecom_delivery_flutter/common/Color.dart';
@@ -1715,6 +1716,15 @@ class _ShopDashboardDrawer extends StatelessWidget {
               onTap: () {
                 Navigator.pop(context);
                 Get.toNamed(Routes.SELLER_PACKAGES);
+              },
+            ),
+            _DrawerItem(
+              icon: Icons.lightbulb_outline_rounded,
+              title: "Tips",
+              color: const Color(0xFF34D399),
+              onTap: () {
+                Navigator.pop(context);
+                Get.to(() => const SellerTipsListView());
               },
             ),
 

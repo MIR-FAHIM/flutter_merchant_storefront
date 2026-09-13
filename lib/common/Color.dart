@@ -10,7 +10,7 @@ class AppColors {
 
   static final secondbackgroundColor = HexColor("#333749"); // Slightly lighter
   static final thirdbackgroundColor = HexColor("#1F222D"); // Card backgrounds
-
+  static final backgroundBlueColor = HexColor("#00007c");
   // Text colors
   static final homeTextColor1 = HexColor("#FFFFFF"); // White text
   static final homeTextColor2 = HexColor("#E0E0E0"); // Slightly dimmed white
