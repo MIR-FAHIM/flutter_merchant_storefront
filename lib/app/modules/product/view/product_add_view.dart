@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:ecom_delivery_flutter/app/models/seller_store_model.dart';
 import 'package:ecom_delivery_flutter/app/modules/product/controller/product_controller.dart';
+import 'package:ecom_delivery_flutter/app/routes/app_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ProductAddView extends StatefulWidget {
@@ -173,7 +173,55 @@ class _ProductAddViewState extends State<ProductAddView> {
                           ),
                         ),
                       ],
-                      if (controller.activeCategories.isNotEmpty)
+                      if (controller.activeCategories.isEmpty)
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.shade900.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.amber.shade600.withOpacity(0.4)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.warning_amber_rounded, color: Colors.amber.shade400, size: 22),
+                                  const SizedBox(width: 8),
+                                  const Expanded(
+                                    child: Text(
+                                      'Please add your preferred categories first.',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  onPressed: () => Get.toNamed(Routes.MARKETPLACE_CATEGORIES),
+                                  icon: const Icon(Icons.category_outlined, size: 18, color: Colors.amber),
+                                  label: const Text(
+                                    'Add Preferred Categories',
+                                    style: TextStyle(color: Colors.amber, fontSize: 13, fontWeight: FontWeight.bold),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    side: BorderSide(color: Colors.amber.shade600.withOpacity(0.6)),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    padding: const EdgeInsets.symmetric(vertical: 10),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else
                         _DropdownField<String>(
                           hint: 'Select category',
                           value: selectedCategoryId.value.isEmpty ? null : selectedCategoryId.value,
@@ -385,23 +433,26 @@ class _StoreSelectorWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
         color: const Color(0xFF1B1C1E),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFF2E3033)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
-          isExpanded: true,
           value: selectedStoreId.isEmpty ? null : selectedStoreId,
-          hint: const Text('Select store'),
-          items: stores
-              .map((store) => DropdownMenuItem<String>(
-                    value: store.id?.toString() ?? '',
-                    child: Text(store.name),
-                  ))
-              .toList(),
+          hint: const Text('Select Store', style: TextStyle(color: Colors.grey)),
+          isExpanded: true,
+          dropdownColor: const Color(0xFF1B1C1E),
+          style: const TextStyle(color: Colors.white, fontSize: 14),
+          items: stores.map((store) {
+            return DropdownMenuItem<String>(
+              value: store.id.toString(),
+              child: Text(store.name ?? 'Store #${store.id}'),
+            );
+          }).toList(),
           onChanged: (value) {
             if (value != null) onChanged(value);
           },
@@ -424,7 +475,7 @@ class _FormCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFF1B1C1E),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFF2E3033)),
       ),
       child: Column(
@@ -434,8 +485,8 @@ class _FormCard extends StatelessWidget {
             title,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 14),
@@ -470,20 +521,16 @@ class _TextField extends StatelessWidget {
         style: const TextStyle(color: Colors.white),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: const TextStyle(color: Color(0xFF9CA3AF)),
+          labelStyle: const TextStyle(color: Colors.grey),
           filled: true,
-          fillColor: const Color(0xFF121417),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF2E3033)),
-          ),
+          fillColor: const Color(0xFF111213),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             borderSide: const BorderSide(color: Color(0xFF2E3033)),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF60A5FA)),
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: Color(0xFF34D399)),
           ),
         ),
       ),
@@ -494,9 +541,9 @@ class _TextField extends StatelessWidget {
 class _DropdownField<T> extends StatelessWidget {
   const _DropdownField({
     required this.hint,
+    required this.value,
     required this.items,
     required this.onChanged,
-    this.value,
   });
 
   final String hint;
@@ -506,23 +553,25 @@ class _DropdownField<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF121417),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF2E3033)),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<T>(
-          isExpanded: true,
-          hint: Text(hint, style: const TextStyle(color: Color(0xFF9CA3AF))),
-          value: value,
-          dropdownColor: const Color(0xFF1B1C1E),
-          style: const TextStyle(color: Colors.white),
-          items: items,
-          onChanged: onChanged,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        decoration: BoxDecoration(
+          color: const Color(0xFF111213),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFF2E3033)),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<T>(
+            value: value,
+            hint: Text(hint, style: const TextStyle(color: Colors.grey)),
+            isExpanded: true,
+            dropdownColor: const Color(0xFF1B1C1E),
+            style: const TextStyle(color: Colors.white, fontSize: 14),
+            items: items,
+            onChanged: onChanged,
+          ),
         ),
       ),
     );
@@ -530,7 +579,11 @@ class _DropdownField<T> extends StatelessWidget {
 }
 
 class _SwitchRow extends StatelessWidget {
-  const _SwitchRow({required this.label, required this.value, required this.onChanged});
+  const _SwitchRow({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
 
   final String label;
   final bool value;
@@ -539,15 +592,15 @@ class _SwitchRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Expanded(
-            child: Text(label, style: const TextStyle(color: Colors.white)),
-          ),
+          Text(label, style: const TextStyle(color: Colors.white)),
           Switch(
             value: value,
             onChanged: onChanged,
+            activeColor: const Color(0xFF34D399),
           ),
         ],
       ),

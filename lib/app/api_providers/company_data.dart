@@ -10,7 +10,7 @@ class CompanyData {
   static const String publicStoreBaseUrl = "https://myzoo.asia/store";
   static const String appVersion = "3";
   static const String companyID = "1";
-  static const String companyLogo = "assets/logo/myzoo_mer.png";
+  static const String companyLogo = "assets/logo/merchant-logo.png";
   static const String packageName = "com.myzoo.marchant";
 
   // jayga

@@ -17,6 +17,7 @@ class DeliveryRepository {
       'email': phoneNumber,
       'password': pass,
       'fcm_token': fcm,
+      'user_type': 'seller',
     };
 
     APIManager _manager = APIManager();

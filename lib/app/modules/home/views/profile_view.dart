@@ -42,7 +42,6 @@ class ProfileView extends GetView<HomeController> {
               children: [
                 // Profile picture
 
-
                 // Name
                 Text(
                   'User ID: ${user.id.toString()}',
@@ -93,7 +92,8 @@ class ProfileView extends GetView<HomeController> {
                   CircleAvatar(
                     radius: 32,
                     backgroundColor: Colors.white,
-                    backgroundImage: CachedNetworkImageProvider(user.shop!.logo!.url!),
+                    backgroundImage:
+                        CachedNetworkImageProvider(user.shop!.logo!.url!),
                   ),
                 ],
 
@@ -119,7 +119,7 @@ class ProfileView extends GetView<HomeController> {
                     style: const TextStyle(color: Colors.white70),
                   ),
                 ),
- ListTile(
+                ListTile(
                   leading: const Icon(Icons.store, color: Colors.white),
                   title: Text(
                     'Shop ID:${user.shop?.id ?? 0}',
