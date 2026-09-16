@@ -34,12 +34,16 @@ abstract class Routes {
   static const SELLER_CUSTOMER_DETAIL = _Paths.SELLER_CUSTOMER_DETAIL;
   static const DELIVERY_MAN_ADD = _Paths.DELIVERY_MAN_ADD;
   static const DELIVERY_MAN_LIST = _Paths.DELIVERY_MAN_LIST;
+  static const ORDER_NOTIFICATION = _Paths.ORDER_NOTIFICATION;
+  static const GENERAL_NOTIFICATION = _Paths.GENERAL_NOTIFICATION;
 }
 
 abstract class _Paths {
   static const HOME = '/home';
   static const ROOT = '/root';
   static const LOGIN = '/LOGIN';
+  static const ORDER_NOTIFICATION = '/notification/order';
+  static const GENERAL_NOTIFICATION = '/notification/general';
   static const SELLER_REGISTER = '/seller-register';
   static const SELLER_REGISTER_SUCCESS = '/seller-register/success';
   static const ORDER_SHOP_LIST = '/ORDER_SHOP_LIST';

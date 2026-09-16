@@ -8,6 +8,9 @@ import 'package:ecom_delivery_flutter/app/modules/delivery_man/views/delivery_ma
 import 'package:ecom_delivery_flutter/app/modules/delivery_man/views/delivery_man_list_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/home/bindings/home_binding.dart';
 import 'package:ecom_delivery_flutter/app/modules/home/views/home_view.dart';
+import 'package:ecom_delivery_flutter/app/modules/notification/binding/notification_binding.dart';
+import 'package:ecom_delivery_flutter/app/modules/notification/view/notification_center_view.dart';
+import 'package:ecom_delivery_flutter/app/modules/notification/view/notification_detail_views.dart';
 import 'package:ecom_delivery_flutter/app/modules/order/binding/order_binding.dart';
 import 'package:ecom_delivery_flutter/app/modules/order/view/order_detail_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/order/view/order_view.dart';
@@ -129,6 +132,21 @@ class AppPages {
       name: _Paths.SELLER_STORE_QR,
       page: () => const SellerStoreQrView(),
       binding: SellerStoreQrBinding(),
+    ),
+    GetPage(
+      name: _Paths.ORDER_NOTIFICATION,
+      page: () => const OrderNotificationView(),
+      binding: NotificationBinding(),
+    ),
+    GetPage(
+      name: _Paths.GENERAL_NOTIFICATION,
+      page: () => const GeneralNotificationView(),
+      binding: NotificationBinding(),
+    ),
+    GetPage(
+      name: _Paths.NOTIFICATIONVIEW,
+      page: () => const NotificationCenterView(),
+      binding: NotificationBinding(),
     ),
     GetPage(
       name: _Paths.SELLER_PACKAGES,

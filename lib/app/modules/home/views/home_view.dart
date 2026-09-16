@@ -8,6 +8,7 @@ import 'package:ecom_delivery_flutter/app/services/auth_service.dart';
 import 'package:ecom_delivery_flutter/common/Color.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../controllers/home_controller.dart';
 
@@ -1707,6 +1708,17 @@ class _ShopDashboardDrawer extends StatelessWidget {
               onTap: () {
                 Navigator.pop(context);
                 Get.toNamed(Routes.SELLER_STORE_QR);
+              },
+            ),
+            _DrawerItem(
+              icon: Icons.share_rounded,
+              title: "shopDashboardDrawer.shareCustomerApp".tr,
+              color: const Color(0xFF38BDF8),
+              onTap: () {
+                Navigator.pop(context);
+                Share.share(
+                  'MyZoo কাস্টমার অ্যাপ ডাউনলোড করুন:\nhttps://play.google.com/store/apps/details?id=com.myzoo.customer',
+                );
               },
             ),
             _DrawerItem(

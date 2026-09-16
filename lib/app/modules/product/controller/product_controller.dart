@@ -2,6 +2,7 @@
 import 'dart:convert';
 
 import 'package:ecom_delivery_flutter/app/models/product/product_response_model.dart';
+import 'package:ecom_delivery_flutter/app/models/product/shop_product_list_response_model.dart';
 import 'package:ecom_delivery_flutter/app/models/seller_store_model.dart';
 import 'package:ecom_delivery_flutter/app/repositories/product_rep.dart';
 import 'package:ecom_delivery_flutter/app/routes/app_pages.dart';
@@ -24,8 +25,23 @@ class ProductController extends GetxController {
 
   final ScrollController scrollController = ScrollController();
   final TextEditingController productSearchController = TextEditingController();
+  final TextEditingController addNameController = TextEditingController();
+  final TextEditingController addSlugController = TextEditingController();
+  final TextEditingController addPriceController = TextEditingController();
+  final TextEditingController addStockController = TextEditingController(text: '0');
+  final TextEditingController addPurchaseController = TextEditingController(text: '0');
+  final TextEditingController addUnitController = TextEditingController(text: 'pcs');
+  final TextEditingController addWeightController = TextEditingController(text: '0');
+  final TextEditingController addShortDescriptionController = TextEditingController();
+  final TextEditingController addDescriptionController = TextEditingController();
+  final TextEditingController addDiscountController = TextEditingController(text: '0');
 
   final RxList<ProductData> products = <ProductData>[].obs;
+  final RxList<ProductData> shopProducts = <ProductData>[].obs;
+  final Rx<ShopProductListResponseModel?> shopProductListResponse =
+      Rx<ShopProductListResponseModel?>(null);
+  final Rx<ShopProductPagination?> shopProductPagination =
+      Rx<ShopProductPagination?>(null);
   final Rx<ProductData?> selectedProduct = Rx<ProductData?>(null);
 
   final RxBool isInitialLoading = false.obs;
@@ -56,12 +72,25 @@ class ProductController extends GetxController {
   final RxBool isCategorySyncing = false.obs;
   final RxBool isBrandsLoading = false.obs;
   final RxBool isCreatingProduct = false.obs;
+  final RxBool addTodaysDeal = false.obs;
+  final RxBool addPublished = true.obs;
+  final RxBool addFeatured = false.obs;
+  final RxBool addRefundable = false.obs;
+  final RxBool addCashOnDelivery = true.obs;
+  final RxBool addStockVisibility = true.obs;
+  final RxString addSelectedBrandId = ''.obs;
+  final RxString addSelectedCategoryId = ''.obs;
+  final RxString addSelectedDiscountType = 'amount'.obs;
+  final RxList<XFile> addSelectedImages = <XFile>[].obs;
+  final RxList<XFile> editSelectedImages = <XFile>[].obs;
+  final RxInt addCurrentStep = 0.obs;
 
   final RxInt currentPage = 1.obs;
   final RxInt lastPage = 1.obs;
   final RxInt totalProducts = 0.obs;
 
   late final String shopId;
+  bool _isProductAddFlowPrepared = false;
 
   bool get hasMore => currentPage.value < lastPage.value;
 
@@ -73,9 +102,10 @@ class ProductController extends GetxController {
     selectedStoreId.value = shopId;
 
     scrollController.addListener(_onScroll);
+    addNameController.addListener(_syncAddSlugFromName);
 
     loadActiveCategories();
-    getStoreProductList(isRefresh: true);
+    getShopProductList(isRefresh: true);
   }
 
   @override
@@ -83,6 +113,17 @@ class ProductController extends GetxController {
     scrollController.removeListener(_onScroll);
     scrollController.dispose();
     productSearchController.dispose();
+    addNameController.removeListener(_syncAddSlugFromName);
+    addNameController.dispose();
+    addSlugController.dispose();
+    addPriceController.dispose();
+    addStockController.dispose();
+    addPurchaseController.dispose();
+    addUnitController.dispose();
+    addWeightController.dispose();
+    addShortDescriptionController.dispose();
+    addDescriptionController.dispose();
+    addDiscountController.dispose();
     super.onClose();
   }
 
@@ -99,17 +140,17 @@ class ProductController extends GetxController {
     final double maxPosition = scrollController.position.maxScrollExtent;
 
     if (currentPosition >= maxPosition - 250) {
-      getMoreStoreProductList();
+      getMoreShopProductList();
     }
   }
 
   Future<void> refreshProducts() async {
-    await getStoreProductList(isRefresh: true);
+    await getShopProductList(isRefresh: true);
   }
 
   Future<void> applyProductFilters() async {
     productSearchQuery.value = productSearchController.text.trim();
-    await getStoreProductList(isRefresh: true);
+    await getShopProductList(isRefresh: true);
   }
 
   Future<void> clearProductFilters() async {
@@ -117,7 +158,7 @@ class ProductController extends GetxController {
     productSearchQuery.value = '';
     productFilterCategoryId.value = '';
     productFilterIsActive.value = null;
-    await getStoreProductList(isRefresh: true);
+    await getShopProductList(isRefresh: true);
   }
 
   void setProductFilterCategory(String value) {
@@ -126,6 +167,162 @@ class ProductController extends GetxController {
 
   void setProductFilterStatus(bool? value) {
     productFilterIsActive.value = value;
+  }
+
+  void prepareProductAddForm() {
+    if (_isProductAddFlowPrepared) return;
+    _isProductAddFlowPrepared = true;
+    Future.microtask(initializeProductAddFlow);
+  }
+
+  void resetProductAddForm() {
+    addNameController.clear();
+    addSlugController.clear();
+    addPriceController.clear();
+    addStockController.text = '0';
+    addPurchaseController.text = '0';
+    addUnitController.text = 'pcs';
+    addWeightController.text = '0';
+    addShortDescriptionController.clear();
+    addDescriptionController.clear();
+    addDiscountController.text = '0';
+    addTodaysDeal.value = false;
+    addPublished.value = true;
+    addFeatured.value = false;
+    addRefundable.value = false;
+    addCashOnDelivery.value = true;
+    addStockVisibility.value = true;
+    addSelectedBrandId.value = '';
+    addSelectedCategoryId.value = '';
+    addSelectedDiscountType.value = 'amount';
+    addSelectedImages.clear();
+    addCurrentStep.value = 0;
+    addProductError.value = '';
+  }
+
+  void prepareDuplicateProduct(ProductData product) {
+    resetProductAddForm();
+    addNameController.text = '${product.name ?? 'পণ্য'} (কপি)';
+    addSlugController.text = generateSlug(addNameController.text);
+    addPriceController.text = (product.unitPrice ?? 0).toString();
+    addStockController.text = (product.currentStock ?? 0).toString();
+    addPurchaseController.text = (product.purchasePrice ?? 0).toString();
+    addUnitController.text = product.unit?.trim().isNotEmpty == true
+        ? product.unit!
+        : 'pcs';
+    addWeightController.text = (product.weight ?? 0).toString();
+    addDescriptionController.text = product.description ?? '';
+    addDiscountController.text = (product.discount ?? 0).toString();
+    addSelectedCategoryId.value = product.categoryId?.toString() ?? '';
+    addSelectedBrandId.value = product.brandId?.toString() ?? '';
+    addSelectedDiscountType.value =
+        product.discountType?.trim().isNotEmpty == true
+            ? product.discountType!
+            : 'amount';
+    addTodaysDeal.value = (product.todaysDeal ?? 0) == 1;
+    addPublished.value = (product.published ?? 0) == 1;
+    addFeatured.value = (product.featured ?? 0) == 1;
+    addRefundable.value = (product.refundable ?? 0) == 1;
+    addCashOnDelivery.value = (product.cashOnDelivery ?? 0) == 1;
+    addStockVisibility.value = product.stockVisibilityState != '0';
+    addCurrentStep.value = 0;
+    _isProductAddFlowPrepared = false;
+  }
+
+  Future<void> pickProductImages() async {
+    final ImagePicker picker = ImagePicker();
+    final List<XFile> files = await picker.pickMultiImage();
+    if (files.isNotEmpty) {
+      addSelectedImages.assignAll(files);
+    }
+  }
+
+  Future<void> pickEditProductImages() async {
+    final ImagePicker picker = ImagePicker();
+    final List<XFile> files = await picker.pickMultiImage();
+    if (files.isNotEmpty) {
+      editSelectedImages.assignAll(files);
+    }
+  }
+
+  void clearEditProductImages() {
+    editSelectedImages.clear();
+  }
+
+  Future<void> submitProductAddForm() async {
+    final productName = addNameController.text.trim();
+    final categoryId = addSelectedCategoryId.value;
+
+    if (productName.isEmpty || categoryId.isEmpty) {
+      addProductError.value = 'অনুগ্রহ করে পণ্যের নাম এবং ক্যাটাগরি পূরণ করুন।';
+      return;
+    }
+
+    if (addPriceController.text.trim().isEmpty ||
+        addStockController.text.trim().isEmpty) {
+      addProductError.value = 'অনুগ্রহ করে বিক্রয় মূল্য এবং বর্তমান স্টক দিন।';
+      return;
+    }
+
+    final created = await createSellerProduct(
+      name: productName,
+      categoryId: categoryId,
+      unitPrice: addPriceController.text.trim(),
+      currentStock: addStockController.text.trim(),
+      brandId: addSelectedBrandId.value.isNotEmpty
+          ? addSelectedBrandId.value
+          : null,
+      purchasePrice: addPurchaseController.text.trim(),
+      unit: addUnitController.text.trim(),
+      weight: addWeightController.text.trim(),
+      shortDescription: addShortDescriptionController.text.trim(),
+      description: addDescriptionController.text.trim(),
+      discount: addDiscountController.text.trim(),
+      discountType: addSelectedDiscountType.value,
+      todaysDeal: addTodaysDeal.value,
+      published: addPublished.value,
+      featured: addFeatured.value,
+      refundable: addRefundable.value,
+      cashOnDelivery: addCashOnDelivery.value,
+      stockVisibility: addStockVisibility.value,
+      images: addSelectedImages,
+    );
+
+    if (created) {
+      Get.snackbar(
+        'সফল',
+        'পণ্য সফলভাবে তৈরি করা হয়েছে',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      resetProductAddForm();
+      _isProductAddFlowPrepared = false;
+      Get.offNamed(Routes.PRODUCT_LIST);
+    }
+  }
+
+  void nextProductAddStep() {
+    if (addCurrentStep.value < 3) {
+      addCurrentStep.value++;
+    } else {
+      submitProductAddForm();
+    }
+  }
+
+  void previousProductAddStep() {
+    if (addCurrentStep.value > 0) {
+      addCurrentStep.value--;
+    }
+  }
+
+  void _syncAddSlugFromName() {
+    final slugText = addSlugController.text.trim();
+    if (slugText.isEmpty || slugText == 'product') {
+      final nextSlug = generateSlug(addNameController.text);
+      addSlugController.text = nextSlug;
+      addSlugController.selection = TextSelection.fromPosition(
+        TextPosition(offset: addSlugController.text.length),
+      );
+    }
   }
 
   Future<void> getProductDetails({required int productId}) async {
@@ -155,6 +352,7 @@ class ProductController extends GetxController {
         final dynamic item = payload['data'] ?? payload;
 
         if (item is Map) {
+          editSelectedImages.clear();
           selectedProduct.value = ProductData.fromJson(Map<String, dynamic>.from(item));
         } else {
           selectedProduct.value = null;
@@ -224,14 +422,78 @@ class ProductController extends GetxController {
     }
   }
 
-  @Deprecated('Inactive: use getStoreProductList() for the seller-store product API.')
-  Future<void> getShopProductList({
-    bool isRefresh = false,
+  Future<bool> updateProductStock({
+    required int productId,
+    required int currentStock,
   }) async {
-    debugPrint('Inactive getShopProductList called. Use getStoreProductList instead.');
+    final saved = await updateProduct(
+      productId: productId,
+      fields: {
+        'current_stock': currentStock.toString(),
+      },
+    );
+
+    if (saved) {
+      await refreshProducts();
+    }
+
+    return saved;
   }
 
-  Future<void> getStoreProductList({
+  Future<bool> uploadProductImages({
+    required int productId,
+    required List<XFile> images,
+  }) async {
+    if (images.isEmpty) {
+      return true;
+    }
+
+    if (isSaving.value) {
+      return false;
+    }
+
+    try {
+      isSaving.value = true;
+      saveMessage.value = '';
+
+      final uploadResponse = await _productRepository.uploadProductImages(
+        productId: productId,
+        images: images,
+      );
+      final uploadStatus = uploadResponse['status_code'] is int
+          ? uploadResponse['status_code'] as int
+          : 500;
+      final uploadBody = uploadResponse['body'];
+      final uploadPayload = uploadBody is Map
+          ? Map<String, dynamic>.from(uploadBody)
+          : <String, dynamic>{};
+
+      if (uploadStatus < 200 ||
+          uploadStatus >= 300 ||
+          !_isSuccessPayload(uploadPayload)) {
+        saveMessage.value = _productApiMessage(
+          uploadPayload,
+          fallback: 'Images could not be uploaded.',
+        );
+        return false;
+      }
+
+      saveMessage.value =
+          uploadPayload['message']?.toString() ?? 'Product images uploaded successfully';
+      editSelectedImages.clear();
+      await getProductDetails(productId: productId);
+      await refreshProducts();
+      return true;
+    } catch (e) {
+      saveMessage.value = e.toString();
+      debugPrint('uploadProductImages error: $e');
+      return false;
+    } finally {
+      isSaving.value = false;
+    }
+  }
+
+  Future<void> getShopProductList({
     bool isRefresh = false,
   }) async {
     if (isInitialLoading.value ||
@@ -246,7 +508,7 @@ class ProductController extends GetxController {
       if (isRefresh) {
         currentPage.value = 1;
 
-        if (products.isEmpty) {
+        if (shopProducts.isEmpty) {
           isInitialLoading.value = true;
         } else {
           isRefreshing.value = true;
@@ -255,8 +517,8 @@ class ProductController extends GetxController {
         isInitialLoading.value = true;
       }
 
-      final response = await _productRepository.storeProductList(
-        storeId: shopId,
+      final response = await _productRepository.shopProductList(
+        shopId: shopId,
         page: currentPage.value,
         perPage: perPage,
         search: productSearchQuery.value,
@@ -264,33 +526,49 @@ class ProductController extends GetxController {
         isActive: productFilterIsActive.value,
       );
 
-      final ProductResponseModel model = ProductResponseModel.fromJson(
+      final ShopProductListResponseModel model =
+          ShopProductListResponseModel.fromJson(
         Map<String, dynamic>.from(response),
       );
 
-      if (model.isSuccess) {
-        final ProductPagination? pagination = model.data;
+      shopProductListResponse.value = model;
 
-        products.assignAll(pagination?.products ?? []);
+      if (model.isSuccess) {
+        final ShopProductPagination? pagination = model.data;
+        shopProductPagination.value = pagination;
+
+        shopProducts.assignAll(pagination?.products ?? []);
+        products.assignAll(shopProducts);
 
         currentPage.value = pagination?.currentPage ?? 1;
         lastPage.value = pagination?.lastPage ?? 1;
-        totalProducts.value = pagination?.total ?? products.length;
+        totalProducts.value = pagination?.total ?? shopProducts.length;
       } else {
+        shopProducts.clear();
         products.clear();
+        shopProductPagination.value = null;
         errorMessage.value = model.message ?? 'Failed to load products';
       }
     } catch (e) {
+      shopProducts.clear();
       products.clear();
+      shopProductPagination.value = null;
+      shopProductListResponse.value = null;
       errorMessage.value = e.toString();
-      debugPrint('getStoreProductList error: $e');
+      debugPrint('getShopProductList error: $e');
     } finally {
       isInitialLoading.value = false;
       isRefreshing.value = false;
     }
   }
 
-  Future<void> getMoreStoreProductList() async {
+  Future<void> getStoreProductList({
+    bool isRefresh = false,
+  }) async {
+    await getShopProductList(isRefresh: isRefresh);
+  }
+
+  Future<void> getMoreShopProductList() async {
     if (!hasMore) return;
 
     if (isInitialLoading.value ||
@@ -305,8 +583,8 @@ class ProductController extends GetxController {
 
       final int nextPage = currentPage.value + 1;
 
-      final response = await _productRepository.storeProductList(
-        storeId: shopId,
+      final response = await _productRepository.shopProductList(
+        shopId: shopId,
         page: nextPage,
         perPage: perPage,
         search: productSearchQuery.value,
@@ -314,14 +592,19 @@ class ProductController extends GetxController {
         isActive: productFilterIsActive.value,
       );
 
-      final ProductResponseModel model = ProductResponseModel.fromJson(
+      final ShopProductListResponseModel model =
+          ShopProductListResponseModel.fromJson(
         Map<String, dynamic>.from(response),
       );
 
-      if (model.isSuccess) {
-        final ProductPagination? pagination = model.data;
+      shopProductListResponse.value = model;
 
-        products.addAll(pagination?.products ?? []);
+      if (model.isSuccess) {
+        final ShopProductPagination? pagination = model.data;
+        shopProductPagination.value = pagination;
+
+        shopProducts.addAll(pagination?.products ?? []);
+        products.assignAll(shopProducts);
 
         currentPage.value = pagination?.currentPage ?? nextPage;
         lastPage.value = pagination?.lastPage ?? lastPage.value;
@@ -331,15 +614,14 @@ class ProductController extends GetxController {
       }
     } catch (e) {
       errorMessage.value = e.toString();
-      debugPrint('getMoreStoreProductList error: $e');
+      debugPrint('getMoreShopProductList error: $e');
     } finally {
       isMoreLoading.value = false;
     }
   }
 
-  @Deprecated('Inactive: use getMoreStoreProductList() for the seller-store product API.')
-  Future<void> getMoreShopProductList() async {
-    debugPrint('Inactive getMoreShopProductList called. Use getMoreStoreProductList instead.');
+  Future<void> getMoreStoreProductList() async {
+    await getMoreShopProductList();
   }
 
   Future<void> initializeProductAddFlow() async {
@@ -674,7 +956,7 @@ class ProductController extends GetxController {
 
   Future<bool> createSellerProduct({
     required String name,
-    required String slug,
+    String? slug,
     required String categoryId,
     required String unitPrice,
     required String currentStock,
@@ -695,24 +977,24 @@ class ProductController extends GetxController {
     required List<XFile> images,
   }) async {
     if (selectedStoreId.value.isEmpty) {
-      addProductError.value = 'Please select a store first.';
+      addProductError.value = 'অনুগ্রহ করে প্রথমে একটি স্টোর নির্বাচন করুন।';
       return false;
     }
 
     if (images.isEmpty) {
-      addProductError.value = 'Please select at least one image for the product.';
+      addProductError.value = 'অনুগ্রহ করে পণ্যের কমপক্ষে একটি ছবি নির্বাচন করুন।';
       return false;
     }
 
     if (categoryId.isEmpty) {
-      addProductError.value = 'Please select an active product category.';
+      addProductError.value = 'অনুগ্রহ করে একটি সক্রিয় ক্যাটাগরি নির্বাচন করুন।';
       return false;
     }
 
     final user = Get.find<AuthService>().currentUser.value.data?.user;
     final userId = user?.id?.toString();
     if (userId == null || userId.isEmpty) {
-      addProductError.value = 'Seller session expired.';
+      addProductError.value = 'সেলার সেশন শেষ হয়ে গেছে, পুনরায় লগইন করুন।';
       return false;
     }
 
@@ -722,7 +1004,6 @@ class ProductController extends GetxController {
 
       final Map<String, String> fields = {
         'name': name.trim(),
-        'slug': slug.trim(),
         'category_id': categoryId,
         'added_by': userId,
         'user_id': userId,

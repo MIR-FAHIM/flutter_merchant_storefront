@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:ecom_delivery_flutter/app/services/auth_service.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:ecom_delivery_flutter/app/api_providers/customExceptions.dart';
 
 class APIManager {
@@ -223,6 +224,25 @@ class APIManager {
     }
   }
 
+  Future<Map<String, dynamic>> getStatus(
+      String url, Map<String, String> headerData) async {
+    print("Calling API: $url");
+    headerData["Accept"] = "application/json";
+    print('header: $headerData');
+
+    try {
+      final response = await http.get(Uri.parse(url), headers: headerData);
+      final body = _decodeResponseBody(response.body);
+
+      return {
+        'status_code': response.statusCode,
+        'body': body,
+      };
+    } on SocketException {
+      throw FetchDataException('No Internet connection');
+    }
+  }
+
   Future<Map<String, dynamic>> postJsonWithHeaderStatus(
       String url, Map<String, dynamic> param, Map<String, String> headerData) async {
     print("Calling API: $url");
@@ -250,6 +270,51 @@ class APIManager {
     }
   }
 
+  Future<Map<String, dynamic>> multipartPostWithHeaderStatus(
+    String url, {
+    required Map<String, String> fields,
+    List<APIUploadFile> files = const <APIUploadFile>[],
+    Map<String, String>? headerData,
+  }) async {
+    final headers = headerData ?? <String, String>{};
+    print("Calling API: $url");
+    print("Calling parameters: $fields");
+    headers["Authorization"] =
+        "Bearer ${Get.find<AuthService>().currentUser.value.data!.token}";
+    headers["Accept"] = "application/json";
+    print('token: $headers');
+
+    try {
+      final request = http.MultipartRequest('POST', Uri.parse(url));
+      request.headers.addAll(headers);
+      request.fields.addAll(fields);
+
+      for (final file in files) {
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            file.fieldName,
+            file.bytes,
+            filename: file.fileName,
+            contentType: file.contentType == null
+                ? null
+                : MediaType.parse(file.contentType!),
+          ),
+        );
+      }
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      final body = _decodeResponseBody(response.body);
+
+      return {
+        'status_code': response.statusCode,
+        'body': body,
+      };
+    } on SocketException {
+      throw FetchDataException('No Internet connection');
+    }
+  }
+
   dynamic _decodeResponseBody(String body) {
     if (body.isEmpty) return null;
 
@@ -259,10 +324,12 @@ class APIManager {
       return {'message': body};
     }
   }
- Future<dynamic> patchWithHeader(
+
+  Future<dynamic> patchWithHeader(
       String url, Map<String, String> headerData) async {
     print("Calling API: $url");
-    headerData["Authorization"] = "Bearer ${Get.find<AuthService>().currentUser.value.data!.token}";
+    headerData["Authorization"] =
+        "Bearer ${Get.find<AuthService>().currentUser.value.data!.token}";
     print('token: $headerData');
     var responseJson;
     try {
@@ -312,4 +379,18 @@ class APIManager {
             'Error occurred while communicating with Server with StatusCode: ${response.statusCode}');
     }
   }
+}
+
+class APIUploadFile {
+  const APIUploadFile({
+    required this.fieldName,
+    required this.bytes,
+    required this.fileName,
+    this.contentType,
+  });
+
+  final String fieldName;
+  final List<int> bytes;
+  final String fileName;
+  final String? contentType;
 }

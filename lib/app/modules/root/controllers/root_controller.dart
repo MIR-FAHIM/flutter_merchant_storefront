@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ecom_delivery_flutter/app/models/notification/popup_image_notification.dart';
 import 'package:ecom_delivery_flutter/app/modules/home/views/home_view.dart';
+import 'package:new_version_plus/new_version_plus.dart';
 
 
 class RootController extends GetxController {
@@ -22,7 +23,7 @@ class RootController extends GetxController {
   void onInit() {
     super.onInit();
 
-
+    advancedStatusCheck();
     //
 
   }
@@ -46,6 +47,24 @@ class RootController extends GetxController {
   ];
 
   Widget get currentPage => pages[currentIndex.value];
-
+  advancedStatusCheck() async {
+    print("hle broooooo");
+    final newVersion = NewVersionPlus(
+      androidId: 'com.myzoo.marchant',
+    );
+    var status = await newVersion.getVersionStatus();
+    print("version status ${status!.appStoreLink}");
+    if (status.canUpdate == true) {
+      print("update av");
+      newVersion.showUpdateDialog(
+        // launchMode: LaunchMode.externalApplication,
+        context: Get.context!,
+        allowDismissal: false,
+        versionStatus: status,
+        dialogTitle: 'Update Available!',
+        dialogText: 'Upgrade  ${status.localVersion} to ${status.storeVersion}',
+      );
+    }
+  }
 
 }

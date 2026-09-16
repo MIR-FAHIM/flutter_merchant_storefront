@@ -1,7 +1,10 @@
+import 'package:ecom_delivery_flutter/app/api_providers/company_data.dart';
+import 'package:ecom_delivery_flutter/app/models/product/product_response_model.dart';
 import 'package:ecom_delivery_flutter/app/modules/product/controller/product_controller.dart';
 import 'package:ecom_delivery_flutter/app/routes/app_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:share_plus/share_plus.dart';
 
 import 'widgets/product_card.dart';
 
@@ -62,14 +65,14 @@ class ProductListView extends GetView<ProductController> {
               }
 
               if (controller.errorMessage.value.isNotEmpty &&
-                  controller.products.isEmpty) {
+                  controller.shopProducts.isEmpty) {
                 return _ProductErrorView(
                   message: controller.errorMessage.value,
                   onRetry: controller.refreshProducts,
                 );
               }
 
-              if (controller.products.isEmpty) {
+              if (controller.shopProducts.isEmpty) {
                 return _ProductEmptyView(
                   onRefresh: controller.refreshProducts,
                 );
@@ -86,7 +89,7 @@ class ProductListView extends GetView<ProductController> {
                     SliverToBoxAdapter(
                       child: _ProductListHeader(
                         total: controller.totalProducts.value,
-                        showing: controller.products.length,
+                        showing: controller.shopProducts.length,
                       ),
                     ),
                     SliverPadding(
@@ -94,21 +97,20 @@ class ProductListView extends GetView<ProductController> {
                       sliver: SliverGrid(
                         delegate: SliverChildBuilderDelegate(
                           (context, index) {
-                            final product = controller.products[index];
+                            final product = controller.shopProducts[index];
 
                             return ProductCard(
                               product: product,
                               onTap: () {
-                                Get.toNamed(
-                                  Routes.PRODUCT_DETAILS,
-                                  arguments: {
-                                    'product_id': product.id,
-                                  },
+                                _showProductActions(
+                                  context: context,
+                                  product: product,
+                                  controller: controller,
                                 );
                               },
                             );
                           },
-                          childCount: controller.products.length,
+                          childCount: controller.shopProducts.length,
                         ),
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
@@ -160,6 +162,389 @@ class ProductListView extends GetView<ProductController> {
             }),
           ),
         ],
+      ),
+    );
+  }
+}
+
+void _showProductActions({
+  required BuildContext context,
+  required ProductData product,
+  required ProductController controller,
+}) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: ProductListView._cardColor,
+    barrierColor: Colors.black.withOpacity(0.55),
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+    ),
+    builder: (sheetContext) {
+      return SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  height: 4,
+                  width: 44,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4B5563),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                product.name ?? 'পণ্য',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'একটি অপশন বেছে নিন',
+                style: TextStyle(
+                  color: Color(0xFF9CA3AF),
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 14),
+              _ProductActionTile(
+                icon: Icons.visibility_outlined,
+                label: 'বিস্তারিত দেখুন',
+                color: const Color(0xFF60A5FA),
+                onTap: () {
+                  Get.back();
+                  Get.toNamed(
+                    Routes.PRODUCT_DETAILS,
+                    arguments: {'product_id': product.id},
+                  );
+                },
+              ),
+              _ProductActionTile(
+                icon: Icons.copy_rounded,
+                label: 'ডুপ্লিকেট করুন',
+                color: const Color(0xFF34D399),
+                onTap: () {
+                  Get.back();
+                  controller.prepareDuplicateProduct(product);
+                  Get.toNamed(Routes.PRODUCT_ADD);
+                },
+              ),
+              _ProductActionTile(
+                icon: Icons.inventory_rounded,
+                label: 'স্টক আপডেট করুন',
+                color: const Color(0xFFFBBF24),
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  Future.microtask(
+                    () => _showStockUpdateSheet(
+                      context: context,
+                      product: product,
+                      controller: controller,
+                    ),
+                  );
+                },
+              ),
+              _ProductActionTile(
+                icon: Icons.share_outlined,
+                label: 'শেয়ার করুন',
+                color: const Color(0xFF2DD4BF),
+                onTap: () {
+                  Get.back();
+                  Share.share(_productShareText(product));
+                },
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+String _productShareText(ProductData product) {
+  final name = product.name?.trim().isNotEmpty == true
+      ? product.name!.trim()
+      : 'Product';
+  final price = product.unitPrice == null ? '' : '\nPrice: ৳${product.unitPrice}';
+  final storeUrl = product.slug?.trim().isNotEmpty == true
+      ? '\n${CompanyData.publicStoreBaseUrl}/${product.slug}'
+      : '';
+
+  return '$name$price$storeUrl';
+}
+
+void _showStockUpdateSheet({
+  required BuildContext context,
+  required ProductData product,
+  required ProductController controller,
+}) {
+  int stock = product.currentStock ?? 0;
+  bool isSaving = false;
+
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: ProductListView._cardColor,
+    barrierColor: Colors.black.withOpacity(0.55),
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+    ),
+    builder: (sheetContext) {
+      return StatefulBuilder(
+        builder: (context, setModalState) {
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      height: 4,
+                      width: 44,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4B5563),
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    product.name ?? 'পণ্য',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'বর্তমান স্টক আপডেট করুন',
+                    style: TextStyle(
+                      color: Color(0xFF9CA3AF),
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF111213),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: ProductListView._borderColor),
+                    ),
+                    child: Row(
+                      children: [
+                        _StockStepperButton(
+                          icon: Icons.remove_rounded,
+                          onTap: isSaving || stock <= 0
+                              ? null
+                              : () => setModalState(() => stock--),
+                        ),
+                        Expanded(
+                          child: Column(
+                            children: [
+                              const Text(
+                                'বর্তমান স্টক',
+                                style: TextStyle(
+                                  color: Color(0xFF9CA3AF),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                stock.toString(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 34,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        _StockStepperButton(
+                          icon: Icons.add_rounded,
+                          onTap: isSaving
+                              ? null
+                              : () => setModalState(() => stock++),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: isSaving
+                          ? null
+                          : () async {
+                              final productId = product.id;
+                              if (productId == null || productId <= 0) {
+                                Get.snackbar(
+                                  'স্টক আপডেট ব্যর্থ হয়েছে',
+                                  'সঠিক পণ্য নির্বাচন করা হয়নি।',
+                                  snackPosition: SnackPosition.BOTTOM,
+                                );
+                                return;
+                              }
+
+                              setModalState(() => isSaving = true);
+                              final saved = await controller.updateProductStock(
+                                productId: productId,
+                                currentStock: stock,
+                              );
+                              setModalState(() => isSaving = false);
+
+                              if (saved) {
+                                Navigator.of(sheetContext).pop();
+                                Get.snackbar(
+                                  'সফল',
+                                  'স্টক সফলভাবে আপডেট হয়েছে',
+                                  snackPosition: SnackPosition.BOTTOM,
+                                );
+                              } else {
+                                Get.snackbar(
+                                  'স্টক আপডেট ব্যর্থ হয়েছে',
+                                  controller.saveMessage.value.isNotEmpty
+                                      ? controller.saveMessage.value
+                                      : 'স্টক আপডেট করতে সমস্যা হয়েছে।',
+                                  snackPosition: SnackPosition.BOTTOM,
+                                  backgroundColor: Colors.redAccent,
+                                );
+                              }
+                            },
+                      icon: isSaving
+                          ? const SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.save_rounded),
+                      label: const Text('স্টক সংরক্ষণ করুন'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF34D399),
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
+class _StockStepperButton extends StatelessWidget {
+  const _StockStepperButton({
+    required this.icon,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Opacity(
+        opacity: onTap == null ? 0.45 : 1,
+        child: Container(
+          height: 48,
+          width: 48,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: const Color(0xFF1B1C1E),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: ProductListView._borderColor),
+          ),
+          child: Icon(
+            icon,
+            color: const Color(0xFF34D399),
+            size: 24,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ProductActionTile extends StatelessWidget {
+  const _ProductActionTile({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF111213),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: ProductListView._borderColor),
+        ),
+        child: Row(
+          children: [
+            Container(
+              height: 38,
+              width: 38,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.14),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: Color(0xFF6B7280),
+            ),
+          ],
+        ),
       ),
     );
   }

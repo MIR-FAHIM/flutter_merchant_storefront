@@ -1,11 +1,5 @@
-import 'dart:convert';
-
 import 'package:ecom_delivery_flutter/app/api_providers/api_manager.dart';
 import 'package:ecom_delivery_flutter/app/api_providers/api_url.dart';
-import 'package:ecom_delivery_flutter/app/services/auth_service.dart';
-import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../models/store_category_model.dart';
@@ -15,13 +9,24 @@ class ProductRepository {
     required String shopId,
     required int page,
     int perPage = 24,
+    String? search,
+    int? categoryId,
+    bool? isActive,
   }) async {
     final APIManager manager = APIManager();
 
-    final String url =
-        '${ApiClient.shopProductList}$shopId?page=$page&per_page=$perPage';
+    final uri = Uri.parse('${ApiClient.shopProductList}$shopId').replace(
+      queryParameters: {
+        'page': page.toString(),
+        'per_page': perPage.toString(),
+        if (search != null && search.trim().isNotEmpty)
+          'search': search.trim(),
+        if (categoryId != null) 'category_id': categoryId.toString(),
+        if (isActive != null) 'is_active': isActive.toString(),
+      },
+    );
 
-    final response = await manager.getWithHeader(url, {});
+    final response = await manager.getWithHeader(uri.toString(), {});
 
     return response;
   }
@@ -57,7 +62,8 @@ class ProductRepository {
     required String shopId,
   }) async {
     final APIManager manager = APIManager();
-    final String url = '${ApiClient.shopProductLimitReport}$shopId/product-limit-report';
+    final String url =
+        '${ApiClient.shopProductLimitReport}$shopId/product-limit-report';
     return manager.getWithHeaderStatus(url, {});
   }
 
@@ -99,43 +105,23 @@ class ProductRepository {
     final APIManager manager = APIManager();
     final String url = '${ApiClient.publicStoreCategories}$storeSlug/categories';
 
-    final Map<String, String> headers = {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    };
-
-    try {
-      final response = await http.get(Uri.parse(url), headers: headers);
-      final dynamic decoded = response.body.isEmpty
-          ? <String, dynamic>{}
-          : jsonDecode(response.body);
-
-      return {
-        'status_code': response.statusCode,
-        'body': decoded is Map<String, dynamic>
-            ? decoded
-            : <String, dynamic>{'message': response.body},
-      };
-    } catch (_) {
-      return {
-        'status_code': 500,
-        'body': {'message': 'Could not load store categories. Please try again.'},
-      };
-    }
+    return manager.getStatus(url, {});
   }
 
   Future<List<StoreCategoryModel>> parsePublicStoreCategories({
     required String storeSlug,
   }) async {
     final response = await fetchPublicStoreCategories(storeSlug: storeSlug);
-    final statusCode = response['status_code'] is int ? response['status_code'] as int : 500;
+    final statusCode =
+        response['status_code'] is int ? response['status_code'] as int : 500;
     final body = response['body'];
 
     if (statusCode < 200 || statusCode >= 300) {
       return const <StoreCategoryModel>[];
     }
 
-    final payload = body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
+    final payload =
+        body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
     final data = payload['data'];
     return StoreCategoryModel.fromList(data);
   }
@@ -149,36 +135,17 @@ class ProductRepository {
   }) async {
     final String queryParams = <String>[
       'store_slug=${Uri.encodeComponent(storeSlug)}',
-      if (categoryId != null && categoryId.isNotEmpty) 'category_id=${Uri.encodeComponent(categoryId)}',
-      if (categorySlug != null && categorySlug.isNotEmpty) 'category_slug=${Uri.encodeComponent(categorySlug)}',
+      if (categoryId != null && categoryId.isNotEmpty)
+        'category_id=${Uri.encodeComponent(categoryId)}',
+      if (categorySlug != null && categorySlug.isNotEmpty)
+        'category_slug=${Uri.encodeComponent(categorySlug)}',
       'page=$page',
       'per_page=$perPage',
     ].join('&');
 
     final String url = '${ApiClient.publicStoreProducts}?$queryParams';
-    final Map<String, String> headers = {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    };
-
-    try {
-      final response = await http.get(Uri.parse(url), headers: headers);
-      final dynamic decoded = response.body.isEmpty
-          ? <String, dynamic>{}
-          : jsonDecode(response.body);
-
-      return {
-        'status_code': response.statusCode,
-        'body': decoded is Map<String, dynamic>
-            ? decoded
-            : <String, dynamic>{'message': response.body},
-      };
-    } catch (_) {
-      return {
-        'status_code': 500,
-        'body': {'message': 'Could not load products for this store.'},
-      };
-    }
+    final APIManager manager = APIManager();
+    return manager.getStatus(url, {});
   }
 
   Future<Map<String, dynamic>> fetchBrands() async {
@@ -199,103 +166,75 @@ class ProductRepository {
     required int productId,
     required Map<String, String> fields,
   }) async {
-    final String token = Get.find<AuthService>().currentUser.value.data!.token!;
     final String url = '${ApiClient.productUpdate}$productId';
-
-    final http.MultipartRequest request = http.MultipartRequest(
-      'POST',
-      Uri.parse(url),
+    final APIManager manager = APIManager();
+    return manager.multipartPostWithHeaderStatus(
+      url,
+      fields: fields,
     );
-
-    request.headers['Authorization'] = 'Bearer $token';
-    request.headers['Accept'] = 'application/json';
-    request.fields.addAll(fields);
-
-    final http.StreamedResponse streamedResponse = await request.send();
-    final http.Response response = await http.Response.fromStream(streamedResponse);
-
-    final dynamic decoded = response.body.isEmpty
-        ? <String, dynamic>{}
-        : jsonDecode(response.body);
-
-    return {
-      'status_code': response.statusCode,
-      'body': decoded is Map<String, dynamic>
-          ? decoded
-          : <String, dynamic>{'message': response.body},
-    };
   }
 
   Future<Map<String, dynamic>> createProduct({
     required Map<String, String> fields,
     required List<XFile> images,
   }) async {
-    final String token = Get.find<AuthService>().currentUser.value.data!.token!;
-    final http.MultipartRequest request = http.MultipartRequest(
-      'POST',
-      Uri.parse(ApiClient.productCreate),
+    final APIManager manager = APIManager();
+    return manager.multipartPostWithHeaderStatus(
+      ApiClient.productCreate,
+      fields: fields,
     );
-
-    request.headers['Authorization'] = 'Bearer $token';
-    request.headers['Accept'] = 'application/json';
-    request.fields.addAll(fields);
-
-    final http.StreamedResponse streamedResponse = await request.send();
-    final http.Response response = await http.Response.fromStream(streamedResponse);
-
-    final dynamic decoded = response.body.isEmpty
-        ? <String, dynamic>{}
-        : jsonDecode(response.body);
-
-    return {
-      'status_code': response.statusCode,
-      'body': decoded is Map<String, dynamic>
-          ? decoded
-          : <String, dynamic>{'message': response.body},
-    };
   }
 
   Future<Map<String, dynamic>> uploadProductImages({
     required int productId,
     required List<XFile> images,
   }) async {
-    final String token = Get.find<AuthService>().currentUser.value.data!.token!;
-    final http.MultipartRequest request = http.MultipartRequest(
-      'POST',
-      Uri.parse('${ApiClient.productImagesUpload}$productId'),
-    );
-
-    request.headers['Authorization'] = 'Bearer $token';
-    request.headers['Accept'] = 'application/json';
-
+    final files = <APIUploadFile>[];
+    final fields = <String, String>{
+      'type': 'image',
+    };
     for (int i = 0; i < images.length; i++) {
       final XFile image = images[i];
       final List<int> bytes = await image.readAsBytes();
       final String fileName = _uploadFileName(image);
-      request.files.add(
-        http.MultipartFile.fromBytes(
-          'images[$i][image]',
-          bytes,
-          filename: fileName,
-          contentType: _imageContentType(fileName),
+      final String contentType = _uploadContentType(fileName);
+      files.add(
+        APIUploadFile(
+          fieldName: 'images[$i][image]',
+          bytes: bytes,
+          fileName: fileName,
+          contentType: contentType,
         ),
       );
-      request.fields['images[$i][is_primary]'] = i == 0 ? '1' : '0';
+      fields['images[$i][is_primary]'] = i == 0 ? '1' : '0';
+      fields['images[$i][type]'] = 'image';
     }
 
-    final http.StreamedResponse streamedResponse = await request.send();
-    final http.Response response = await http.Response.fromStream(streamedResponse);
-
-    final dynamic decoded = response.body.isEmpty
-        ? <String, dynamic>{}
-        : jsonDecode(response.body);
-
-    return {
-      'status_code': response.statusCode,
-      'body': decoded is Map<String, dynamic>
-          ? decoded
-          : <String, dynamic>{'message': response.body},
+    final APIManager manager = APIManager();
+    final url = '${ApiClient.productImagesUpload}$productId';
+    final payloadLog = {
+      'fields': fields,
+      'files': files
+          .map(
+            (file) => {
+              'fieldName': file.fieldName,
+              'fileName': file.fileName,
+              'contentType': file.contentType,
+              'bytes': file.bytes.length,
+            },
+          )
+          .toList(),
     };
+    print('uploadProductImages url: $url');
+    print('uploadProductImages payload: $payloadLog');
+    final response = await manager.multipartPostWithHeaderStatus(
+      url,
+      fields: fields,
+      files: files,
+    );
+    print('uploadProductImages response: $response');
+
+    return response;
   }
 
   String _uploadFileName(XFile image) {
@@ -307,20 +246,19 @@ class ProductRepository {
     return pathName.isNotEmpty ? pathName : 'product-image.jpg';
   }
 
-  MediaType _imageContentType(String fileName) {
+  String _uploadContentType(String fileName) {
     final extension = fileName.split('.').last.toLowerCase();
     switch (extension) {
+      case 'png':
+        return 'image/png';
+      case 'webp':
+        return 'image/webp';
+      case 'gif':
+        return 'image/gif';
       case 'jpg':
       case 'jpeg':
-        return MediaType('image', 'jpeg');
-      case 'png':
-        return MediaType('image', 'png');
-      case 'webp':
-        return MediaType('image', 'webp');
-      case 'gif':
-        return MediaType('image', 'gif');
       default:
-        return MediaType('image', 'jpeg');
+        return 'image/jpeg';
     }
   }
 }

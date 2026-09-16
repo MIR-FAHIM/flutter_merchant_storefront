@@ -60,4 +60,14 @@ class ApiClient {
   static const String chatMessages = '$chatBase/messages/';
   static const String messageReadBase = '$chatBase/messages/';
   static const String conversationReadBase = '$chatBase/conversations/';
+
+
+  // Notifications
+  static const String notifications = '$baseUrl/api/notifications';
+  static const String notificationUnreadCount =
+      '$baseUrl/api/notifications/unread-count';
+  static const String notificationOrders = '$baseUrl/api/notifications/orders/';
+  static const String notificationRead = '$baseUrl/api/notifications/';
+  static const String notificationReadAll =
+      '$baseUrl/api/notifications/read-all';
 }
