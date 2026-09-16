@@ -11,6 +11,7 @@ class CompanyData {
   static const String appVersion = "3";
   static const String companyID = "1";
   static const String companyLogo = "assets/logo/merchant-logo.png";
+  static const String officialCompanyLogo = "assets/logo/mz_trans_logo.png";
   static const String packageName = "com.myzoo.marchant";
 
   // jayga
