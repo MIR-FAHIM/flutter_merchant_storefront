@@ -5,129 +5,14 @@ import 'package:ecom_delivery_flutter/app/modules/product/controller/product_con
 import 'package:ecom_delivery_flutter/app/routes/app_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
 
-class ProductAddView extends StatefulWidget {
+class ProductAddView extends GetView<ProductController> {
   const ProductAddView({super.key});
 
   @override
-  State<ProductAddView> createState() => _ProductAddViewState();
-}
-
-class _ProductAddViewState extends State<ProductAddView> {
-  final ProductController controller = Get.find<ProductController>();
-
-  final TextEditingController nameCtrl = TextEditingController();
-  final TextEditingController slugCtrl = TextEditingController();
-  final TextEditingController priceCtrl = TextEditingController();
-  final TextEditingController stockCtrl = TextEditingController(text: '0');
-  final TextEditingController purchaseCtrl = TextEditingController(text: '0');
-  final TextEditingController unitCtrl = TextEditingController(text: 'pcs');
-  final TextEditingController weightCtrl = TextEditingController(text: '0');
-  final TextEditingController shortDescriptionCtrl = TextEditingController();
-  final TextEditingController descriptionCtrl = TextEditingController();
-  final TextEditingController discountCtrl = TextEditingController(text: '0');
-
-  final RxBool todaysDeal = false.obs;
-  final RxBool published = true.obs;
-  final RxBool featured = false.obs;
-  final RxBool refundable = false.obs;
-  final RxBool cashOnDelivery = true.obs;
-  final RxBool stockVisibility = true.obs;
-  final RxString selectedBrandId = ''.obs;
-  final RxString selectedCategoryId = ''.obs;
-  final RxString selectedDiscountType = 'amount'.obs;
-  final RxList<XFile> selectedImages = <XFile>[].obs;
-
-  final PageController pageController = PageController();
-  final RxInt currentStep = 0.obs;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.initializeProductAddFlow();
-    });
-    nameCtrl.addListener(() {
-      if (slugCtrl.text.trim().isEmpty || slugCtrl.text.trim() == 'product') {
-        slugCtrl.text = controller.generateSlug(nameCtrl.text);
-        slugCtrl.selection = TextSelection.fromPosition(
-          TextPosition(offset: slugCtrl.text.length),
-        );
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    nameCtrl.dispose();
-    slugCtrl.dispose();
-    priceCtrl.dispose();
-    stockCtrl.dispose();
-    purchaseCtrl.dispose();
-    unitCtrl.dispose();
-    weightCtrl.dispose();
-    shortDescriptionCtrl.dispose();
-    descriptionCtrl.dispose();
-    discountCtrl.dispose();
-    pageController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _pickImages() async {
-    final ImagePicker picker = ImagePicker();
-    final List<XFile> files = await picker.pickMultiImage();
-    if (files.isNotEmpty) {
-      selectedImages.assignAll(files);
-    }
-  }
-
-  Future<void> _submitProduct() async {
-    final productName = nameCtrl.text.trim();
-    final slug = slugCtrl.text.trim();
-    final categoryId = selectedCategoryId.value;
-
-    if (productName.isEmpty || slug.isEmpty || categoryId.isEmpty) {
-      controller.addProductError.value = 'Please fill in product name, slug and category.';
-      return;
-    }
-
-    if (priceCtrl.text.trim().isEmpty || stockCtrl.text.trim().isEmpty) {
-      controller.addProductError.value = 'Please enter unit price and current stock.';
-      return;
-    }
-
-    final created = await controller.createSellerProduct(
-      name: productName,
-      slug: slug,
-      categoryId: categoryId,
-      unitPrice: priceCtrl.text.trim(),
-      currentStock: stockCtrl.text.trim(),
-      brandId: selectedBrandId.value.isNotEmpty ? selectedBrandId.value : null,
-      purchasePrice: purchaseCtrl.text.trim(),
-      unit: unitCtrl.text.trim(),
-      weight: weightCtrl.text.trim(),
-      shortDescription: shortDescriptionCtrl.text.trim(),
-      description: descriptionCtrl.text.trim(),
-      discount: discountCtrl.text.trim(),
-      discountType: selectedDiscountType.value,
-      todaysDeal: todaysDeal.value,
-      published: published.value,
-      featured: featured.value,
-      refundable: refundable.value,
-      cashOnDelivery: cashOnDelivery.value,
-      stockVisibility: stockVisibility.value,
-      images: selectedImages,
-    );
-
-    if (created) {
-      Get.snackbar('Success', 'Product created successfully', snackPosition: SnackPosition.BOTTOM);
-      Get.offNamed('/PRODUCT_LIST');
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
+    controller.prepareProductAddForm();
+
     return Scaffold(
       backgroundColor: const Color(0xFF111213),
       appBar: AppBar(
@@ -135,7 +20,7 @@ class _ProductAddViewState extends State<ProductAddView> {
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
-          'Add Product',
+          'পণ্য যোগ করুন',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900),
         ),
       ),
@@ -150,14 +35,13 @@ class _ProductAddViewState extends State<ProductAddView> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 4),
-              _StepIndicator(currentStep: currentStep.value),
+              _StepIndicator(currentStep: controller.addCurrentStep.value),
               const SizedBox(height: 16),
-              if (currentStep.value == 0) ...[
+              if (controller.addCurrentStep.value == 0) ...[
                 _FormCard(
-                  title: 'Step 1: Basic Info',
+                  title: 'ধাপ ১: সাধারণ তথ্য',
                   children: [
-                    _TextField(label: 'Product name', controller: nameCtrl),
-                    _TextField(label: 'Slug', controller: slugCtrl),
+                    _TextField(label: 'পণ্যের নাম', controller: controller.addNameController),
                     if (controller.isCategoriesLoading.value)
                       const SizedBox(
                         height: 48,
@@ -191,7 +75,7 @@ class _ProductAddViewState extends State<ProductAddView> {
                                   const SizedBox(width: 8),
                                   const Expanded(
                                     child: Text(
-                                      'Please add your preferred categories first.',
+                                      'অনুগ্রহ করে প্রথমে পছন্দের ক্যাটাগরি যুক্ত করুন।',
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 13,
@@ -208,7 +92,7 @@ class _ProductAddViewState extends State<ProductAddView> {
                                   onPressed: () => Get.toNamed(Routes.MARKETPLACE_CATEGORIES),
                                   icon: const Icon(Icons.category_outlined, size: 18, color: Colors.amber),
                                   label: const Text(
-                                    'Add Preferred Categories',
+                                    'পছন্দের ক্যাটাগরি যুক্ত করুন',
                                     style: TextStyle(color: Colors.amber, fontSize: 13, fontWeight: FontWeight.bold),
                                   ),
                                   style: OutlinedButton.styleFrom(
@@ -223,57 +107,57 @@ class _ProductAddViewState extends State<ProductAddView> {
                         )
                       else
                         _DropdownField<String>(
-                          hint: 'Select category',
-                          value: selectedCategoryId.value.isEmpty ? null : selectedCategoryId.value,
+                          hint: 'ক্যাটাগরি নির্বাচন করুন',
+                          value: controller.addSelectedCategoryId.value.isEmpty ? null : controller.addSelectedCategoryId.value,
                           items: controller.activeCategories
                               .map((e) => DropdownMenuItem<String>(
                                     value: e.id.toString(),
                                     child: Text(e.name),
                                   ))
                               .toList(),
-                          onChanged: (value) => selectedCategoryId.value = value ?? '',
+                          onChanged: (value) => controller.addSelectedCategoryId.value = value ?? '',
                         ),
                       if (controller.brands.isNotEmpty)
                         _DropdownField<String>(
-                          hint: 'No brand',
-                          value: selectedBrandId.value.isEmpty ? null : selectedBrandId.value,
+                          hint: 'কোনো ব্র্যান্ড নেই',
+                          value: controller.addSelectedBrandId.value.isEmpty ? null : controller.addSelectedBrandId.value,
                           items: [
-                            const DropdownMenuItem<String>(value: '', child: Text('No brand')),
+                            const DropdownMenuItem<String>(value: '', child: Text('কোনো ব্র্যান্ড নেই')),
                             ...controller.brands.map((brand) => DropdownMenuItem<String>(
                               value: brand.id.toString(),
                               child: Text(brand.name),
                             ))
                           ],
-                          onChanged: (value) => selectedBrandId.value = value ?? '',
+                          onChanged: (value) => controller.addSelectedBrandId.value = value ?? '',
                         ),
                     ],
-                    _TextField(label: 'Unit price', controller: priceCtrl, keyboardType: TextInputType.number),
-                    _TextField(label: 'Current stock', controller: stockCtrl, keyboardType: TextInputType.number),
-                    _TextField(label: 'Purchase price', controller: purchaseCtrl, keyboardType: TextInputType.number),
-                    _TextField(label: 'Unit', controller: unitCtrl),
-                    _TextField(label: 'Weight', controller: weightCtrl, keyboardType: TextInputType.number),
+                    _TextField(label: 'বিক্রয় মূল্য', controller: controller.addPriceController, keyboardType: TextInputType.number),
+                    _TextField(label: 'বর্তমান স্টক', controller: controller.addStockController, keyboardType: TextInputType.number),
+                    _TextField(label: 'ক্রয় মূল্য', controller: controller.addPurchaseController, keyboardType: TextInputType.number),
+                    _TextField(label: 'পরিমাপের একক (যেমন: pcs, kg)', controller: controller.addUnitController),
+                    _TextField(label: 'ওজন', controller: controller.addWeightController, keyboardType: TextInputType.number),
                   ],
                 ),
-              ] else if (currentStep.value == 1) ...[
+              ] else if (controller.addCurrentStep.value == 1) ...[
                 _FormCard(
-                  title: 'Step 2: Images',
+                  title: 'ধাপ ২: পণ্যের ছবি',
                   children: [
                     ElevatedButton.icon(
-                      onPressed: _pickImages,
+                      onPressed: controller.pickProductImages,
                       icon: const Icon(Icons.photo_library_rounded),
-                      label: const Text('Select product images'),
+                      label: const Text('পণ্যের ছবি নির্বাচন করুন'),
                     ),
                     const SizedBox(height: 12),
-                    if (selectedImages.isEmpty)
+                    if (controller.addSelectedImages.isEmpty)
                       const Text(
-                        'At least one image is required.',
+                        'কমপক্ষে একটি ছবি নির্বাচন করা আবশ্যক।',
                         style: TextStyle(color: Colors.orangeAccent),
                       )
                     else
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: selectedImages.map((image) {
+                        children: controller.addSelectedImages.map((image) {
                           return ClipRRect(
                             borderRadius: BorderRadius.circular(10),
                             child: Image.file(
@@ -287,45 +171,43 @@ class _ProductAddViewState extends State<ProductAddView> {
                       ),
                   ],
                 ),
-              ] else if (currentStep.value == 2) ...[
+              ] else if (controller.addCurrentStep.value == 2) ...[
                 _FormCard(
-                  title: 'Step 3: Description & Settings',
+                  title: 'ধাপ ৩: বিবরণ ও সেটিংস',
                   children: [
-                    _TextField(label: 'Short description', controller: shortDescriptionCtrl),
-                    _TextField(label: 'Description', controller: descriptionCtrl, maxLines: 4),
-                    _TextField(label: 'Discount', controller: discountCtrl, keyboardType: TextInputType.number),
+                    _TextField(label: 'সংক্ষিপ্ত বিবরণ', controller: controller.addShortDescriptionController),
+                    _TextField(label: 'বিস্তারিত বিবরণ', controller: controller.addDescriptionController, maxLines: 4),
+                    _TextField(label: 'ডিসকাউন্ট', controller: controller.addDiscountController, keyboardType: TextInputType.number),
                     _DropdownField<String>(
-                      hint: 'Discount type',
-                      value: selectedDiscountType.value,
+                      hint: 'ডিসকাউন্টের ধরন',
+                      value: controller.addSelectedDiscountType.value,
                       items: const [
-                        DropdownMenuItem(value: 'amount', child: Text('Amount')),
-                        DropdownMenuItem(value: 'percent', child: Text('Percent')),
+                        DropdownMenuItem(value: 'amount', child: Text('নির্দিষ্ট টাকা (টাকা)')),
+                        DropdownMenuItem(value: 'percent', child: Text('শতাংশ (%)')),
                       ],
-                      onChanged: (value) => selectedDiscountType.value = value ?? 'amount',
+                      onChanged: (value) => controller.addSelectedDiscountType.value = value ?? 'amount',
                     ),
-                    Obx(() => _SwitchRow(label: 'Today\'s Deal', value: todaysDeal.value, onChanged: (v) => todaysDeal.value = v)),
-                    Obx(() => _SwitchRow(label: 'Published', value: published.value, onChanged: (v) => published.value = v)),
-                    Obx(() => _SwitchRow(label: 'Featured', value: featured.value, onChanged: (v) => featured.value = v)),
-                    Obx(() => _SwitchRow(label: 'Cash on Delivery', value: cashOnDelivery.value, onChanged: (v) => cashOnDelivery.value = v)),
-                    Obx(() => _SwitchRow(label: 'Refundable', value: refundable.value, onChanged: (v) => refundable.value = v)),
-                    Obx(() => _SwitchRow(label: 'Stock visibility', value: stockVisibility.value, onChanged: (v) => stockVisibility.value = v)),
+                    Obx(() => _SwitchRow(label: 'আজকের অফার (Today\'s Deal)', value: controller.addTodaysDeal.value, onChanged: (v) => controller.addTodaysDeal.value = v)),
+                    Obx(() => _SwitchRow(label: 'প্রকাশিত (Published)', value: controller.addPublished.value, onChanged: (v) => controller.addPublished.value = v)),
+                    Obx(() => _SwitchRow(label: 'ফিচার্ড পণ্য (Featured)', value: controller.addFeatured.value, onChanged: (v) => controller.addFeatured.value = v)),
+                    Obx(() => _SwitchRow(label: 'ক্যাশ অন ডেলিভারি (COD)', value: controller.addCashOnDelivery.value, onChanged: (v) => controller.addCashOnDelivery.value = v)),
+                    Obx(() => _SwitchRow(label: 'রিফান্ডযোগ্য (Refundable)', value: controller.addRefundable.value, onChanged: (v) => controller.addRefundable.value = v)),
+                    Obx(() => _SwitchRow(label: 'স্টক প্রদর্শন (Stock Visibility)', value: controller.addStockVisibility.value, onChanged: (v) => controller.addStockVisibility.value = v)),
                   ],
                 ),
               ] else ...[
                 _FormCard(
-                  title: 'Step 4: Preview',
+                  title: 'ধাপ ৪: প্রিভিউ',
                   children: [
-                    Text('Name: ${nameCtrl.text}', style: const TextStyle(color: Colors.white)),
+                    Text('নাম: ${controller.addNameController.text}', style: const TextStyle(color: Colors.white)),
                     const SizedBox(height: 8),
-                    Text('Slug: ${slugCtrl.text}', style: const TextStyle(color: Colors.white)),
+                    Text('ক্যাটাগরি: ${controller.activeCategories.firstWhereOrNull((e) => e.id.toString() == controller.addSelectedCategoryId.value)?.name ?? 'N/A'}', style: const TextStyle(color: Colors.white)),
                     const SizedBox(height: 8),
-                    Text('Category: ${controller.activeCategories.firstWhereOrNull((e) => e.id.toString() == selectedCategoryId.value)?.name ?? 'N/A'}', style: const TextStyle(color: Colors.white)),
+                    Text('বিক্রয় মূল্য: ৳${controller.addPriceController.text}', style: const TextStyle(color: Colors.white)),
                     const SizedBox(height: 8),
-                    Text('Price: ${priceCtrl.text}', style: const TextStyle(color: Colors.white)),
+                    Text('স্টক: ${controller.addStockController.text}', style: const TextStyle(color: Colors.white)),
                     const SizedBox(height: 8),
-                    Text('Stock: ${stockCtrl.text}', style: const TextStyle(color: Colors.white)),
-                    const SizedBox(height: 8),
-                    Text('Images: ${selectedImages.length}', style: const TextStyle(color: Colors.white)),
+                    Text('মোট ছবি: ${controller.addSelectedImages.length} টি', style: const TextStyle(color: Colors.white)),
                   ],
                 ),
               ],
@@ -347,11 +229,11 @@ class _ProductAddViewState extends State<ProductAddView> {
                 ),
               Row(
                 children: [
-                  if (currentStep.value > 0)
+                  if (controller.addCurrentStep.value > 0)
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () => currentStep.value--,
-                        child: const Text('Back'),
+                        onPressed: controller.previousProductAddStep,
+                        child: const Text('পেছনে'),
                       ),
                     ),
                   const SizedBox(width: 10),
@@ -359,20 +241,14 @@ class _ProductAddViewState extends State<ProductAddView> {
                     child: ElevatedButton(
                       onPressed: controller.isCreatingProduct.value
                           ? null
-                          : () {
-                              if (currentStep.value < 3) {
-                                currentStep.value++;
-                              } else {
-                                _submitProduct();
-                              }
-                            },
+                          : controller.nextProductAddStep,
                       child: controller.isCreatingProduct.value
                           ? const SizedBox(
                               height: 18,
                               width: 18,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : Text(currentStep.value < 3 ? 'Next' : 'Submit'),
+                          : Text(controller.addCurrentStep.value < 3 ? 'পরবর্তী' : 'সংরক্ষণ করুন'),
                     ),
                   ),
                 ],
@@ -392,7 +268,7 @@ class _StepIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final steps = ['Basic', 'Images', 'Details', 'Preview'];
+    final steps = ['সাধারণ তথ্য', 'ছবি', 'বিবরণ', 'প্রিভিউ'];
     return Row(
       children: List.generate(steps.length, (index) {
         final selected = currentStep == index;
@@ -443,14 +319,14 @@ class _StoreSelectorWidget extends StatelessWidget {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: selectedStoreId.isEmpty ? null : selectedStoreId,
-          hint: const Text('Select Store', style: TextStyle(color: Colors.grey)),
+          hint: const Text('স্টোর নির্বাচন করুন', style: TextStyle(color: Colors.grey)),
           isExpanded: true,
           dropdownColor: const Color(0xFF1B1C1E),
           style: const TextStyle(color: Colors.white, fontSize: 14),
           items: stores.map((store) {
             return DropdownMenuItem<String>(
               value: store.id.toString(),
-              child: Text(store.name ?? 'Store #${store.id}'),
+              child: Text(store.name ?? 'স্টোর #${store.id}'),
             );
           }).toList(),
           onChanged: (value) {
