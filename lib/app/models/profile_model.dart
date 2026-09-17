@@ -3,6 +3,7 @@
 //     final profileModel = profileModelFromJson(jsonString);
 
 import 'dart:convert';
+import 'package:ecom_delivery_flutter/app/models/location_model.dart';
 
 ProfileModel profileModelFromJson(String str) =>
     ProfileModel.fromJson(json.decode(str) as Map<String, dynamic>);
@@ -65,6 +66,12 @@ class ProfileData {
   // Also nullable
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final int? divisionId;
+  final int? districtId;
+  final int? upazilaId;
+  final DivisionModel? division;
+  final DistrictModel? district;
+  final UpazilaModel? upazila;
   final SellerShop? shop;
 
   const ProfileData({
@@ -92,6 +99,12 @@ class ProfileData {
     this.remainingUploads,
     this.createdAt,
     this.updatedAt,
+    this.divisionId,
+    this.districtId,
+    this.upazilaId,
+    this.division,
+    this.district,
+    this.upazila,
     this.shop,
   });
 
@@ -120,6 +133,18 @@ class ProfileData {
     remainingUploads: _asInt(json["remaining_uploads"]),
     createdAt: _asDate(json["created_at"]),
     updatedAt: _asDate(json["updated_at"]),
+    divisionId: _asInt(json["division_id"]),
+    districtId: _asInt(json["district_id"]),
+    upazilaId: _asInt(json["upazila_id"]),
+    division: json["division"] is Map<String, dynamic>
+        ? DivisionModel.fromJson(json["division"] as Map<String, dynamic>)
+        : null,
+    district: json["district"] is Map<String, dynamic>
+        ? DistrictModel.fromJson(json["district"] as Map<String, dynamic>)
+        : null,
+    upazila: json["upazila"] is Map<String, dynamic>
+        ? UpazilaModel.fromJson(json["upazila"] as Map<String, dynamic>)
+        : null,
     shop: json["shop"] is Map<String, dynamic>
         ? SellerShop.fromJson(json["shop"] as Map<String, dynamic>)
         : null,
@@ -150,6 +175,12 @@ class ProfileData {
     "remaining_uploads": remainingUploads,
     "created_at": createdAt?.toIso8601String(),
     "updated_at": updatedAt?.toIso8601String(),
+    "division_id": divisionId,
+    "district_id": districtId,
+    "upazila_id": upazilaId,
+    "division": division?.toJson(),
+    "district": district?.toJson(),
+    "upazila": upazila?.toJson(),
     "shop": shop?.toJson(),
   };
 }
@@ -236,6 +267,12 @@ class SellerShop {
   final dynamic area;
   final dynamic lat;
   final dynamic lon;
+  final int? divisionId;
+  final int? districtId;
+  final int? upazilaId;
+  final DivisionModel? division;
+  final DistrictModel? districtModel;
+  final UpazilaModel? upazila;
   final String? status;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -259,6 +296,12 @@ class SellerShop {
     this.area,
     this.lat,
     this.lon,
+    this.divisionId,
+    this.districtId,
+    this.upazilaId,
+    this.division,
+    this.districtModel,
+    this.upazila,
     this.status,
     this.createdAt,
     this.updatedAt,
@@ -283,10 +326,24 @@ class SellerShop {
     email: json['email'] as String?,
     address: json['address'] as String?,
     zone: json['zone'],
-    district: json['district'],
+    district: json['district'] is Map<String, dynamic>
+        ? DistrictModel.fromJson(json['district'] as Map<String, dynamic>)
+        : json['district'],
+    districtModel: json['district'] is Map<String, dynamic>
+        ? DistrictModel.fromJson(json['district'] as Map<String, dynamic>)
+        : null,
     area: json['area'],
     lat: json['lat'],
     lon: json['lon'],
+    divisionId: _asInt(json['division_id']),
+    districtId: _asInt(json['district_id']),
+    upazilaId: _asInt(json['upazila_id']),
+    division: json['division'] is Map<String, dynamic>
+        ? DivisionModel.fromJson(json['division'] as Map<String, dynamic>)
+        : null,
+    upazila: json['upazila'] is Map<String, dynamic>
+        ? UpazilaModel.fromJson(json['upazila'] as Map<String, dynamic>)
+        : null,
     status: json['status'] as String?,
     createdAt: _asDate(json['created_at']),
     updatedAt: _asDate(json['updated_at']),
@@ -309,10 +366,17 @@ class SellerShop {
     'email': email,
     'address': address,
     'zone': zone,
-    'district': district,
+    'district': district is DistrictModel
+        ? (district as DistrictModel).toJson()
+        : (districtModel != null ? districtModel?.toJson() : district),
     'area': area,
     'lat': lat,
     'lon': lon,
+    'division_id': divisionId,
+    'district_id': districtId,
+    'upazila_id': upazilaId,
+    'division': division?.toJson(),
+    'upazila': upazila?.toJson(),
     'status': status,
     'created_at': createdAt?.toIso8601String(),
     'updated_at': updatedAt?.toIso8601String(),

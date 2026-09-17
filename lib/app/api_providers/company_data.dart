@@ -8,7 +8,7 @@ class CompanyData {
   static const String appname = "MyZoo Merchant";
   static const String siteName = "MyZoo Merchant";
   static const String publicStoreBaseUrl = "https://myzoo.asia/store";
-  static const String appVersion = "3";
+  static const String appVersion = "4";
   static const String companyID = "1";
   static const String companyLogo = "assets/logo/merchant-logo.png";
   static const String officialCompanyLogo = "assets/logo/mz_trans_logo.png";

@@ -1,91 +1,54 @@
-import 'dart:convert';
-import 'dart:io';
-
+import 'package:ecom_delivery_flutter/app/api_providers/api_manager.dart';
 import 'package:ecom_delivery_flutter/app/api_providers/api_url.dart';
-import 'package:http/http.dart' as http;
+import 'package:ecom_delivery_flutter/app/models/location_model.dart';
 
 class SellerRegisterRepository {
-  Future<SellerRegisterResponse> createSeller(
+  SellerRegisterRepository({APIManager? apiManager})
+      : _apiManager = apiManager ?? APIManager();
+
+  final APIManager _apiManager;
+
+  Future<Map<String, dynamic>> createSeller(
     Map<String, dynamic> payload,
-  ) async {
-    try {
-      final response = await http.post(
-        Uri.parse(ApiClient.createSeller),
-        headers: const {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode(payload),
-      );
+  ) {
+    var response = _apiManager.postPublicJsonStatus(ApiClient.createSeller, payload);
+    return response;
+  }
 
-      final decoded = _decode(response.body);
-      return SellerRegisterResponse(
-        statusCode: response.statusCode,
-        body: decoded,
-      );
-    } on SocketException {
-      throw SellerRegisterException('No Internet connection');
-    } catch (e) {
-      throw SellerRegisterException(e.toString());
+  Future<List<DivisionModel>> getDivisions() async {
+    final response = await _apiManager.getPublicJsonStatus(ApiClient.divisions);
+    final body = response['body'];
+
+    print("my data 45308 $body");
+    if (body is Map && body['data'] is List) {
+      return (body['data'] as List)
+          .map((e) => DivisionModel.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
     }
+    return [];
   }
 
-  dynamic _decode(String body) {
-    if (body.trim().isEmpty) return null;
-    try {
-      return jsonDecode(body);
-    } catch (_) {
-      return {'message': body};
+  Future<List<DistrictModel>> getDistricts(int divisionId) async {
+    final response = await _apiManager
+        .getPublicJsonStatus(ApiClient.districtsByDivision(divisionId));
+    final body = response['body'];
+    if (body is Map && body['data'] is List) {
+      return (body['data'] as List)
+          .map((e) => DistrictModel.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
     }
+    return [];
   }
-}
 
-class SellerRegisterResponse {
-  SellerRegisterResponse({
-    required this.statusCode,
-    required this.body,
-  });
-
-  final int statusCode;
-  final dynamic body;
-
-  bool get isSuccess => statusCode >= 200 && statusCode < 300;
-
-  String get message {
-    if (body is Map && body['message'] != null) {
-      return body['message'].toString();
+  Future<List<UpazilaModel>> getUpazilas(int districtId) async {
+    final response = await _apiManager
+        .getPublicJsonStatus(ApiClient.upazilasByDistrict(districtId));
+    final body = response['body'];
+    if (body is Map && body['data'] is List) {
+      return (body['data'] as List)
+          .map((e) => UpazilaModel.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
     }
-    if (isSuccess) return 'Seller and shop created successfully';
-    return 'Registration failed. Please try again.';
+    return [];
   }
-
-  Map<String, List<String>> get fieldErrors {
-    if (body is! Map || body['errors'] is! Map) return {};
-
-    final errors = <String, List<String>>{};
-    (body['errors'] as Map).forEach((key, value) {
-      if (value is List) {
-        errors[key.toString()] = value.map((item) => item.toString()).toList();
-      } else if (value != null) {
-        errors[key.toString()] = [value.toString()];
-      }
-    });
-    return errors;
-  }
-
-  Map<String, dynamic> get data {
-    if (body is Map && body['data'] is Map) {
-      return Map<String, dynamic>.from(body['data']);
-    }
-    return {};
-  }
-}
-
-class SellerRegisterException implements Exception {
-  SellerRegisterException(this.message);
-
-  final String message;
-
-  @override
-  String toString() => message;
 }

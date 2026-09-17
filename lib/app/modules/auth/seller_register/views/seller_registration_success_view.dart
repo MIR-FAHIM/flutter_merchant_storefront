@@ -10,7 +10,7 @@ class SellerRegistrationSuccessView extends StatelessWidget {
     final args = Get.arguments is Map ? Get.arguments as Map : {};
     final autoLoggedIn = args['auto_logged_in'] == true;
     final shop = args['shop'] is Map ? args['shop'] as Map : {};
-    final shopName = (shop['name'] ?? shop['shop_name'] ?? 'Your MyZoo store')
+    final shopName = (shop['name'] ?? shop['shop_name'] ?? 'আপনার MyZoo দোকান')
         .toString();
 
     return Scaffold(
@@ -20,7 +20,7 @@ class SellerRegistrationSuccessView extends StatelessWidget {
         elevation: 0,
         backgroundColor: const Color(0xFF111213),
         title: const Text(
-          'Store Created',
+          'দোকান তৈরি সম্পন্ন হয়েছে',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900),
         ),
       ),
@@ -42,7 +42,7 @@ class SellerRegistrationSuccessView extends StatelessWidget {
                     height: 58,
                     width: 58,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2DD4BF).withOpacity(0.14),
+                      color: const Color(0x242DD4BF),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(
@@ -53,21 +53,21 @@ class SellerRegistrationSuccessView extends StatelessWidget {
                   ),
                   const SizedBox(height: 18),
                   const Text(
-                    'Seller and shop created successfully',
+                    'বিক্রেতা এবং দোকান সফলভাবে তৈরি হয়েছে',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 23,
-                      height: 1.18,
+                      fontSize: 22,
+                      height: 1.25,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '$shopName is ready. Complete your store profile, choose a subscription package, add products, and share your public store link with customers.',
+                    '$shopName প্রস্তুত। আপনার স্টোর প্রোফাইল সম্পূর্ণ করুন, সাবস্ক্রিপশন প্যাকেজ বেছে নিন, পণ্য যোগ করুন এবং গ্রাহকদের সাথে দোকানের লিংক শেয়ার করুন।',
                     style: const TextStyle(
                       color: Color(0xFFCBD5E1),
                       fontSize: 13.5,
-                      height: 1.45,
+                      height: 1.5,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -96,8 +96,8 @@ class SellerRegistrationSuccessView extends StatelessWidget {
                 ),
                 child: Text(
                   autoLoggedIn
-                      ? 'Go to Seller Dashboard'
-                      : 'Login to Seller Dashboard',
+                      ? 'বিক্রেতা ড্যাশবোর্ডে যান'
+                      : 'বিক্রেতা ড্যাশবোর্ডে লগইন করুন',
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w900,
@@ -119,12 +119,12 @@ class _NextStepsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final steps = [
-      'Login to seller dashboard',
-      'Choose or confirm subscription package',
-      'Complete store profile',
-      'Activate categories',
-      'Add products',
-      'Share store link or QR code',
+      'বিক্রেতা ড্যাশবোর্ডে লগইন করুন',
+      'সাবস্ক্রিপশন প্যাকেজ নির্বাচন বা নিশ্চিত করুন',
+      'দোকানের প্রোফাইল সম্পূর্ণ করুন',
+      'ক্যাটাগরি সক্রিয় করুন',
+      'পণ্য যোগ করুন',
+      'দোকানের লিংক বা QR কোড শেয়ার করুন',
     ];
 
     return Container(
@@ -138,7 +138,7 @@ class _NextStepsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Next Steps',
+            'পরবর্তী পদক্ষেপসমূহ',
             style: TextStyle(
               color: Colors.white,
               fontSize: 16,

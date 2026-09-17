@@ -1,5 +1,7 @@
 import 'package:ecom_delivery_flutter/app/api_providers/company_data.dart';
+import 'package:ecom_delivery_flutter/app/models/location_model.dart';
 import 'package:ecom_delivery_flutter/app/modules/auth/seller_register/controllers/seller_register_controller.dart';
+import 'package:ecom_delivery_flutter/app/modules/auth/seller_register/views/widgets/location_search_dropdown.dart';
 import 'package:ecom_delivery_flutter/app/routes/app_pages.dart';
 import 'package:ecom_delivery_flutter/common/Color.dart';
 import 'package:flutter/material.dart';
@@ -44,12 +46,12 @@ class SellerRegisterView extends GetView<SellerRegisterController> {
                   _SellerTextField(
                     label: 'sellerRegister.phone'.tr,
                     hint: 'sellerRegister.phoneHint'.tr,
+
                     textController: controller.phoneController,
                     errorKey: 'phone',
                     keyboardType: TextInputType.phone,
                     prefixIcon: Icons.phone_outlined,
-                    validator: (value) =>
-                        controller.requiredValidator(value, 'sellerRegister.phone'.tr),
+                    validator: controller.phoneValidator,
                   ),
                   _SellerTextField(
                     label: 'sellerRegister.email'.tr,
@@ -128,30 +130,57 @@ class SellerRegisterView extends GetView<SellerRegisterController> {
                     validator: (value) =>
                         controller.requiredValidator(value, 'sellerRegister.country'.tr),
                   ),
-                  _SellerTextField(
-                    label: 'sellerRegister.state'.tr,
-                    hint: 'sellerRegister.stateHint'.tr,
-                    textController: controller.stateController,
-                    errorKey: 'state',
-                    prefixIcon: Icons.map_outlined,
-                    validator: (value) =>
-                        controller.requiredValidator(value, 'sellerRegister.state'.tr),
+                  Obx(
+                    () => LocationSearchDropdown<DivisionModel>(
+                      label: 'sellerRegister.division'.tr,
+                      hint: 'sellerRegister.divisionHint'.tr,
+                      items: controller.divisions,
+                      selectedItem: controller.selectedDivision.value,
+                      isLoading: controller.isLoadingDivisions.value,
+                      prefixIcon: Icons.map_outlined,
+                      errorText: controller.fieldError('division_id'),
+                      itemTitle: (item) => item.displayName,
+                      itemSubtitle: (item) => item.bnName,
+                      itemMatcher: (item, query) => item.matches(query),
+                      onChanged: (division) => controller.selectDivision(division),
+                      onClear: () => controller.selectDivision(null),
+                    ),
                   ),
-                  _SellerTextField(
-                    label: 'sellerRegister.city'.tr,
-                    hint: 'sellerRegister.cityHint'.tr,
-                    textController: controller.cityController,
-                    errorKey: 'city',
-                    prefixIcon: Icons.location_city_outlined,
-                    validator: (value) =>
-                        controller.requiredValidator(value, 'sellerRegister.city'.tr),
+                  Obx(
+                    () => LocationSearchDropdown<DistrictModel>(
+                      label: 'sellerRegister.district'.tr,
+                      hint: 'sellerRegister.districtHint'.tr,
+                      items: controller.districts,
+                      selectedItem: controller.selectedDistrict.value,
+                      isLoading: controller.isLoadingDistricts.value,
+                      isDisabled: controller.selectedDivision.value == null,
+                      disabledHint: 'sellerRegister.selectDivisionFirst'.tr,
+                      prefixIcon: Icons.location_city_outlined,
+                      errorText: controller.fieldError('district_id'),
+                      itemTitle: (item) => item.displayName,
+                      itemSubtitle: (item) => item.bnName,
+                      itemMatcher: (item, query) => item.matches(query),
+                      onChanged: (district) => controller.selectDistrict(district),
+                      onClear: () => controller.selectDistrict(null),
+                    ),
                   ),
-                  _SellerTextField(
-                    label: 'sellerRegister.area'.tr,
-                    hint: 'sellerRegister.areaHint'.tr,
-                    textController: controller.areaController,
-                    errorKey: 'area',
-                    prefixIcon: Icons.place_outlined,
+                  Obx(
+                    () => LocationSearchDropdown<UpazilaModel>(
+                      label: 'sellerRegister.upazila'.tr,
+                      hint: 'sellerRegister.upazilaHint'.tr,
+                      items: controller.upazilas,
+                      selectedItem: controller.selectedUpazila.value,
+                      isLoading: controller.isLoadingUpazilas.value,
+                      isDisabled: controller.selectedDistrict.value == null,
+                      disabledHint: 'sellerRegister.selectDistrictFirst'.tr,
+                      prefixIcon: Icons.place_outlined,
+                      errorText: controller.fieldError('upazila_id'),
+                      itemTitle: (item) => item.displayName,
+                      itemSubtitle: (item) => item.bnName,
+                      itemMatcher: (item, query) => item.matches(query),
+                      onChanged: (upazila) => controller.selectUpazila(upazila),
+                      onClear: () => controller.selectUpazila(null),
+                    ),
                   ),
                   _SellerTextField(
                     label: 'sellerRegister.address'.tr,
@@ -169,8 +198,13 @@ class SellerRegisterView extends GetView<SellerRegisterController> {
                     errorKey: 'postal_code',
                     keyboardType: TextInputType.number,
                     prefixIcon: Icons.markunread_mailbox_outlined,
-                    validator: (value) =>
-                        controller.requiredValidator(value, 'sellerRegister.postalCode'.tr),
+                  ),
+                  _SellerTextField(
+                    label: 'sellerRegister.referralCode'.tr,
+                    hint: 'sellerRegister.referralCodeHint'.tr,
+                    textController: controller.referralCodeController,
+                    errorKey: 'referral_code',
+                    prefixIcon: Icons.card_giftcard_rounded,
                   ),
                 ],
               ),

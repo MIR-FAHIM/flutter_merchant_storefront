@@ -121,6 +121,8 @@ class SellerPackagesController extends GetxController
 
   Future<void> fetchSellerProfilePackage(String userId) async {
     final response = await _repository.fetchSellerProfile(userId: userId);
+
+    print("seller profile 3453 $response");
     if (!_handleApiError(response, showSnackbar: false)) return;
 
     final body = _bodyMap(response['body']);

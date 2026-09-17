@@ -14,19 +14,26 @@ class SellerPackagesRepository {
     final String url =
         '${ApiClient.sellerShopList}?user_id=$userId&page=$page&per_page=$perPage';
 
-    return _manager.getWithHeaderStatus(url, {});
+    var response = await _manager.getWithHeaderStatus(url, {});
+    print("data return fetchSellerStores $response");
+    return response;
   }
 
   Future<Map<String, dynamic>> fetchSellerProfile({
     required String userId,
   }) async {
-    return _manager.getWithHeaderStatus(ApiClient.sellerProfile + userId, {});
+    var response = await _manager.getWithHeaderStatus(
+        ApiClient.sellerProfile + userId, {});
+    print("data return fetchSellerProfile $response");
+    return response;
   }
 
   Future<Map<String, dynamic>> fetchSubscriptionPackages() async {
     const String url = '${ApiClient.subscriptionPackages}?status=active&all=1';
 
-    return _manager.getWithHeaderStatus(url, {});
+    var response = await _manager.getWithHeaderStatus(url, {});
+    print("data return fetchSubscriptionPackages $response");
+    return response;
   }
 
   Future<Map<String, dynamic>> fetchStoreSubscription({
@@ -34,7 +41,9 @@ class SellerPackagesRepository {
   }) async {
     final String url = '${ApiClient.stores}$storeId/subscription';
 
-    return _manager.getWithHeaderStatus(url, {});
+    var response = await _manager.getWithHeaderStatus(url, {});
+    print("data return fetchStoreSubscription $response");
+    return response;
   }
 
   Future subscribeToPackage({
@@ -44,17 +53,18 @@ class SellerPackagesRepository {
   }) async {
     final String url = '${ApiClient.stores}$storeId/subscription/subscribe';
 
-    return _manager.postAPICallWithHeader(
+    var response = await _manager.postAPICallWithHeader(
       url,
       {
         'subscription_package_id': packageId.toString(),
         'billing_cycle': billingCycle,
       },
       {
-'Authorization': "Bearer ${Get.find<AuthService>().currentUser.value.data!.token!}",
+        'Authorization':
+            "Bearer ${Get.find<AuthService>().currentUser.value.data!.token!}",
       },
     );
+    print("data return subscribeToPackage $response");
+    return response;
   }
 }
-
-
