@@ -35,55 +35,56 @@ class SellerCustomerController extends GetxController {
 
   @override
   void onClose() {
-    nameController.dispose();
-    phoneController.dispose();
-    emailController.dispose();
-    addressController.dispose();
-    passwordController.dispose();
-    existingCustomerIdController.dispose();
     super.onClose();
   }
 
-  Future<void> createNewCustomer() async {
-    final name = nameController.text.trim();
-    final phone = phoneController.text.trim();
-    final email = emailController.text.trim();
-    final address = addressController.text.trim();
-    final password = passwordController.text.trim();
+  Future<bool> createNewCustomer({
+    String? name,
+    String? phone,
+    String? email,
+    String? address,
+    String? password,
+  }) async {
+    final resolvedName = (name ?? nameController.text).trim();
+    final resolvedPhone = (phone ?? phoneController.text).trim();
+    final resolvedEmail = (email ?? emailController.text).trim();
+    final resolvedAddress = (address ?? addressController.text).trim();
+    final resolvedPassword = (password ?? passwordController.text).trim();
 
-    if (name.isEmpty && phone.isEmpty && email.isEmpty) {
+    if (resolvedName.isEmpty && resolvedPhone.isEmpty && resolvedEmail.isEmpty) {
       errorMessage.value = 'Please enter customer name, phone, or email.';
-      return;
+      return false;
     }
 
-    if (email.isNotEmpty && !GetUtils.isEmail(email)) {
+    if (resolvedEmail.isNotEmpty && !GetUtils.isEmail(resolvedEmail)) {
       errorMessage.value = 'Please enter a valid email address.';
-      return;
+      return false;
     }
 
     final payload = <String, dynamic>{
-      if (name.isNotEmpty) 'name': name,
-      if (phone.isNotEmpty) 'phone': phone,
-      if (email.isNotEmpty) 'email': email,
-      if (address.isNotEmpty) 'address': address,
-      if (password.isNotEmpty) 'password': password,
+      if (resolvedName.isNotEmpty) 'name': resolvedName,
+      if (resolvedPhone.isNotEmpty) 'phone': resolvedPhone,
+      if (resolvedEmail.isNotEmpty) 'email': resolvedEmail,
+      if (resolvedAddress.isNotEmpty) 'address': resolvedAddress,
+      if (resolvedPassword.isNotEmpty) 'password': resolvedPassword,
     };
 
-    await _submit(payload);
+    return await _submit(payload);
   }
 
-  Future<void> attachExistingCustomer() async {
-    final customerUserId = existingCustomerIdController.text.trim();
-    if (customerUserId.isEmpty) {
+  Future<bool> attachExistingCustomer({String? customerUserId}) async {
+    final resolvedId =
+        (customerUserId ?? existingCustomerIdController.text).trim();
+    if (resolvedId.isEmpty) {
       errorMessage.value = 'Please enter customer user id.';
-      return;
+      return false;
     }
 
-    await _submit({'customer_user_id': customerUserId});
+    return await _submit({'customer_user_id': resolvedId});
   }
 
-  Future<void> _submit(Map<String, dynamic> payload) async {
-    if (isSaving.value) return;
+  Future<bool> _submit(Map<String, dynamic> payload) async {
+    if (isSaving.value) return false;
 
     try {
       isSaving.value = true;
@@ -95,14 +96,17 @@ class SellerCustomerController extends GetxController {
         snackPosition: SnackPosition.BOTTOM,
       );
       _clearForm();
+      return true;
     } on SellerCustomerException catch (error) {
       if (error.statusCode == 401) {
         Get.offAllNamed(Routes.LOGIN);
-        return;
+        return false;
       }
       errorMessage.value = _friendlyError(error.statusCode, error.message);
+      return false;
     } catch (error) {
       errorMessage.value = 'Customer add failed. Please try again.';
+      return false;
     } finally {
       isSaving.value = false;
     }
@@ -203,11 +207,13 @@ class SellerCustomerController extends GetxController {
   }
 
   void _clearForm() {
-    nameController.clear();
-    phoneController.clear();
-    emailController.clear();
-    addressController.clear();
-    passwordController.clear();
-    existingCustomerIdController.clear();
+    try {
+      nameController.clear();
+      phoneController.clear();
+      emailController.clear();
+      addressController.clear();
+      passwordController.clear();
+      existingCustomerIdController.clear();
+    } catch (_) {}
   }
 }

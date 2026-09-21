@@ -3,6 +3,9 @@ import 'package:ecom_delivery_flutter/app/modules/auth/login/views/login_view.da
 import 'package:ecom_delivery_flutter/app/modules/auth/seller_register/bindings/seller_register_binding.dart';
 import 'package:ecom_delivery_flutter/app/modules/auth/seller_register/views/seller_register_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/auth/seller_register/views/seller_registration_success_view.dart';
+import 'package:ecom_delivery_flutter/app/modules/baki/bindings/baki_binding.dart';
+import 'package:ecom_delivery_flutter/app/modules/baki/views/baki_khata_screen.dart';
+import 'package:ecom_delivery_flutter/app/modules/baki/views/customer_ledger_screen.dart';
 import 'package:ecom_delivery_flutter/app/modules/delivery_man/bindings/delivery_man_binding.dart';
 import 'package:ecom_delivery_flutter/app/modules/delivery_man/views/delivery_man_add_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/delivery_man/views/delivery_man_list_view.dart';
@@ -177,6 +180,16 @@ class AppPages {
       name: _Paths.DELIVERY_MAN_LIST,
       page: () => const DeliveryManListView(),
       binding: DeliveryManBinding(),
+    ),
+    GetPage(
+      name: _Paths.BAKI_KHATA,
+      page: () => const BakiKhataScreen(),
+      binding: BakiBinding(),
+    ),
+    GetPage(
+      name: _Paths.CUSTOMER_LEDGER,
+      page: () => const CustomerLedgerScreen(),
+      binding: BakiBinding(),
     ),
   ];
 }

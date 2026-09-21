@@ -4,6 +4,9 @@ import 'package:get/get.dart';
 class SellerCustomerBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<SellerCustomerController>(() => SellerCustomerController());
+    Get.lazyPut<SellerCustomerController>(
+      () => SellerCustomerController(),
+      fenix: true,
+    );
   }
 }

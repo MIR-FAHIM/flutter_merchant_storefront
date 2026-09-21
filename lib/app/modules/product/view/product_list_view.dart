@@ -1,11 +1,13 @@
 import 'package:ecom_delivery_flutter/app/api_providers/company_data.dart';
 import 'package:ecom_delivery_flutter/app/models/product/product_response_model.dart';
+import 'package:ecom_delivery_flutter/app/modules/pos/controllers/pos_cart_controller.dart';
+import 'package:ecom_delivery_flutter/app/modules/pos/views/widgets/pos_cart_bottom_sheet.dart';
+import 'package:ecom_delivery_flutter/app/modules/pos/views/widgets/pos_floating_cart_bar.dart';
 import 'package:ecom_delivery_flutter/app/modules/product/controller/product_controller.dart';
 import 'package:ecom_delivery_flutter/app/routes/app_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:share_plus/share_plus.dart';
-
 import 'widgets/product_card.dart';
 
 class ProductListView extends GetView<ProductController> {
@@ -17,8 +19,13 @@ class ProductListView extends GetView<ProductController> {
 
   @override
   Widget build(BuildContext context) {
+    final posCartController = Get.isRegistered<PosCartController>()
+        ? Get.find<PosCartController>()
+        : Get.put(PosCartController());
+
     return Scaffold(
       backgroundColor: _bgColor,
+      bottomNavigationBar: PosFloatingCartBar(controller: posCartController),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: _bgColor,
@@ -41,18 +48,69 @@ class ProductListView extends GetView<ProductController> {
             },
             icon: const Icon(Icons.category_outlined),
           ),
+
+          // POS Counter Cart button with badge
+          Obx(() {
+            final total = posCartController.totalItems;
+            return Stack(
+              alignment: Alignment.center,
+              children: [
+                IconButton(
+                  tooltip: 'pos.posCounterCart'.tr,
+                  onPressed: () => PosCartBottomSheet.show(
+                    context: context,
+                    controller: posCartController,
+                  ),
+                  icon: const Icon(
+                    Icons.point_of_sale_rounded,
+                    color: Color(0xFF34D399),
+                    size: 24,
+                  ),
+                ),
+                if (total > 0)
+                  Positioned(
+                    right: 6,
+                    top: 6,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.redAccent,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 18,
+                        minHeight: 18,
+                      ),
+                      child: Text(
+                        '$total',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          }),
+
+          const SizedBox(width: 4),
+
+          FloatingActionButton.extended(
+            onPressed: () => Get.toNamed(Routes.PRODUCT_ADD),
+            backgroundColor: const Color(0xFF34D399),
+            foregroundColor: Colors.black,
+            icon: const Icon(Icons.add_rounded),
+            label: const Text(
+              'Add Product',
+              style: TextStyle(fontWeight: FontWeight.w900),
+            ),
+          ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Get.toNamed(Routes.PRODUCT_ADD),
-        backgroundColor: const Color(0xFF34D399),
-        foregroundColor: Colors.black,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text(
-          'Add Product',
-          style: TextStyle(fontWeight: FontWeight.w900),
-        ),
-      ),
+
       body: Column(
         children: [
           _ProductFilterBar(controller: controller),
@@ -86,38 +144,43 @@ class ProductListView extends GetView<ProductController> {
                     parent: BouncingScrollPhysics(),
                   ),
                   slivers: [
-                    SliverToBoxAdapter(
-                      child: _ProductListHeader(
-                        total: controller.totalProducts.value,
-                        showing: controller.shopProducts.length,
-                      ),
-                    ),
+
                     SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
+                      padding: const EdgeInsets.fromLTRB(10, 6, 10, 14),
                       sliver: SliverGrid(
                         delegate: SliverChildBuilderDelegate(
                           (context, index) {
                             final product = controller.shopProducts[index];
 
-                            return ProductCard(
-                              product: product,
-                              onTap: () {
-                                _showProductActions(
-                                  context: context,
-                                  product: product,
-                                  controller: controller,
-                                );
-                              },
-                            );
+                            return Obx(() {
+                              final isAdding =
+                                  posCartController.addingProductId.value == product.id;
+
+                              return ProductCard(
+                                product: product,
+                                onTap: () {
+                                  _showProductActions(
+                                    context: context,
+                                    product: product,
+                                    controller: controller,
+                                    posCartController: posCartController,
+                                  );
+                                },
+                                onAddToCart: () {
+                                  posCartController.addItem(product: product);
+                                },
+                                isAddingToCart: isAdding,
+                              );
+                            });
                           },
                           childCount: controller.shopProducts.length,
                         ),
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 12,
-                          crossAxisSpacing: 12,
-                          childAspectRatio: 0.62,
+                          crossAxisCount: 3,
+                          mainAxisSpacing: 8,
+                          crossAxisSpacing: 8,
+                          childAspectRatio: 0.54,
                         ),
                       ),
                     ),
@@ -171,6 +234,7 @@ void _showProductActions({
   required BuildContext context,
   required ProductData product,
   required ProductController controller,
+  required PosCartController posCartController,
 }) {
   showModalBottomSheet(
     context: context,
@@ -218,6 +282,15 @@ void _showProductActions({
                 ),
               ),
               const SizedBox(height: 14),
+              _ProductActionTile(
+                icon: Icons.add_shopping_cart_rounded,
+                label: '${'pos.addToPosCart'.tr} (${posCartController.selectedCounter.value})',
+                color: const Color(0xFF34D399),
+                onTap: () {
+                  Get.back();
+                  posCartController.addItem(product: product);
+                },
+              ),
               _ProductActionTile(
                 icon: Icons.visibility_outlined,
                 label: 'বিস্তারিত দেখুন',

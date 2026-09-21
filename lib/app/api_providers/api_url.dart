@@ -77,4 +77,32 @@ class ApiClient {
   static const String notificationRead = '$baseUrl/api/notifications/';
   static const String notificationReadAll =
       '$baseUrl/api/notifications/read-all';
+
+  // POS Multi-Counter
+  static String posCart(String storeId) =>
+      '$baseUrl/api/seller/stores/$storeId/pos/cart';
+  static String posCartAddItem(String storeId) =>
+      '$baseUrl/api/seller/stores/$storeId/pos/cart/items/add';
+  static String posCartUpdateItem(String storeId, int itemId) =>
+      '$baseUrl/api/seller/stores/$storeId/pos/cart/items/update/$itemId';
+  static String posCartRemoveItem(String storeId, int itemId) =>
+      '$baseUrl/api/seller/stores/$storeId/pos/cart/items/remove/$itemId';
+  static String posCartHold(String storeId) =>
+      '$baseUrl/api/seller/stores/$storeId/pos/cart/hold';
+  static String posCartHeldList(String storeId) =>
+      '$baseUrl/api/seller/stores/$storeId/pos/cart/held-list';
+  static String posCartResume(String storeId) =>
+      '$baseUrl/api/seller/stores/$storeId/pos/cart/resume';
+  static String posCartCheckout(String storeId) =>
+      '$baseUrl/api/seller/stores/$storeId/pos/cart/checkout';
+
+  // Baki Khata & Due Management
+  static String bakiSummary(String storeId, {String? search}) =>
+      '$baseUrl/api/seller/stores/$storeId/baki/summary${search != null && search.trim().isNotEmpty ? '?search=${Uri.encodeComponent(search.trim())}' : ''}';
+  static String customerLedger(String storeId, int customerId, {int page = 1}) =>
+      '$baseUrl/api/seller/stores/$storeId/baki/customer/$customerId?page=$page';
+  static String bakiCollect(String storeId) =>
+      '$baseUrl/api/seller/stores/$storeId/baki/collect';
+  static String bakiQuickAdd(String storeId) =>
+      '$baseUrl/api/seller/stores/$storeId/baki/quick-add';
 }
