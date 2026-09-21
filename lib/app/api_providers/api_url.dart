@@ -6,6 +6,13 @@ class ApiClient {
   static const String login = '$baseUrl/api/auth/login-seller';
   static const String sellerLogin = '$baseUrl/api/auth/login-seller';
   static const String createSeller = '$baseUrl/api/users/create-seller';
+
+  // locations
+  static const String divisions = '$baseUrl/api/locations/divisions';
+  static String districtsByDivision(dynamic divisionId) =>
+      '$baseUrl/api/locations/districts/$divisionId';
+  static String upazilasByDistrict(dynamic districtId) =>
+      '$baseUrl/api/locations/upazilas/$districtId';
   static const String changeNotificationStatus =
       '$baseUrl/api/appapi/myNotifications/changeStatus';
 

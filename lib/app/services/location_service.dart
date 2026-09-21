@@ -55,51 +55,90 @@ class LocationService extends GetxService {
     }
   }
 
-  Future<Map> determinePosition() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-    // Test if location services are enabled.
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      // Location services are not enabled don't continue
-      // accessing the position and request users of the
-      // App to enable the location services.
-
-      return Future.error('Location services are disabled.');
-    }
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        // Permissions are denied, next time you could try
-        // requesting permissions again (this is also where
-        // Android's shouldShowRequestPermissionRationale
-        // returned true. According to Android guidelines
-        // your App should show an explanatory UI now.
-
-        return Future.error('Location permissions are denied');
+  Future<Map<String, dynamic>> determinePosition() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        print('Location services are disabled.');
       }
-    }
-    if (permission == LocationPermission.deniedForever) {
-      // Permissions are denied forever, handle appropriately.
 
-      return Future.error(
-          'Location permissions are permanently denied, we cannot request permissions.');
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        print('Location permissions denied: $permission');
+      }
+
+      // Step 1: Immediately use last known position if available for instant coordinates
+      Position? position;
+      try {
+        position = await Geolocator.getLastKnownPosition();
+        if (position != null) {
+          final m = {
+            'lat': position.latitude,
+            'lng': position.longitude,
+            'lon': position.longitude,
+            'city': currentLocation['city'] ?? '',
+          };
+          currentLocation.assignAll(m);
+        }
+      } catch (e) {
+        print('Error getting last known position: $e');
+      }
+
+      // Step 2: Fetch current live position with a timeout
+      try {
+        final livePosition = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+          timeLimit: const Duration(seconds: 6),
+        );
+        position = livePosition;
+      } catch (e) {
+        print('High accuracy getCurrentPosition failed or timed out ($e), trying lower accuracy');
+        try {
+          final fallbackPosition = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.medium,
+            timeLimit: const Duration(seconds: 4),
+          );
+          position = fallbackPosition;
+        } catch (e2) {
+          print('Fallback getCurrentPosition also failed: $e2');
+        }
+      }
+
+      if (position != null) {
+        String city = '';
+        try {
+          final placemarks = await placemarkFromCoordinates(
+            position.latitude,
+            position.longitude,
+          );
+          if (placemarks.isNotEmpty) {
+            final place = placemarks[0];
+            city = place.locality?.isNotEmpty == true
+                ? place.locality!
+                : (place.administrativeArea ?? '');
+          }
+        } catch (e) {
+          print('Reverse geocoding error: $e');
+        }
+
+        final m = {
+          'lat': position.latitude,
+          'lng': position.longitude,
+          'lon': position.longitude,
+          'city': city,
+        };
+        currentLocation.assignAll(m);
+        return m;
+      }
+    } catch (e) {
+      print('determinePosition general error: $e');
     }
-    // When we reach here, permissions are granted and we can
-    // continue accessing the position of the device.
-    Position position =
-        await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
-    List<Placemark> placemarks = await placemarkFromCoordinates(
-        position.latitude, position.longitude,);
-    Placemark place = placemarks[0];
-    String city = '${place.locality == '' ? place.administrativeArea : place.locality}';
-    Map m = {
-      'lat': position.latitude,
-      'lng': position.longitude,
-      'city': city,
-    };
-    currentLocation.value = m;
-    return m;
+
+    return Map<String, dynamic>.from(currentLocation);
   }
 }

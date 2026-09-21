@@ -145,16 +145,38 @@ class SellerStoreQrController extends GetxController {
     }
   }
 
+  String _buildCustomerShareMessage() {
+    final shopName = selectedStoreName;
+    final shopCode = selectedStoreCode;
+    final codePart = shopCode.isNotEmpty
+        ? '\n🔑 শপ কোড: $shopCode\n\n👉 MyZoo কাস্টমার অ্যাপে এই কোডটি দিয়ে আমাদের দোকানটি যুক্ত (Add) করে নিন এবং ঘরে বসেই সহজে কেনাকাটা করুন!\n'
+        : '';
+
+    return '✨ প্রিয় গ্রাহক,\n'
+        'এখন ঘরে বসেই আমাদের দোকান থেকে কেনাকাটা করুন খুব সহজে!\n\n'
+        '🛍️ দোকান: $shopName\n'
+        '$codePart\n'
+        '📲 এখনই MyZoo কাস্টমার অ্যাপটি ডাউনলোড করুন:\n'
+        'https://play.google.com/store/apps/details?id=com.myzoo.customer';
+  }
+
   Future<void> shareQrOrUrl() async {
-    if (!_ensureStoreUrl()) return;
+    if (!hasSelectedStore) {
+      Get.showSnackbar(
+        Ui.ErrorSnackBar(message: 'Please select a store first.'),
+      );
+      return;
+    }
 
     final file = await _capturePosterFile(showSuccess: false);
+    final message = _buildCustomerShareMessage();
+    final subject = '$selectedStoreName - MyZoo কাস্টমার অ্যাপ';
 
     if (file != null) {
       await SharePlus.instance.share(
         ShareParams(
-          text: 'Shop from $selectedStoreName: $publicStoreUrl',
-          subject: '$selectedStoreName Store QR',
+          text: message,
+          subject: subject,
           files: [XFile(file.path)],
         ),
       );
@@ -163,8 +185,8 @@ class SellerStoreQrController extends GetxController {
 
     await SharePlus.instance.share(
       ShareParams(
-        text: 'Shop from $selectedStoreName: $publicStoreUrl',
-        subject: '$selectedStoreName Store QR',
+        text: message,
+        subject: subject,
       ),
     );
   }
@@ -341,8 +363,8 @@ class SellerStoreQrController extends GetxController {
                 Get.back();
                 SharePlus.instance.share(
                   ShareParams(
-                    text: 'Shop from $selectedStoreName: $publicStoreUrl',
-                    subject: '$selectedStoreName Store QR',
+                    text: _buildCustomerShareMessage(),
+                    subject: '$selectedStoreName - MyZoo কাস্টমার অ্যাপ',
                     files: [XFile(file.path)],
                   ),
                 );

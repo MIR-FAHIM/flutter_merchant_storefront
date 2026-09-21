@@ -270,6 +270,44 @@ class APIManager {
     }
   }
 
+  Future<Map<String, dynamic>> postPublicJsonStatus(
+      String url, Map<String, dynamic> param) async {
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        body: jsonEncode(param),
+        headers: const {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+      return {
+        'status_code': response.statusCode,
+        'body': _decodeResponseBody(response.body),
+      };
+    } on SocketException {
+      throw FetchDataException('No Internet connection');
+    }
+  }
+
+  Future<Map<String, dynamic>> getPublicJsonStatus(String url) async {
+    print("Calling Public API: $url");
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: const {
+          'Accept': 'application/json',
+        },
+      );
+      return {
+        'status_code': response.statusCode,
+        'body': _decodeResponseBody(response.body),
+      };
+    } on SocketException {
+      throw FetchDataException('No Internet connection');
+    }
+  }
+
   Future<Map<String, dynamic>> multipartPostWithHeaderStatus(
     String url, {
     required Map<String, String> fields,

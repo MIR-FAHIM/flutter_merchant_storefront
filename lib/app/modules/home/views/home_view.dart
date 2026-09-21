@@ -1612,146 +1612,193 @@ class _ShopDashboardDrawer extends StatelessWidget {
       child: SafeArea(
         child: Column(
           children: [
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.all(14),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.primaryColor,
-                borderRadius: BorderRadius.circular(22),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Image.asset(
-                    CompanyData.companyLogo,
-                    height: 58,
-                    width: 120,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) {
-                      return const Icon(
-                        Icons.storefront_rounded,
-                        color: Colors.white,
-                        size: 44,
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    "shopDashboardDrawer.title".tr,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Obx(() {
-                    final homeController = Get.isRegistered<HomeController>() ? Get.find<HomeController>() : null;
-                    final profileData = homeController?.profileData.value;
-                    final packageName = profileData?.shop?.package?.package?.name ?? 'Free';
-
-                    return Text.rich(
-                      TextSpan(
-                        text: "You are in ",
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w500,
-                        ),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.all(14),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryColor,
+                        borderRadius: BorderRadius.circular(22),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          TextSpan(
-                            text: packageName,
+                          Image.asset(
+                            CompanyData.companyLogo,
+                            height: 58,
+                            width: 120,
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) {
+                              return const Icon(
+                                Icons.storefront_rounded,
+                                color: Colors.white,
+                                size: 44,
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            "shopDashboardDrawer.title".tr,
                             style: const TextStyle(
-                              color: Colors.amberAccent,
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
                             ),
                           ),
+                          const SizedBox(height: 4),
+                          Obx(() {
+                            final homeController = Get.isRegistered<HomeController>()
+                                ? Get.find<HomeController>()
+                                : null;
+                            final profileData = homeController?.profileData.value;
+                            final packageName =
+                                profileData?.shop?.package?.package?.name ?? 'Free';
 
+                            return Text.rich(
+                              TextSpan(
+                                text: "You are in ",
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                children: [
+                                  TextSpan(
+                                    text: packageName,
+                                    style: const TextStyle(
+                                      color: Colors.amberAccent,
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
                         ],
                       ),
-                    );
-                  }),
-                ],
+                    ),
+                    _DrawerItem(
+                      icon: Icons.dashboard_outlined,
+                      title: "shopDashboardDrawer.dashboard".tr,
+                      color: AppColors.primaryColor,
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.inventory_2_outlined,
+                      title: "shopDashboardDrawer.products".tr,
+                      color: const Color(0xFF60A5FA),
+                      onTap: () {
+                        Get.toNamed(Routes.PRODUCT_LIST);
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.forum_outlined,
+                      title: "shopDashboardDrawer.customerChat".tr,
+                      color: const Color(0xFF2DD4BF),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Get.toNamed(Routes.SHOP_CHAT_CONVERSATIONS);
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.qr_code_2_rounded,
+                      title: "shopDashboardDrawer.storeQrDownload".tr,
+                      color: const Color(0xFF2DD4BF),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Get.toNamed(Routes.SELLER_STORE_QR);
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.share_rounded,
+                      title: "shopDashboardDrawer.shareCustomerApp".tr,
+                      color: const Color(0xFF38BDF8),
+                      onTap: () {
+                        Navigator.pop(context);
+                        final profileData = Get.find<HomeController>().profileData.value;
+                        final shop = profileData.shop;
+                        final shopName = shop?.name ?? shop?.shopName ?? profileData.name ?? 'আমাদের দোকান';
+                        final shopCode = shop?.code?.trim();
+
+                        final codePart = (shopCode != null && shopCode.isNotEmpty)
+                            ? '\n🔑 শপ কোড: $shopCode\n\n👉 MyZoo কাস্টমার অ্যাপে এই কোডটি দিয়ে আমাদের দোকানটি যুক্ত (Add) করে নিন এবং ঘরে বসেই সহজে কেনাকাটা করুন!\n'
+                            : '';
+
+                        final message =
+                            '✨ প্রিয় গ্রাহক,\n'
+                            'এখন ঘরে বসেই আমাদের দোকান থেকে কেনাকাটা করুন খুব সহজে!\n\n'
+                            '🛍️ দোকান: $shopName\n'
+                            '$codePart\n'
+                            '📲 এখনই MyZoo কাস্টমার অ্যাপটি ডাউনলোড করুন:\n'
+                            'https://play.google.com/store/apps/details?id=com.myzoo.customer';
+
+                        Share.share(
+                          message,
+                          subject: '$shopName - MyZoo কাস্টমার অ্যাপ',
+                        );
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.storefront_rounded,
+                      title: "মার্চেন্ট অ্যাপ শেয়ার করুন",
+                      color: const Color(0xFF2DD4BF),
+                      onTap: () {
+                        Navigator.pop(context);
+                        final code = Get.find<HomeController>().profileData.value.shop?.code ??
+                            Get.find<HomeController>().profileData.value.referralCode?.toString();
+                        final referralPart = (code != null && code.trim().isNotEmpty)
+                            ? '\n🎁 আমার রেফারেল কোড: ${code.trim()}\n\n💡 নোট: নতুন সেলার হিসেবে MyZoo মার্চেন্ট অ্যাপে রেজিস্ট্রেশনের সময় এই রেফারেল কোডটি ব্যবহার করুন।\n'
+                            : '';
+                        Share.share(
+                          '🛍️ MyZoo মার্চেন্ট অ্যাপে যোগ দিন এবং অনলাইনে আপনার ব্যবসা সহজে পরিচালনা ও বৃদ্ধি করুন!\n'
+                          '$referralPart\n'
+                          '📲 এখনই মার্চেন্ট অ্যাপটি ডাউনলোড করুন:\n'
+                          'https://play.google.com/store/apps/details?id=com.myzoo.marchant&pli=1',
+                          subject: 'MyZoo মার্চেন্ট অ্যাপ ও রেফারেল কোড',
+                        );
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.workspace_premium_outlined,
+                      title: "shopDashboardDrawer.subscriptionPackages".tr,
+                      color: const Color(0xFFFBBF24),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Get.toNamed(Routes.SELLER_PACKAGES);
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.lightbulb_outline_rounded,
+                      title: "Tips",
+                      color: const Color(0xFF34D399),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Get.to(() => const SellerTipsListView());
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.workspace_premium_outlined,
+                      title: "shopDashboardDrawer.deliveryMan".tr,
+                      color: const Color(0xFFFBBF24),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Get.toNamed(Routes.DELIVERY_MAN_LIST);
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ),
               ),
             ),
-            _DrawerItem(
-              icon: Icons.dashboard_outlined,
-              title: "shopDashboardDrawer.dashboard".tr,
-              color: AppColors.primaryColor,
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            _DrawerItem(
-              icon: Icons.inventory_2_outlined,
-              title: "shopDashboardDrawer.products".tr,
-              color: const Color(0xFF60A5FA),
-              onTap: () {
-                Get.toNamed(Routes.PRODUCT_LIST);
-              },
-            ),
-            _DrawerItem(
-              icon: Icons.forum_outlined,
-              title: "shopDashboardDrawer.customerChat".tr,
-              color: const Color(0xFF2DD4BF),
-              onTap: () {
-                Navigator.pop(context);
-                Get.toNamed(Routes.SHOP_CHAT_CONVERSATIONS);
-              },
-            ),
-            _DrawerItem(
-              icon: Icons.qr_code_2_rounded,
-              title: "shopDashboardDrawer.storeQrDownload".tr,
-              color: const Color(0xFF2DD4BF),
-              onTap: () {
-                Navigator.pop(context);
-                Get.toNamed(Routes.SELLER_STORE_QR);
-              },
-            ),
-            _DrawerItem(
-              icon: Icons.share_rounded,
-              title: "shopDashboardDrawer.shareCustomerApp".tr,
-              color: const Color(0xFF38BDF8),
-              onTap: () {
-                Navigator.pop(context);
-                Share.share(
-                  'MyZoo কাস্টমার অ্যাপ ডাউনলোড করুন:\nhttps://play.google.com/store/apps/details?id=com.myzoo.customer',
-                );
-              },
-            ),
-            _DrawerItem(
-              icon: Icons.workspace_premium_outlined,
-              title: "shopDashboardDrawer.subscriptionPackages".tr,
-              color: const Color(0xFFFBBF24),
-              onTap: () {
-                Navigator.pop(context);
-                Get.toNamed(Routes.SELLER_PACKAGES);
-              },
-            ),
-            _DrawerItem(
-              icon: Icons.lightbulb_outline_rounded,
-              title: "Tips",
-              color: const Color(0xFF34D399),
-              onTap: () {
-                Navigator.pop(context);
-                Get.to(() => const SellerTipsListView());
-              },
-            ),
-
-
-
-            _DrawerItem(
-              icon: Icons.workspace_premium_outlined,
-              title: "shopDashboardDrawer.deliveryMan".tr,
-              color: const Color(0xFFFBBF24),
-              onTap: () {
-                Navigator.pop(context);
-                Get.toNamed(Routes.DELIVERY_MAN_LIST);
-              },
-            ),
-            const Spacer(),
+            Divider(color: Colors.white.withOpacity(0.08), height: 1),
             _DrawerItem(
               icon: Icons.logout_rounded,
               title: "shopDashboardDrawer.logOut".tr,
@@ -1761,7 +1808,7 @@ class _ShopDashboardDrawer extends StatelessWidget {
                 Get.offAllNamed(Routes.SPLASHSCREEN);
               },
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 10),
           ],
         ),
       ),
