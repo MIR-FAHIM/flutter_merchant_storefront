@@ -426,6 +426,14 @@ class HomeView extends GetView<HomeController> {
                                 Get.toNamed(Routes.SELLER_STORE_QR);
                               },
                             ),
+                            _QuickActionCard(
+                              title: "baki.title".tr,
+                              icon: Icons.account_balance_wallet_outlined,
+                              color: const Color(0xFFEF4444),
+                              onTap: () {
+                                Get.toNamed(Routes.BAKI_KHATA);
+                              },
+                            ),
                           ],
                         ),
                         const SizedBox(height: 22),
@@ -1697,6 +1705,15 @@ class _ShopDashboardDrawer extends StatelessWidget {
                       color: const Color(0xFF60A5FA),
                       onTap: () {
                         Get.toNamed(Routes.PRODUCT_LIST);
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.account_balance_wallet_outlined,
+                      title: "baki.title".tr,
+                      color: const Color(0xFFEF4444),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Get.toNamed(Routes.BAKI_KHATA);
                       },
                     ),
                     _DrawerItem(

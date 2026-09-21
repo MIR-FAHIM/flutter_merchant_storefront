@@ -2,7 +2,7 @@ import 'package:ecom_delivery_flutter/app/modules/seller_customers/controllers/s
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class SellerCustomerAddView extends GetView<SellerCustomerController> {
+class SellerCustomerAddView extends StatefulWidget {
   const SellerCustomerAddView({super.key});
 
   static const Color _bgColor = Color(0xFF111213);
@@ -11,11 +11,51 @@ class SellerCustomerAddView extends GetView<SellerCustomerController> {
   static const Color _accentColor = Color(0xFF34D399);
 
   @override
+  State<SellerCustomerAddView> createState() => _SellerCustomerAddViewState();
+}
+
+class _SellerCustomerAddViewState extends State<SellerCustomerAddView> {
+  late final SellerCustomerController controller;
+
+  late final TextEditingController _nameController;
+  late final TextEditingController _phoneController;
+  late final TextEditingController _emailController;
+  late final TextEditingController _addressController;
+  late final TextEditingController _passwordController;
+  late final TextEditingController _existingCustomerIdController;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.isRegistered<SellerCustomerController>()
+        ? Get.find<SellerCustomerController>()
+        : Get.put(SellerCustomerController());
+
+    _nameController = TextEditingController();
+    _phoneController = TextEditingController();
+    _emailController = TextEditingController();
+    _addressController = TextEditingController();
+    _passwordController = TextEditingController();
+    _existingCustomerIdController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _emailController.dispose();
+    _addressController.dispose();
+    _passwordController.dispose();
+    _existingCustomerIdController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bgColor,
+      backgroundColor: SellerCustomerAddView._bgColor,
       appBar: AppBar(
-        backgroundColor: _bgColor,
+        backgroundColor: SellerCustomerAddView._bgColor,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         title: Text(
@@ -43,26 +83,26 @@ class SellerCustomerAddView extends GetView<SellerCustomerController> {
                 children: [
                   _CustomerTextField(
                     label: 'sellerCustomers.name'.tr,
-                    controller: controller.nameController,
+                    controller: _nameController,
                   ),
                   _CustomerTextField(
                     label: 'sellerCustomers.phone'.tr,
-                    controller: controller.phoneController,
+                    controller: _phoneController,
                     keyboardType: TextInputType.phone,
                   ),
                   _CustomerTextField(
                     label: 'sellerCustomers.email'.tr,
-                    controller: controller.emailController,
+                    controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                   ),
                   _CustomerTextField(
                     label: 'sellerCustomers.address'.tr,
-                    controller: controller.addressController,
+                    controller: _addressController,
                     maxLines: 2,
                   ),
                   _CustomerTextField(
                     label: 'sellerCustomers.password'.tr,
-                    controller: controller.passwordController,
+                    controller: _passwordController,
                     obscureText: true,
                   ),
                   const SizedBox(height: 8),
@@ -71,9 +111,24 @@ class SellerCustomerAddView extends GetView<SellerCustomerController> {
                     child: ElevatedButton(
                       onPressed: controller.isSaving.value
                           ? null
-                          : controller.createNewCustomer,
+                          : () async {
+                              final ok = await controller.createNewCustomer(
+                                name: _nameController.text,
+                                phone: _phoneController.text,
+                                email: _emailController.text,
+                                address: _addressController.text,
+                                password: _passwordController.text,
+                              );
+                              if (ok && mounted) {
+                                _nameController.clear();
+                                _phoneController.clear();
+                                _emailController.clear();
+                                _addressController.clear();
+                                _passwordController.clear();
+                              }
+                            },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _accentColor,
+                        backgroundColor: SellerCustomerAddView._accentColor,
                         foregroundColor: Colors.black,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
@@ -102,7 +157,7 @@ class SellerCustomerAddView extends GetView<SellerCustomerController> {
                 children: [
                   _CustomerTextField(
                     label: 'sellerCustomers.customerUserId'.tr,
-                    controller: controller.existingCustomerIdController,
+                    controller: _existingCustomerIdController,
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 8),
@@ -111,10 +166,20 @@ class SellerCustomerAddView extends GetView<SellerCustomerController> {
                     child: OutlinedButton(
                       onPressed: controller.isSaving.value
                           ? null
-                          : controller.attachExistingCustomer,
+                          : () async {
+                              final ok =
+                                  await controller.attachExistingCustomer(
+                                customerUserId:
+                                    _existingCustomerIdController.text,
+                              );
+                              if (ok && mounted) {
+                                _existingCustomerIdController.clear();
+                              }
+                            },
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: _accentColor,
-                        side: const BorderSide(color: _accentColor),
+                        foregroundColor: SellerCustomerAddView._accentColor,
+                        side: const BorderSide(
+                            color: SellerCustomerAddView._accentColor),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),

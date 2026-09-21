@@ -36,6 +36,8 @@ abstract class Routes {
   static const DELIVERY_MAN_LIST = _Paths.DELIVERY_MAN_LIST;
   static const ORDER_NOTIFICATION = _Paths.ORDER_NOTIFICATION;
   static const GENERAL_NOTIFICATION = _Paths.GENERAL_NOTIFICATION;
+  static const BAKI_KHATA = _Paths.BAKI_KHATA;
+  static const CUSTOMER_LEDGER = _Paths.CUSTOMER_LEDGER;
 }
 
 abstract class _Paths {
@@ -71,4 +73,6 @@ abstract class _Paths {
   static const SELLER_CUSTOMER_DETAIL = '/SELLER_CUSTOMER_DETAIL';
   static const DELIVERY_MAN_ADD = '/delivery-man/add';
   static const DELIVERY_MAN_LIST = '/delivery-man/list';
+  static const BAKI_KHATA = '/seller/baki-khata';
+  static const CUSTOMER_LEDGER = '/seller/baki-khata/ledger';
 }

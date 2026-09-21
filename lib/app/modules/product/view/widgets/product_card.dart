@@ -6,10 +6,14 @@ class ProductCard extends StatelessWidget {
     super.key,
     required this.product,
     required this.onTap,
+    this.onAddToCart,
+    this.isAddingToCart = false,
   });
 
   final ProductData product;
   final VoidCallback onTap;
+  final VoidCallback? onAddToCart;
+  final bool isAddingToCart;
 
   static const Color _cardColor = Color(0xFF1B1C1E);
   static const Color _borderColor = Color(0xFF2E3033);
@@ -24,14 +28,14 @@ class ProductCard extends StatelessWidget {
 
     return Material(
       color: _cardColor,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(12),
         child: Container(
           decoration: BoxDecoration(
             color: _cardColor,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(color: _borderColor),
           ),
           child: Column(
@@ -45,7 +49,7 @@ class ProductCard extends StatelessWidget {
 
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                  padding: const EdgeInsets.fromLTRB(7, 6, 7, 7),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -55,9 +59,9 @@ class ProductCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: _textPrimary,
-                          fontSize: 14,
-                          height: 1.25,
-                          fontWeight: FontWeight.w900,
+                          fontSize: 11,
+                          height: 1.2,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
 
@@ -69,27 +73,28 @@ class ProductCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: Color(0xFF34D399),
-                          fontSize: 16,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.w900,
                         ),
                       ),
 
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 5),
 
                       Row(
                         children: [
                           Expanded(
                             child: _StockBadge(
                               stock: stock,
-
                             ),
                           ),
-                          const SizedBox(width: 10),
-                          const Icon(
-                            Icons.more_horiz_rounded,
-                            color: _textSecondary,
-                            size: 20,
-                          ),
+                          if (onAddToCart != null) ...[
+                            const SizedBox(width: 4),
+                            _AddToCartButton(
+                              onTap: onAddToCart!,
+                              isLoading: isAddingToCart,
+                            ),
+                          ],
+
                         ],
                       ),
                     ],
@@ -104,17 +109,20 @@ class ProductCard extends StatelessWidget {
   }
 
   static String _formatMoney(double value) {
-    final String fixed = value.toStringAsFixed(2);
+    final bool hasDecimals = value % 1 != 0;
+    final String fixed =
+        hasDecimals ? value.toStringAsFixed(2) : value.toStringAsFixed(0);
     final List<String> parts = fixed.split('.');
     final String integerPart = parts[0];
-    final String decimalPart = parts.length > 1 ? parts[1] : '00';
-
     final String formattedInteger = integerPart.replaceAllMapped(
       RegExp(r'\B(?=(\d{3})+(?!\d))'),
       (match) => ',',
     );
 
-    return '৳$formattedInteger.$decimalPart';
+    if (hasDecimals && parts.length > 1) {
+      return '৳$formattedInteger.${parts[1]}';
+    }
+    return '৳$formattedInteger';
   }
 }
 
@@ -134,10 +142,10 @@ class _ProductImage extends StatelessWidget {
     return Stack(
       children: [
         AspectRatio(
-          aspectRatio: 1.25,
+          aspectRatio: 1.0,
           child: ClipRRect(
             borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(18),
+              top: Radius.circular(12),
             ),
             child: Container(
               color: const Color(0xFF242528),
@@ -146,7 +154,7 @@ class _ProductImage extends StatelessWidget {
                       child: Icon(
                         Icons.image_not_supported_outlined,
                         color: Color(0xFF6B7280),
-                        size: 36,
+                        size: 26,
                       ),
                     )
                   : Image.network(
@@ -157,7 +165,7 @@ class _ProductImage extends StatelessWidget {
                           child: Icon(
                             Icons.broken_image_outlined,
                             color: Color(0xFF6B7280),
-                            size: 36,
+                            size: 26,
                           ),
                         );
                       },
@@ -166,9 +174,9 @@ class _ProductImage extends StatelessWidget {
 
                         return const Center(
                           child: SizedBox(
-                            height: 24,
-                            width: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 1.5),
                           ),
                         );
                       },
@@ -179,30 +187,30 @@ class _ProductImage extends StatelessWidget {
 
         if (isOutOfStock)
           Positioned(
-            left: 8,
-            top: 8,
+            left: 5,
+            bottom: 5,
             child: Container(
               padding: const EdgeInsets.symmetric(
-                horizontal: 9,
-                vertical: 5,
+                horizontal: 5,
+                vertical: 2,
               ),
               decoration: BoxDecoration(
-                color: Colors.redAccent,
+                color: Colors.redAccent.withOpacity(0.92),
                 borderRadius: BorderRadius.circular(999),
               ),
               child: const Text(
                 'Out of stock',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w900,
+                  fontSize: 8,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ),
           ),
         Positioned(
-          right: 8,
-          top: 8,
+          right: 5,
+          top: 5,
           child: _StatusPill(
             color: isPublished
                 ? const Color(0xFF34D399)
@@ -218,11 +226,9 @@ class _ProductImage extends StatelessWidget {
 class _StockBadge extends StatelessWidget {
   const _StockBadge({
     required this.stock,
-
   });
 
   final int stock;
-
 
   @override
   Widget build(BuildContext context) {
@@ -230,32 +236,31 @@ class _StockBadge extends StatelessWidget {
     final color = isOut ? Colors.redAccent : const Color(0xFF34D399);
 
     return Container(
-      height: 34,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      height: 22,
+      padding: const EdgeInsets.symmetric(horizontal: 5),
       decoration: BoxDecoration(
         color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.35)),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withOpacity(0.35), width: 0.8),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             isOut ? Icons.warning_amber_rounded : Icons.inventory_2_outlined,
             color: color,
-            size: 15,
+            size: 11,
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 3),
           Expanded(
             child: Text(
-              isOut
-                  ? 'Stock: 0'
-                  : 'Stock: $stock',
+              isOut ? 'Stock: 0' : 'Qty: $stock',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: color,
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ),
@@ -277,19 +282,60 @@ class _StatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.58),
+        color: Colors.black.withOpacity(0.65),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withOpacity(0.65)),
+        border: Border.all(color: color.withOpacity(0.65), width: 0.8),
       ),
       child: Text(
         text,
         style: TextStyle(
           color: color,
-          fontSize: 10.5,
-          fontWeight: FontWeight.w900,
+          fontSize: 8.5,
+          fontWeight: FontWeight.w800,
         ),
+      ),
+    );
+  }
+}
+
+class _AddToCartButton extends StatelessWidget {
+  const _AddToCartButton({
+    required this.onTap,
+    this.isLoading = false,
+  });
+
+  final VoidCallback onTap;
+  final bool isLoading;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: isLoading ? null : onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        height: 22,
+        width: 22,
+        decoration: BoxDecoration(
+          color: const Color(0xFF34D399),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        alignment: Alignment.center,
+        child: isLoading
+            ? const SizedBox(
+                width: 11,
+                height: 11,
+                child: CircularProgressIndicator(
+                  strokeWidth: 1.5,
+                  color: Colors.black,
+                ),
+              )
+            : const Icon(
+                Icons.add,
+                color: Colors.black,
+                size: 15,
+              ),
       ),
     );
   }
