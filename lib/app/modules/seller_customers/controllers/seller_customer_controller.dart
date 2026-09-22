@@ -2,6 +2,7 @@ import 'package:ecom_delivery_flutter/app/models/seller_customer_list_model.dart
 import 'package:ecom_delivery_flutter/app/models/seller_customer_model.dart';
 import 'package:ecom_delivery_flutter/app/modules/seller_customers/repositories/seller_customer_repository.dart';
 import 'package:ecom_delivery_flutter/app/routes/app_pages.dart';
+import 'package:ecom_delivery_flutter/app/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -33,8 +34,36 @@ class SellerCustomerController extends GetxController {
   int _customerOrderPage = 1;
   int _customerOrderLastPage = 1;
 
+  int get sellerId {
+    if (Get.isRegistered<AuthService>()) {
+      return Get.find<AuthService>().currentUser.value.data?.user?.id ?? 0;
+    }
+    return 0;
+  }
+
+  int get shopId {
+    if (Get.isRegistered<AuthService>()) {
+      return Get.find<AuthService>().currentUser.value.data?.user?.shop?.id ?? 0;
+    }
+    return 0;
+  }
+
+  @override
+  void onInit() {
+    super.onInit();
+    if (preferredCustomers.isEmpty && !isLoadingCustomers.value) {
+      fetchPreferredCustomers();
+    }
+  }
+
   @override
   void onClose() {
+    nameController.dispose();
+    phoneController.dispose();
+    emailController.dispose();
+    addressController.dispose();
+    passwordController.dispose();
+    existingCustomerIdController.dispose();
     super.onClose();
   }
 
@@ -96,6 +125,7 @@ class SellerCustomerController extends GetxController {
         snackPosition: SnackPosition.BOTTOM,
       );
       _clearForm();
+      fetchPreferredCustomers(refresh: true);
       return true;
     } on SellerCustomerException catch (error) {
       if (error.statusCode == 401) {
@@ -115,14 +145,15 @@ class SellerCustomerController extends GetxController {
   /// Fetches preferred customers for [sellerId], parses the response into
   /// [SellerPreferredCustomerPagination], and stores the flattened list in
   /// [preferredCustomers].
-  Future<void> fetchPreferredCustomers({required int sellerId}) async {
+  Future<void> fetchPreferredCustomers({int? sellerId, bool refresh = false}) async {
+    final targetSellerId = sellerId ?? this.sellerId;
     if (isLoadingCustomers.value) return;
 
     try {
       isLoadingCustomers.value = true;
       fetchError.value = '';
 
-      final data = await _repository.getPreferredCustomers(sellerId: sellerId);
+      final data = await _repository.getPreferredCustomers(sellerId: targetSellerId);
       final pagination = SellerPreferredCustomerPagination.fromJson(data);
 
       preferredCustomersPagination.value = pagination;
@@ -139,6 +170,8 @@ class SellerCustomerController extends GetxController {
       isLoadingCustomers.value = false;
     }
   }
+
+  Future<void> refreshCustomers() => fetchPreferredCustomers(refresh: true);
 
   void setSelectedCustomer(SellerPreferredCustomer customer) {
     selectedCustomer.value = customer;
@@ -191,6 +224,16 @@ class SellerCustomerController extends GetxController {
     } finally {
       isLoadingCustomerOrders.value = false;
     }
+  }
+
+  Future<void> loadSelectedCustomerOrders({bool refresh = false}) async {
+    final customer = selectedCustomer.value;
+    if (customer == null) return;
+    return fetchCustomerOrders(
+      shopId: shopId,
+      userId: customer.customer.id,
+      refresh: refresh,
+    );
   }
 
   String _friendlyError(int statusCode, String message) {

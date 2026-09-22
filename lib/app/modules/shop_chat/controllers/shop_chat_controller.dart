@@ -1,5 +1,6 @@
 import 'package:ecom_delivery_flutter/app/models/chat_model.dart';
 import 'package:ecom_delivery_flutter/app/modules/shop_chat/repositories/shop_chat_repository.dart';
+import 'package:ecom_delivery_flutter/app/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -96,6 +97,35 @@ class ShopChatController extends GetxController {
       loadMessages(conversationId: conversation.id, refresh: true),
       markConversationRead(conversation.id),
     ]);
+  }
+
+  Future<Conversation?> openConversationWithUser({
+    required int userId,
+    int? shopId,
+  }) async {
+    isConversationLoading.value = true;
+    try {
+      final resolvedShopId = shopId ??
+          (Get.isRegistered<AuthService>()
+              ? Get.find<AuthService>().currentUser.value.data?.user?.shop?.id
+              : null);
+      final conversation = await _repository.openConversation(
+        userId: userId,
+        shopId: resolvedShopId,
+      );
+      final index = conversations.indexWhere((c) => c.id == conversation.id);
+      if (index >= 0) {
+        conversations[index] = conversation;
+      } else {
+        conversations.insert(0, conversation);
+      }
+      return conversation;
+    } catch (e) {
+      conversationError.value = e.toString();
+      return null;
+    } finally {
+      isConversationLoading.value = false;
+    }
   }
 
   Future<void> loadThread(int conversationId) async {

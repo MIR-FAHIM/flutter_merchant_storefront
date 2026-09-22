@@ -31,6 +31,8 @@ class ApiClient {
   static const String orderDetail = '$baseUrl/api/orders/details/';
   static const String orderStatusList = '$baseUrl/api/orders/orderstatus';
   static const String changeOrderStatus = '$baseUrl/api/orders/status/';
+  static String pendingOrderCount(dynamic shopId) =>
+      '$baseUrl/api/orders/pending-count/$shopId';
 
   //shop
   static const String shopDashboard = '$baseUrl/api/reports/shop/';
@@ -105,4 +107,32 @@ class ApiClient {
       '$baseUrl/api/seller/stores/$storeId/baki/collect';
   static String bakiQuickAdd(String storeId) =>
       '$baseUrl/api/seller/stores/$storeId/baki/quick-add';
+
+  // Shop Cash Flow & Financial Ledger Report
+  static String shopFinancialSummary(
+    String storeId, {
+    String? period,
+    String? from,
+    String? to,
+  }) {
+    final queryParams = <String, String>{};
+    if (period != null && period.isNotEmpty) queryParams['period'] = period;
+    if (from != null && from.isNotEmpty) queryParams['from'] = from;
+    if (to != null && to.isNotEmpty) queryParams['to'] = to;
+
+    final queryString = queryParams.isNotEmpty
+        ? '?${Uri(queryParameters: queryParams).query}'
+        : '';
+    return '$baseUrl/api/reports/shop/$storeId/summary$queryString';
+  }
+
+  // Cash Logs Quick Actions
+  static String cashLogOpening(String storeId) =>
+      '$baseUrl/api/seller/stores/$storeId/cash-logs/opening';
+  static String cashLogQuickCash(String storeId) =>
+      '$baseUrl/api/seller/stores/$storeId/cash-logs/quick-cash';
+  static String cashLogExpense(String storeId) =>
+      '$baseUrl/api/seller/stores/$storeId/cash-logs/expense';
+  static String cashLogAdjustDrawer(String storeId) =>
+      '$baseUrl/api/seller/stores/$storeId/cash-logs/adjust-drawer';
 }

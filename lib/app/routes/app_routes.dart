@@ -38,6 +38,8 @@ abstract class Routes {
   static const GENERAL_NOTIFICATION = _Paths.GENERAL_NOTIFICATION;
   static const BAKI_KHATA = _Paths.BAKI_KHATA;
   static const CUSTOMER_LEDGER = _Paths.CUSTOMER_LEDGER;
+  static const SHOP_CASH_FLOW_REPORT = _Paths.SHOP_CASH_FLOW_REPORT;
+  static const CASH_FLOW_GUIDE = _Paths.CASH_FLOW_GUIDE;
 }
 
 abstract class _Paths {
@@ -75,4 +77,6 @@ abstract class _Paths {
   static const DELIVERY_MAN_LIST = '/delivery-man/list';
   static const BAKI_KHATA = '/seller/baki-khata';
   static const CUSTOMER_LEDGER = '/seller/baki-khata/ledger';
+  static const SHOP_CASH_FLOW_REPORT = '/seller/reports/cash-flow';
+  static const CASH_FLOW_GUIDE = '/seller/reports/cash-flow/guide';
 }

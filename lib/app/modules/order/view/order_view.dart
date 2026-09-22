@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 
 import 'widgets/order_card.dart';
 
-class OrderListView extends StatefulWidget {
+class OrderListView extends GetView<OrderController> {
   const OrderListView({super.key});
 
   static const Color bgColor = Color(0xFF111213);
@@ -12,19 +12,11 @@ class OrderListView extends StatefulWidget {
   static const Color borderColor = Color(0xFF2E3033);
 
   @override
-  State<OrderListView> createState() => _OrderListViewState();
-}
-
-class _OrderListViewState extends State<OrderListView> {
-  final OrderController controller = Get.find<OrderController>();
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
-  String _selectedFilterStatus = 'all';
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
+  OrderController get controller {
+    if (Get.isRegistered<OrderController>()) {
+      return Get.find<OrderController>();
+    }
+    return Get.put(OrderController());
   }
 
   @override
@@ -59,51 +51,7 @@ class _OrderListViewState extends State<OrderListView> {
           );
         }
 
-        final filteredItems = controller.orderItems.where((item) {
-          final order = item.order;
-
-          // Status filter
-          if (_selectedFilterStatus != 'all') {
-            final status = (item.status ?? order?.status ?? '').toLowerCase();
-            if (_selectedFilterStatus == 'pending' &&
-                status != 'pending' &&
-                status != 'unpaid') {
-              return false;
-            } else if (_selectedFilterStatus == 'processing' &&
-                status != 'processing' &&
-                status != 'confirmed' &&
-                status != 'accepted') {
-              return false;
-            } else if (_selectedFilterStatus == 'delivered' &&
-                status != 'delivered' &&
-                status != 'completed') {
-              return false;
-            } else if (_selectedFilterStatus == 'cancelled' &&
-                status != 'cancelled' &&
-                status != 'canceled' &&
-                status != 'failed') {
-              return false;
-            }
-          }
-
-          // Search filter
-          if (_searchQuery.trim().isNotEmpty) {
-            final query = _searchQuery.trim().toLowerCase();
-            final orderNum = (order?.orderNumber ?? '').toLowerCase();
-            final orderId = (item.orderId ?? item.id ?? '').toString().toLowerCase();
-            final product = (item.productName ?? '').toLowerCase();
-            final customer = (order?.customerName ?? order?.user?.name ?? '').toLowerCase();
-            final sku = (item.sku ?? '').toLowerCase();
-
-            return orderNum.contains(query) ||
-                orderId.contains(query) ||
-                product.contains(query) ||
-                customer.contains(query) ||
-                sku.contains(query);
-          }
-
-          return true;
-        }).toList();
+        final filteredItems = controller.filteredOrderItems;
 
         return RefreshIndicator(
           onRefresh: controller.refreshOrders,
@@ -130,26 +78,17 @@ class _OrderListViewState extends State<OrderListView> {
 
                       // Search Input Field
                       TextField(
-                        controller: _searchController,
+                        controller: controller.searchController,
                         style: const TextStyle(color: Colors.white, fontSize: 13.5),
-                        onChanged: (val) {
-                          setState(() {
-                            _searchQuery = val;
-                          });
-                        },
+                        onChanged: (val) => controller.setSearchQuery(val),
                         decoration: InputDecoration(
                           hintText: 'Search order #, product, customer, SKU...',
                           hintStyle: const TextStyle(color: Color(0xFF6B7280), fontSize: 13),
                           prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF9CA3AF), size: 20),
-                          suffixIcon: _searchQuery.isNotEmpty
+                          suffixIcon: controller.searchQuery.value.isNotEmpty
                               ? IconButton(
                                   icon: const Icon(Icons.clear_rounded, color: Color(0xFF9CA3AF), size: 18),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    setState(() {
-                                      _searchQuery = '';
-                                    });
-                                  },
+                                  onPressed: () => controller.resetFilters(),
                                 )
                               : null,
                           filled: true,
@@ -175,36 +114,36 @@ class _OrderListViewState extends State<OrderListView> {
                           children: [
                             _FilterPill(
                               label: 'All Orders',
-                              isSelected: _selectedFilterStatus == 'all',
-                              onTap: () => setState(() => _selectedFilterStatus = 'all'),
+                              isSelected: controller.selectedFilterStatus.value == 'all',
+                              onTap: () => controller.setFilterStatus('all'),
                             ),
                             const SizedBox(width: 8),
                             _FilterPill(
                               label: 'Pending',
-                              isSelected: _selectedFilterStatus == 'pending',
+                              isSelected: controller.selectedFilterStatus.value == 'pending',
                               color: const Color(0xFFF59E0B),
-                              onTap: () => setState(() => _selectedFilterStatus = 'pending'),
+                              onTap: () => controller.setFilterStatus('pending'),
                             ),
                             const SizedBox(width: 8),
                             _FilterPill(
                               label: 'Processing',
-                              isSelected: _selectedFilterStatus == 'processing',
+                              isSelected: controller.selectedFilterStatus.value == 'processing',
                               color: const Color(0xFF3B82F6),
-                              onTap: () => setState(() => _selectedFilterStatus = 'processing'),
+                              onTap: () => controller.setFilterStatus('processing'),
                             ),
                             const SizedBox(width: 8),
                             _FilterPill(
                               label: 'Delivered',
-                              isSelected: _selectedFilterStatus == 'delivered',
+                              isSelected: controller.selectedFilterStatus.value == 'delivered',
                               color: const Color(0xFF10B981),
-                              onTap: () => setState(() => _selectedFilterStatus = 'delivered'),
+                              onTap: () => controller.setFilterStatus('delivered'),
                             ),
                             const SizedBox(width: 8),
                             _FilterPill(
                               label: 'Cancelled',
-                              isSelected: _selectedFilterStatus == 'cancelled',
+                              isSelected: controller.selectedFilterStatus.value == 'cancelled',
                               color: const Color(0xFFEF4444),
-                              onTap: () => setState(() => _selectedFilterStatus = 'cancelled'),
+                              onTap: () => controller.setFilterStatus('cancelled'),
                             ),
                           ],
                         ),
@@ -242,13 +181,7 @@ class _OrderListViewState extends State<OrderListView> {
                               side: const BorderSide(color: Color(0xFF34D399)),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() {
-                                _searchQuery = '';
-                                _selectedFilterStatus = 'all';
-                              });
-                            },
+                            onPressed: () => controller.resetFilters(),
                             child: const Text('Reset Filters', style: TextStyle(color: Color(0xFF34D399))),
                           ),
                         ],

@@ -43,10 +43,17 @@ class ShopChatRepository {
     );
   }
 
-  Future<Conversation> openConversation({required int shopId}) async {
+  Future<Conversation> openConversation({
+    int? shopId,
+    int? userId,
+  }) async {
+    final payload = <String, dynamic>{
+      if (userId != null && userId > 0) 'user_id': userId,
+      if (shopId != null && shopId > 0) 'shop_id': shopId,
+    };
     final response = await _apiManager.postJsonWithHeaderStatus(
       ApiClient.chatConversations,
-      {'shop_id': shopId},
+      payload,
       {},
     );
     _throwIfNeeded(response);
