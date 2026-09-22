@@ -6,6 +6,9 @@ import 'package:ecom_delivery_flutter/app/modules/auth/seller_register/views/sel
 import 'package:ecom_delivery_flutter/app/modules/baki/bindings/baki_binding.dart';
 import 'package:ecom_delivery_flutter/app/modules/baki/views/baki_khata_screen.dart';
 import 'package:ecom_delivery_flutter/app/modules/baki/views/customer_ledger_screen.dart';
+import 'package:ecom_delivery_flutter/app/modules/reports/bindings/shop_cash_flow_binding.dart';
+import 'package:ecom_delivery_flutter/app/modules/reports/views/shop_cash_flow_report_screen.dart';
+import 'package:ecom_delivery_flutter/app/modules/reports/views/seller_cash_flow_guide_screen.dart';
 import 'package:ecom_delivery_flutter/app/modules/delivery_man/bindings/delivery_man_binding.dart';
 import 'package:ecom_delivery_flutter/app/modules/delivery_man/views/delivery_man_add_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/delivery_man/views/delivery_man_list_view.dart';
@@ -190,6 +193,16 @@ class AppPages {
       name: _Paths.CUSTOMER_LEDGER,
       page: () => const CustomerLedgerScreen(),
       binding: BakiBinding(),
+    ),
+    GetPage(
+      name: _Paths.SHOP_CASH_FLOW_REPORT,
+      page: () => const ShopCashFlowReportScreen(),
+      binding: ShopCashFlowBinding(),
+    ),
+    GetPage(
+      name: _Paths.CASH_FLOW_GUIDE,
+      page: () => const SellerCashFlowGuideScreen(),
+      binding: ShopCashFlowBinding(),
     ),
   ];
 }

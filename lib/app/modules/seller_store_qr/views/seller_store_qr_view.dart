@@ -49,6 +49,18 @@ class SellerStoreQrView extends GetView<SellerStoreQrController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 2),
+              Text(
+                "dashboardHero.storeQrSubtitle".tr,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              SizedBox(height: 10,),
               if (controller.stores.length > 1) ...[
                 _StoreDropdown(controller: controller),
                 const SizedBox(height: 14),

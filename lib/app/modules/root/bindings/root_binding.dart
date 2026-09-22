@@ -1,3 +1,4 @@
+import 'package:ecom_delivery_flutter/app/modules/order/controller/order_controller.dart';
 import 'package:get/get.dart';
 import 'package:ecom_delivery_flutter/app/modules/home/controllers/home_controller.dart';
 
@@ -16,5 +17,8 @@ class RootBinding extends Bindings {
       () => HomeController(),
     );
 
+    Get.lazyPut<OrderController>(
+      () => OrderController(),
+    );
   }
 }

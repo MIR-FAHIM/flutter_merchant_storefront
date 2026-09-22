@@ -1,47 +1,33 @@
 import 'package:ecom_delivery_flutter/app/models/seller_customer_list_model.dart';
 import 'package:ecom_delivery_flutter/app/modules/seller_customers/controllers/seller_customer_controller.dart';
 import 'package:ecom_delivery_flutter/app/routes/app_pages.dart';
-import 'package:ecom_delivery_flutter/app/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class SellerCustomerDetailView extends StatefulWidget {
+class SellerCustomerDetailView extends GetView<SellerCustomerController> {
   const SellerCustomerDetailView({super.key});
 
   @override
-  State<SellerCustomerDetailView> createState() =>
-      _SellerCustomerDetailViewState();
-}
-
-class _SellerCustomerDetailViewState extends State<SellerCustomerDetailView> {
-  late final SellerCustomerController controller;
-
-  @override
-  void initState() {
-    super.initState();
-    controller = Get.find<SellerCustomerController>();
+  Widget build(BuildContext context) {
     final args = Get.arguments;
     if (args is Map && args['customer'] is SellerPreferredCustomer) {
-      controller.setSelectedCustomer(args['customer'] as SellerPreferredCustomer);
-    }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final customer = controller.selectedCustomer.value;
-      if (customer != null) {
-        controller.fetchCustomerOrders(
-          shopId: _shopId,
-          userId: customer.customer.id,
-          refresh: true,
-        );
+      final customerArg = args['customer'] as SellerPreferredCustomer;
+      if (controller.selectedCustomer.value?.id != customerArg.id) {
+        controller.setSelectedCustomer(customerArg);
+        controller.loadSelectedCustomerOrders(refresh: true);
       }
-    });
-  }
+    } else if (args is SellerPreferredCustomer) {
+      if (controller.selectedCustomer.value?.id != args.id) {
+        controller.setSelectedCustomer(args);
+        controller.loadSelectedCustomerOrders(refresh: true);
+      }
+    } else if (controller.selectedCustomer.value != null &&
+        controller.customerOrders.isEmpty &&
+        !controller.isLoadingCustomerOrders.value &&
+        controller.customerOrdersError.value.isEmpty) {
+      controller.loadSelectedCustomerOrders(refresh: true);
+    }
 
-  int get _shopId {
-    return Get.find<AuthService>().currentUser.value.data?.user?.shop?.id ?? 0;
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return DefaultTabController(
       length: 4,
       child: Scaffold(
@@ -93,8 +79,6 @@ class _SellerCustomerDetailViewState extends State<SellerCustomerDetailView> {
 
               _CustomerOrdersTab(
                 controller: controller,
-                shopId: _shopId,
-                userId: customer.customer.id,
               ),
               _PlaceholderTab(
                 icon: Icons.account_balance_wallet_outlined,
@@ -122,20 +106,12 @@ class _SellerCustomerDetailViewState extends State<SellerCustomerDetailView> {
 class _CustomerOrdersTab extends StatelessWidget {
   const _CustomerOrdersTab({
     required this.controller,
-    required this.shopId,
-    required this.userId,
   });
 
   final SellerCustomerController controller;
-  final int shopId;
-  final int userId;
 
   Future<void> _refresh() {
-    return controller.fetchCustomerOrders(
-      shopId: shopId,
-      userId: userId,
-      refresh: true,
-    );
+    return controller.loadSelectedCustomerOrders(refresh: true);
   }
 
   @override

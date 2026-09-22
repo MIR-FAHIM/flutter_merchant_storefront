@@ -1,5 +1,6 @@
 import 'package:ecom_delivery_flutter/app/models/order/order_list_model.dart';
 
+import 'package:ecom_delivery_flutter/app/modules/root/controllers/root_controller.dart';
 import 'package:ecom_delivery_flutter/app/repositories/order_rep.dart';
 import 'package:ecom_delivery_flutter/app/routes/app_pages.dart';
 import 'package:ecom_delivery_flutter/app/services/auth_service.dart';
@@ -62,6 +63,73 @@ class OrderController extends GetxController {
   final Rxn<ShopOrderItem> selectedOrderItem = Rxn<ShopOrderItem>();
   final Rxn<OrderInfo> selectedOrder = Rxn<OrderInfo>();
 
+  // Search & Filter state
+  final TextEditingController searchController = TextEditingController();
+  final RxString searchQuery = ''.obs;
+  final RxString selectedFilterStatus = 'all'.obs;
+
+  void setFilterStatus(String status) {
+    selectedFilterStatus.value = status;
+  }
+
+  void setSearchQuery(String query) {
+    searchQuery.value = query;
+  }
+
+  void resetFilters() {
+    searchController.clear();
+    searchQuery.value = '';
+    selectedFilterStatus.value = 'all';
+  }
+
+  List<ShopOrderItem> get filteredOrderItems {
+    return orderItems.where((item) {
+      final order = item.order;
+
+      // Status filter
+      if (selectedFilterStatus.value != 'all') {
+        final status = (item.status ?? order?.status ?? '').toLowerCase();
+        if (selectedFilterStatus.value == 'pending' &&
+            status != 'pending' &&
+            status != 'unpaid') {
+          return false;
+        } else if (selectedFilterStatus.value == 'processing' &&
+            status != 'processing' &&
+            status != 'confirmed' &&
+            status != 'accepted') {
+          return false;
+        } else if (selectedFilterStatus.value == 'delivered' &&
+            status != 'delivered' &&
+            status != 'completed') {
+          return false;
+        } else if (selectedFilterStatus.value == 'cancelled' &&
+            status != 'cancelled' &&
+            status != 'canceled' &&
+            status != 'failed') {
+          return false;
+        }
+      }
+
+      // Search filter
+      if (searchQuery.value.trim().isNotEmpty) {
+        final query = searchQuery.value.trim().toLowerCase();
+        final orderNum = (order?.orderNumber ?? '').toLowerCase();
+        final orderId = (item.orderId ?? item.id ?? '').toString().toLowerCase();
+        final product = (item.productName ?? '').toLowerCase();
+        final customer = (order?.customerName ?? order?.user?.name ?? '').toLowerCase();
+        final sku = (item.sku ?? '').toLowerCase();
+
+        return orderNum.contains(query) ||
+            orderId.contains(query) ||
+            product.contains(query) ||
+            customer.contains(query) ||
+            sku.contains(query);
+      }
+
+      return true;
+    }).toList();
+  }
+
   late final String shopId;
 
   bool get hasMore => currentPage.value < lastPage.value;
@@ -79,6 +147,7 @@ class OrderController extends GetxController {
 
   @override
   void onClose() {
+    searchController.dispose();
     scrollController.removeListener(_onScroll);
     scrollController.dispose();
     super.onClose();
@@ -359,6 +428,9 @@ class OrderController extends GetxController {
         }
 
         await getOrderDetails(orderId);
+        if (Get.isRegistered<RootController>()) {
+          Get.find<RootController>().fetchPendingOrderCount();
+        }
         return true;
       }
 

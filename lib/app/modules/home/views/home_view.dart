@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'package:ecom_delivery_flutter/app/modules/reports/controllers/shop_cash_flow_controller.dart';
+import 'package:ecom_delivery_flutter/app/modules/reports/views/widgets/shop_cash_flow_report_widget.dart';
 import '../controllers/home_controller.dart';
 
 class HomeView extends GetView<HomeController> {
@@ -213,23 +215,21 @@ class HomeView extends GetView<HomeController> {
                     await controller.reportDashboardShopController();
                     await controller.refreshShopOrderReport();
                     await controller.refreshShopProductLimitReport();
+                    if (Get.isRegistered<ShopCashFlowController>()) {
+                      await Get.find<ShopCashFlowController>().fetchReport();
+                    }
                   },
                   child: SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(
                       parent: BouncingScrollPhysics(),
                     ),
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                    padding: const EdgeInsets.fromLTRB(4, 8, 4, 24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Obx(() {
-                          return _DashboardHeroCard(
-                            summary: controller.shopSummary.value,
-                            isSummaryLoading:
-                                controller.isShopSummaryLoading.value,
-                            onPeriodChanged: controller.refreshShopSummary,
-                          );
-                        }),
+                        const _StoreQrQuickBanner(),
+                        const SizedBox(height: 14),
+                        const ShopCashFlowReportWidget(),
                         const SizedBox(height: 18),
                         // Container(
                         //   padding: const EdgeInsets.all(14),
@@ -434,6 +434,14 @@ class HomeView extends GetView<HomeController> {
                                 Get.toNamed(Routes.BAKI_KHATA);
                               },
                             ),
+                            _QuickActionCard(
+                              title: "cashFlow.title".tr,
+                              icon: Icons.table_chart_outlined,
+                              color: const Color(0xFF10B981),
+                              onTap: () {
+                                Get.toNamed(Routes.SHOP_CASH_FLOW_REPORT);
+                              },
+                            ),
                           ],
                         ),
                         const SizedBox(height: 22),
@@ -454,6 +462,78 @@ class HomeView extends GetView<HomeController> {
                 ),
         );
       }),
+    );
+  }
+}
+
+class _StoreQrQuickBanner extends StatelessWidget {
+  const _StoreQrQuickBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1B1C1E),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFF2E3033)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "dashboardHero.storeQrTitle".tr,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          InkWell(
+            onTap: () => Get.toNamed(Routes.SELLER_STORE_QR),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.primaryColor,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.share_rounded, size: 14, color: Colors.white),
+                  const SizedBox(width: 5),
+                  Text(
+                    "Show QR".tr,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -685,6 +765,36 @@ class _DashboardHeroCardState extends State<_DashboardHeroCard> {
                   ),
                 ),
             ],
+          ),
+          const SizedBox(height: 14),
+          InkWell(
+            onTap: () => Get.toNamed(Routes.SHOP_CASH_FLOW_REPORT),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white.withOpacity(0.2)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.table_chart_outlined, color: Colors.white, size: 16),
+                  const SizedBox(width: 8),
+                  Text(
+                    'cashFlow.viewFullLedger'.tr,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 14),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -1714,6 +1824,15 @@ class _ShopDashboardDrawer extends StatelessWidget {
                       onTap: () {
                         Navigator.pop(context);
                         Get.toNamed(Routes.BAKI_KHATA);
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.table_chart_outlined,
+                      title: "cashFlow.drawerTitle".tr,
+                      color: const Color(0xFF10B981),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Get.toNamed(Routes.SHOP_CASH_FLOW_REPORT);
                       },
                     ),
                     _DrawerItem(

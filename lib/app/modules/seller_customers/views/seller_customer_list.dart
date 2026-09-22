@@ -1,40 +1,23 @@
+import 'package:ecom_delivery_flutter/app/models/chat_model.dart';
 import 'package:ecom_delivery_flutter/app/models/seller_customer_list_model.dart';
 import 'package:ecom_delivery_flutter/app/modules/seller_customers/controllers/seller_customer_controller.dart';
+import 'package:ecom_delivery_flutter/app/modules/shop_chat/controllers/shop_chat_controller.dart';
 import 'package:ecom_delivery_flutter/app/routes/app_pages.dart';
-import 'package:ecom_delivery_flutter/app/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class SellerCustomerListView extends StatefulWidget {
+class SellerCustomerListView extends GetView<SellerCustomerController> {
   const SellerCustomerListView({super.key});
 
   @override
-  State<SellerCustomerListView> createState() => _SellerCustomerListViewState();
-}
-
-class _SellerCustomerListViewState extends State<SellerCustomerListView> {
-  late final SellerCustomerController controller;
-
-  @override
-  void initState() {
-    super.initState();
-    controller = Get.find<SellerCustomerController>();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.fetchPreferredCustomers(sellerId: _sellerId);
-    });
-  }
-
-  int get _sellerId {
-    return Get.find<AuthService>().currentUser.value.data?.user?.id ?? 0;
-  }
-
-  Future<void> _refresh() {
-    return controller.fetchPreferredCustomers(sellerId: _sellerId);
-  }
-
-  @override
   Widget build(BuildContext context) {
+    if (controller.preferredCustomers.isEmpty &&
+        !controller.isLoadingCustomers.value &&
+        controller.fetchError.value.isEmpty) {
+      controller.fetchPreferredCustomers();
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFF111213),
       appBar: AppBar(
@@ -56,7 +39,7 @@ class _SellerCustomerListViewState extends State<SellerCustomerListView> {
           ),
           IconButton(
             tooltip: 'Refresh',
-            onPressed: _refresh,
+            onPressed: controller.refreshCustomers,
             icon: const Icon(Icons.refresh_rounded),
           ),
         ],
@@ -73,7 +56,7 @@ class _SellerCustomerListViewState extends State<SellerCustomerListView> {
             icon: Icons.warning_amber_rounded,
             title: 'Could not load customers',
             message: controller.fetchError.value,
-            onRetry: _refresh,
+            onRetry: controller.refreshCustomers,
           );
         }
 
@@ -82,12 +65,12 @@ class _SellerCustomerListViewState extends State<SellerCustomerListView> {
             icon: Icons.people_outline_rounded,
             title: 'No customers added yet.',
             message: 'Create a customer or attach an existing customer.',
-            onRetry: _refresh,
+            onRetry: controller.refreshCustomers,
           );
         }
 
         return RefreshIndicator(
-          onRefresh: _refresh,
+          onRefresh: controller.refreshCustomers,
           child: ListView.separated(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
@@ -198,7 +181,28 @@ class SellerCustomerListItem extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
+            // Message Button
+            InkWell(
+              onTap: () => _openCustomerChat(item),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                height: 42,
+                width: 42,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0C2B3E),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.chat_bubble_outline_rounded,
+                  color: Color(0xFF38BDF8),
+                  size: 20,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Call Button
             InkWell(
               onTap: phone.isEmpty ? null : () => _callCustomer(phone),
               borderRadius: BorderRadius.circular(12),
@@ -226,8 +230,87 @@ class SellerCustomerListItem extends StatelessWidget {
     );
   }
 
+  Future<void> _openCustomerChat(SellerPreferredCustomer item) async {
+    final customer = item.customer;
+    final int customerId = customer.id;
+    final String customerPhone = (customer.phone ?? '').trim();
+    final String customerName = customer.name.trim();
+
+    if (!Get.isRegistered<ShopChatController>()) {
+      Get.put(ShopChatController());
+    }
+    final chatController = Get.find<ShopChatController>();
+
+    if (chatController.conversations.isEmpty &&
+        !chatController.isConversationLoading.value) {
+      try {
+        await chatController.loadConversations();
+      } catch (_) {}
+    }
+
+    Conversation? match;
+    if (customerId > 0) {
+      match = chatController.conversations.firstWhereOrNull(
+        (c) => c.customerId == customerId || c.customer?.id == customerId,
+      );
+    }
+    if (match == null && customerPhone.isNotEmpty) {
+      final cleanPhone = customerPhone.replaceAll(RegExp(r'[^0-9]'), '');
+      if (cleanPhone.isNotEmpty) {
+        match = chatController.conversations.firstWhereOrNull(
+          (c) =>
+              (c.customer?.phone ?? '').replaceAll(RegExp(r'[^0-9]'), '') ==
+              cleanPhone,
+        );
+      }
+    }
+    if (match == null && customerName.isNotEmpty) {
+      match = chatController.conversations.firstWhereOrNull(
+        (c) =>
+            (c.customer?.name ?? '').trim().toLowerCase() ==
+            customerName.toLowerCase(),
+      );
+    }
+
+    if (match != null) {
+      Get.toNamed(
+        Routes.SHOP_CHAT_THREAD,
+        arguments: {'conversation': match},
+      );
+      return;
+    }
+
+    // If no conversation exists, open a new conversation with user_id
+    if (customerId > 0) {
+      try {
+        final newConversation = await chatController.openConversationWithUser(
+          userId: customerId,
+        );
+        if (newConversation != null) {
+          Get.toNamed(
+            Routes.SHOP_CHAT_THREAD,
+            arguments: {'conversation': newConversation},
+          );
+          return;
+        }
+      } catch (_) {}
+    }
+
+    Get.toNamed(
+      Routes.SHOP_CHAT_CONVERSATIONS,
+      arguments: {
+        'customer_id': customerId,
+        'user_id': customerId,
+        'customer_name': customerName,
+        'customer_phone': customerPhone,
+      },
+    );
+  }
+
   Future<void> _callCustomer(String phone) async {
-    final uri = Uri(scheme: 'tel', path: phone);
+    final cleanPhone = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+    if (cleanPhone.isEmpty) return;
+    final uri = Uri(scheme: 'tel', path: cleanPhone);
     final opened = await launchUrl(uri);
     if (!opened) {
       Get.snackbar(
