@@ -73,8 +73,16 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
         }
 
         double cashInflow = 0.0;
+        double quickManualCashSales = 0.0;
         for (var row in grouped['REVENUE_INFLOW'] ?? <LedgerRowItem>[]) {
           cashInflow += row.credit;
+
+          final normalizedTitle = row.title.trim().toLowerCase();
+          final normalizedFlowType = row.flowType.trim().toLowerCase();
+          if (normalizedTitle == 'quick manual cash sales (no cart)' ||
+              normalizedFlowType == 'manual cash in (+)') {
+            quickManualCashSales += row.credit;
+          }
         }
 
         double cashExpenses = 0.0;
@@ -119,6 +127,7 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
                       (grouped['OPENING_BALANCE'] ?? <LedgerRowItem>[])
                           .isNotEmpty,
                   openingCash: openingCash,
+                  quickManualCashSales: quickManualCashSales,
                   cashExpenses: cashExpenses,
                   expectedDrawer: expectedDrawer,
                   todayNewBaki: todayNewBaki,
@@ -291,6 +300,7 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
     required BuildContext context,
     required bool hasOpeningEntry,
     required double openingCash,
+    required double quickManualCashSales,
     required double cashExpenses,
     required double expectedDrawer,
     required double todayNewBaki,
@@ -324,7 +334,8 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
           ),
           const SizedBox(height: 7),
           const Text(
-            'শুধু পড়বেন না। প্রতিটি ধাপের বাটনে চাপ দিয়ে আজকের হিসাব সম্পন্ন করুন।',
+            'আপনি যদি এই পাঁচটি ক্যাশ ইন-আউট ঠিকভাবে পরিচালনা করেন, তাহলে দিন শেষে আপনার দোকানের টাকার একটি সঠিক হিসাব আপনার কাছে থাকবে।\n\n'
+            'মাস শেষে রিপোর্ট দেখে সহজেই বুঝতে পারবেন, আপনার ব্যবসার ক্যাশ ফ্লো কত সুন্দরভাবে আপনার চোখের সামনে পরিষ্কার হয়ে উঠেছে।',
             style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
           ),
           const SizedBox(height: 14),
@@ -354,11 +365,14 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
           _buildActionStep(
             step: '২',
             timeLabel: 'প্রতিটি বিক্রির সময়',
-            title: 'সঠিক পেমেন্ট ধরন দিয়ে বিক্রি রেকর্ড করুন',
+            title: 'বাদ পড়া নগদ বিক্রি এখনই যোগ করুন',
             instruction:
-                'POS অর্ডারে Cash, Digital বা Baki ঠিকভাবে বাছুন। কার্ট ছাড়া সরাসরি নগদ বিক্রি হলে Quick Cash Sale ব্যবহার করুন।',
-            status: 'বাদ পড়া নগদ বিক্রি এখনই যোগ করুন',
-            statusColor: const Color(0xFF60A5FA),
+                'ব্যস্ত সময়ে সব বিক্রি অ্যাপের POS দিয়ে রেকর্ড করা সবসময় সম্ভব নাও হতে পারে। ধরুন, এক ঘণ্টায় POS ব্যবহার না করে মোট ৫,০০০ টাকার নগদ বিক্রি করেছেন এবং অ্যাপে কোনো এন্ট্রি হয়নি। তখন এখানে মোট ৳৫,০০০ Quick Cash Sale হিসেবে এন্ট্রি করুন। এতে দিন শেষে সিস্টেমের হিসাবের সঙ্গে ক্যাশ বাক্সের টাকা সহজে মিলাতে পারবেন। শুধু বাদ পড়া নগদ বিক্রি এখানে লিখুন; ডিজিটাল পেমেন্ট বা বাকি যোগ করবেন না।',
+            status:
+                'নির্বাচিত সময়ে রেকর্ডকৃত Quick Cash Sale: ৳${_formatCurrency(quickManualCashSales)}',
+            statusColor: quickManualCashSales > 0
+                ? const Color(0xFF34D399)
+                : Colors.white54,
             buttonLabel: 'দ্রুত নগদ বিক্রি যোগ করুন',
             buttonIcon: Icons.point_of_sale_rounded,
             buttonColor: const Color(0xFF60A5FA),
