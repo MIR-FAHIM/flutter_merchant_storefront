@@ -592,290 +592,349 @@ class ShopCashFlowReportWidget extends GetWidget<ShopCashFlowController> {
     );
   }
 
-  // --- Master Financial & Cash Ledger Table ---
+  // --- Master Financial & Cash Ledger Table (Executive Merchant View) ---
   Widget _buildMasterLedgerTable(BuildContext context) {
-    final grouped = controller.groupedLedgerRows;
+    return Obx(() {
+      final isExpanded = controller.isLedgerTableExpanded.value;
+      final grouped = controller.groupedLedgerRows;
+      final totalRowsCount = controller.reportData.value?.ledgerRows.length ?? 0;
 
-    final sectionConfigs = [
-      {
-        'key': 'OPENING_BALANCE',
-        'title': 'OPENING CASH BALANCE'.tr,
-        'icon': Icons.wb_sunny_outlined,
-        'color': const Color(0xFF6EE7B7),
-      },
-      {
-        'key': 'REVENUE_INFLOW',
-        'title': 'REVENUE & CASH INFLOW'.tr,
-        'icon': Icons.arrow_downward_rounded,
-        'color': const Color(0xFF6EE7B7),
-      },
-      {
-        'key': 'CASH_OUTFLOW',
-        'title': 'CASH OUTFLOW & EXPENSES'.tr,
-        'icon': Icons.arrow_upward_rounded,
-        'color': const Color(0xFFFCA5A5),
-      },
-      {
-        'key': 'DRAWER_ADJUSTMENT',
-        'title': 'DRAWER ADJUSTMENTS & CORRECTIONS'.tr,
-        'icon': Icons.tune_rounded,
-        'color': const Color(0xFF5EEAD4),
-      },
-      {
-        'key': 'BAKI_FLOW',
-        'title': 'BAKI (CREDIT) MARKET FLOW'.tr,
-        'icon': Icons.account_balance_wallet_outlined,
-        'color': const Color(0xFFFDE68A),
-      },
-    ];
+      final sectionConfigs = [
+        {
+          'key': 'OPENING_BALANCE',
+          'title': 'OPENING CASH BALANCE'.tr,
+          'icon': Icons.wb_sunny_outlined,
+          'color': const Color(0xFF6EE7B7),
+        },
+        {
+          'key': 'REVENUE_INFLOW',
+          'title': 'CASH INFLOW & REVENUE'.tr,
+          'icon': Icons.arrow_downward_rounded,
+          'color': const Color(0xFF6EE7B7),
+        },
+        {
+          'key': 'CASH_OUTFLOW',
+          'title': 'CASH OUTFLOW & EXPENSES'.tr,
+          'icon': Icons.arrow_upward_rounded,
+          'color': const Color(0xFFFCA5A5),
+        },
+        {
+          'key': 'DRAWER_ADJUSTMENT',
+          'title': 'DRAWER ADJUSTMENTS'.tr,
+          'icon': Icons.tune_rounded,
+          'color': const Color(0xFF5EEAD4),
+        },
+        {
+          'key': 'BAKI_FLOW',
+          'title': 'BAKI (CREDIT) MOVEMENT'.tr,
+          'icon': Icons.account_balance_wallet_outlined,
+          'color': const Color(0xFFFDE68A),
+        },
+      ];
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.28),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.18)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Table Header
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              children: [
-                const Icon(Icons.table_chart_outlined, color: Colors.white, size: 18),
-                const SizedBox(width: 8),
-                Text(
-                  'Master Cash & Financial Ledger'.tr,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Divider(color: Colors.white.withOpacity(0.15), height: 1),
-
-          // Column titles header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            color: Colors.black.withOpacity(0.22),
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 5,
-                  child: Text(
-                    'Title & Flow Type'.tr,
-                    style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w700),
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    'Debit (৳)'.tr,
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w700),
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    'Credit (৳)'.tr,
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w700),
-                  ),
-                ),
-                Expanded(
-                  flex: 3,
-                  child: Text(
-                    'Net (৳)'.tr,
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Divider(color: Colors.white.withOpacity(0.15), height: 1),
-
-          // Render Sections
-          ...sectionConfigs.map((sec) {
-            final key = sec['key'] as String;
-            final rows = grouped[key] ?? [];
-            if (rows.isEmpty) return const SizedBox.shrink();
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Section Header Bar
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  color: (sec['color'] as Color).withOpacity(0.12),
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.28),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.white.withOpacity(0.18)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Table Header (Interactive toggle)
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: controller.toggleLedgerTable,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   child: Row(
                     children: [
-                      Icon(sec['icon'] as IconData, size: 12, color: sec['color'] as Color),
-                      const SizedBox(width: 6),
-                      Text(
-                        sec['title'] as String,
-                        style: TextStyle(
-                          color: sec['color'] as Color,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.4,
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.table_chart_outlined, color: Colors.white, size: 18),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Master Cash & Financial Ledger'.tr,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              isExpanded
+                                  ? 'Tap to collapse breakdown'.tr
+                                  : '$totalRowsCount ${'ledger entries • Tap to view breakdown'.tr}',
+                              style: const TextStyle(color: Colors.white60, fontSize: 10.5),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isExpanded ? Colors.white.withOpacity(0.15) : Colors.white.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              isExpanded ? 'Hide'.tr : 'Show'.tr,
+                              style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(width: 4),
+                            AnimatedRotation(
+                              turns: isExpanded ? 0.5 : 0.0,
+                              duration: const Duration(milliseconds: 200),
+                              child: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white, size: 18),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                Divider(color: Colors.white.withOpacity(0.10), height: 1),
+              ),
+            ),
 
-                // Section Rows
-                ...rows.map((row) => _buildLedgerRow(context, row)),
-              ],
-            );
-          }),
-        ],
-      ),
-    );
+            // Animated Expandable Content
+            AnimatedCrossFade(
+              firstChild: const SizedBox(width: double.infinity, height: 0),
+              secondChild: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Divider(color: Colors.white.withOpacity(0.15), height: 1),
+
+                  // Render Sections
+                  ...sectionConfigs.map((sec) {
+                    final key = sec['key'] as String;
+                    final rows = grouped[key] ?? [];
+                    if (rows.isEmpty) return const SizedBox.shrink();
+
+                    final secTotal = _calculateSectionTotal(key, rows);
+                    final secColor = sec['color'] as Color;
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Section Header Bar with Subtotal
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          color: secColor.withOpacity(0.12),
+                          child: Row(
+                            children: [
+                              Icon(sec['icon'] as IconData, size: 14, color: secColor),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  sec['title'] as String,
+                                  style: TextStyle(
+                                    color: secColor,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.4,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                _formatSectionSubtotal(key, secTotal),
+                                style: TextStyle(
+                                  color: secTotal.abs() > 0.0001 ? secColor : Colors.white54,
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Divider(color: Colors.white.withOpacity(0.08), height: 1),
+
+                        // Section Rows
+                        ...rows.map((row) => _buildLedgerRow(context, row)),
+                      ],
+                    );
+                  }),
+                ],
+              ),
+              crossFadeState: isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 250),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
-  VoidCallback? _getLedgerRowAction(BuildContext context, LedgerRowItem row) {
-    final title = row.title.toLowerCase();
-    final sec = row.section.toUpperCase();
+  double _calculateSectionTotal(String key, List<LedgerRowItem> rows) {
+    double total = 0.0;
+    for (final r in rows) {
+      if (key == 'CASH_OUTFLOW') {
+        total += r.debit;
+      } else if (key == 'REVENUE_INFLOW' || key == 'OPENING_BALANCE') {
+        total += r.credit;
+      } else {
+        total += r.netImpact;
+      }
+    }
+    return total;
+  }
 
-    if (sec == 'BAKI_FLOW' || title.contains('baki')) {
-      return () => Get.toNamed(Routes.BAKI_KHATA);
+  String _formatSectionSubtotal(String key, double total) {
+    if (total.abs() <= 0.0001) return '৳0.00';
+    if (key == 'CASH_OUTFLOW') {
+      return '-৳${_formatCurrency(total)}';
     }
-    if (title.contains('expense')) {
-      return () => AddExpenseBottomSheet.show(context: context, controller: controller);
+    if (key == 'REVENUE_INFLOW' || key == 'OPENING_BALANCE') {
+      return '+৳${_formatCurrency(total)}';
     }
-    if (title.contains('opening')) {
-      return () => SetOpeningCashBottomSheet.show(context: context, controller: controller);
+    if (key == 'DRAWER_ADJUSTMENT' || key == 'BAKI_FLOW') {
+      final sign = total > 0 ? '+' : (total < 0 ? '-' : '');
+      return '$sign৳${_formatCurrency(total.abs())}';
     }
-    if (title.contains('adjust') || sec == 'DRAWER_ADJUSTMENT') {
-      return () => AdjustCashDrawerBottomSheet.show(context: context, controller: controller);
-    }
-    if (title.contains('quick manual')) {
-      return () => QuickCashSaleBottomSheet.show(context: context, controller: controller);
-    }
-    if (title.contains('pos') || title.contains('sales') || title.contains('digital') || title.contains('refund')) {
-      return () => Get.toNamed(Routes.ORDER_SHOP_LIST);
-    }
-    return null;
+    return '৳${_formatCurrency(total)}';
   }
 
   Widget _buildLedgerRow(BuildContext context, LedgerRowItem row) {
-    Color flowBadgeColor = const Color(0xFF6EE7B7);
-    final ft = row.flowType.toLowerCase();
-    if (ft.contains('cash out') || ft.contains('debt (+)')) {
-      flowBadgeColor = const Color(0xFFFCA5A5);
-    } else if (ft.contains('digital') || ft.contains('non-cash')) {
-      flowBadgeColor = const Color(0xFF93C5FD);
-    } else if (ft.contains('drawer') || ft.contains('starting')) {
-      flowBadgeColor = const Color(0xFF5EEAD4);
-    } else if (ft.contains('cleared') || ft.contains('debt (-)')) {
-      flowBadgeColor = const Color(0xFFFDE68A);
-    }
-
-    final net = row.netImpact;
-    final netColor = net > 0
-        ? const Color(0xFF6EE7B7)
-        : (net < 0 ? const Color(0xFFFCA5A5) : Colors.white70);
-
-    final action = _getLedgerRowAction(context, row);
+    final amount = _getLedgerAmount(row);
+    final amountText = _formatRowAmount(row, amount);
+    final amountColor = _getRowAmountColor(row, amount);
+    final title = _getSmartLedgerTitle(row);
+    final flowBadgeColor = _getFlowBadgeColor(row);
+    final icon = _getLedgerRowIcon(row);
+    final smartAction = _getSmartAction(context, row);
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: action,
+        onTap: smartAction?.onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.08), width: 0.6)),
+            border: Border(
+              bottom: BorderSide(color: Colors.white.withOpacity(0.06), width: 0.6),
+            ),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Title & flow type badge
+              // Icon container
+              Container(
+                height: 34,
+                width: 34,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: flowBadgeColor.withOpacity(0.14),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Icon(icon, color: flowBadgeColor, size: 17),
+              ),
+              const SizedBox(width: 10),
+
+              // Title and Flow Type Badge
               Expanded(
-                flex: 5,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 3),
                     Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Flexible(
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                          decoration: BoxDecoration(
+                            color: flowBadgeColor.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: flowBadgeColor.withOpacity(0.24), width: 0.6),
+                          ),
                           child: Text(
-                            row.title.tr,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
+                            row.flowType.isNotEmpty ? row.flowType : 'Entry'.tr,
+                            style: TextStyle(
+                              color: flowBadgeColor,
+                              fontSize: 9.5,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
-                        if (action != null) ...[
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            size: 9,
-                            color: Colors.white.withOpacity(0.4),
-                          ),
-                        ],
                       ],
-                    ),
-                    const SizedBox(height: 3),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: flowBadgeColor.withOpacity(0.18),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        row.flowType.tr,
-                        style: TextStyle(
-                          color: flowBadgeColor,
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
                     ),
                   ],
                 ),
               ),
-              // Debit
-              Expanded(
-                flex: 2,
-                child: Text(
-                  row.debit > 0 ? _formatCurrency(row.debit) : '-',
-                  textAlign: TextAlign.right,
-                  style: const TextStyle(color: Colors.white70, fontSize: 11),
-                ),
-              ),
-              // Credit
-              Expanded(
-                flex: 2,
-                child: Text(
-                  row.credit > 0 ? _formatCurrency(row.credit) : '-',
-                  textAlign: TextAlign.right,
-                  style: const TextStyle(color: Colors.white70, fontSize: 11),
-                ),
-              ),
-              // Net Impact
-              Expanded(
-                flex: 3,
-                child: Text(
-                  '${net > 0 ? '+' : ''}${_formatCurrency(net)}',
-                  textAlign: TextAlign.right,
-                  style: TextStyle(
-                    color: netColor,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
+
+              const SizedBox(width: 10),
+
+              // Amount & Smart Action Button
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    amountText,
+                    style: TextStyle(
+                      color: amountColor,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
-                ),
+                  if (smartAction != null) ...[
+                    const SizedBox(height: 3),
+                    InkWell(
+                      onTap: smartAction.onTap,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                        decoration: BoxDecoration(
+                          color: smartAction.color.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: smartAction.color.withOpacity(0.35), width: 0.8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (smartAction.icon != null) ...[
+                              Icon(smartAction.icon, size: 10.5, color: smartAction.color),
+                              const SizedBox(width: 3),
+                            ],
+                            Text(
+                              smartAction.label,
+                              style: TextStyle(
+                                color: smartAction.color,
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ],
           ),
@@ -884,151 +943,391 @@ class ShopCashFlowReportWidget extends GetWidget<ShopCashFlowController> {
     );
   }
 
+  String _getSmartLedgerTitle(LedgerRowItem row) {
+    final title = row.title.toLowerCase();
+    if (title.contains('opening')) return 'Opening Drawer Cash'.tr;
+    if (title.contains('quick manual')) return 'Quick Manual Cash Sales'.tr;
+    if (title.contains('pos')) return 'POS In-Store Cash Sales'.tr;
+    if (title.contains('online') && title.contains('cod')) return 'Online COD Cash Collected'.tr;
+    if (title.contains('baki recovered') && title.contains('payment')) return 'Baki Cash Recovered'.tr;
+    if (title.contains('total baki recovered')) return 'Total Baki Recovered'.tr;
+    if (title.contains('digital')) return 'Digital Payments (bKash/Nagad)'.tr;
+    if (title.contains('expense')) return 'Shop Daily Expenses'.tr;
+    if (title.contains('refund')) return 'Customer Cash Refunds'.tr;
+    if (title.contains('adjust')) return 'Till Balance Adjustments'.tr;
+    if (title.contains('new baki')) return 'New Baki Given (Unpaid)'.tr;
+    return row.title.tr;
+  }
+
+  _SmartAction? _getSmartAction(BuildContext context, LedgerRowItem row) {
+    final title = row.title.toLowerCase();
+    final sec = row.section.toUpperCase();
+    final amount = _getLedgerAmount(row);
+
+    if (title.contains('opening')) {
+      return _SmartAction(
+        label: amount > 0.001 ? 'Edit Till'.tr : '+ Set Till'.tr,
+        icon: amount > 0.001 ? Icons.edit_outlined : Icons.add_rounded,
+        color: const Color(0xFF5EEAD4),
+        onTap: () => SetOpeningCashBottomSheet.show(context: context, controller: controller),
+      );
+    }
+    if (title.contains('quick manual')) {
+      return _SmartAction(
+        label: '+ Quick Sale'.tr,
+        icon: Icons.add_rounded,
+        color: const Color(0xFF6EE7B7),
+        onTap: () => QuickCashSaleBottomSheet.show(context: context, controller: controller),
+      );
+    }
+    if (title.contains('expense')) {
+      return _SmartAction(
+        label: '+ Expense'.tr,
+        icon: Icons.remove_rounded,
+        color: const Color(0xFFFCA5A5),
+        onTap: () => AddExpenseBottomSheet.show(context: context, controller: controller),
+      );
+    }
+    if (title.contains('adjust') || sec == 'DRAWER_ADJUSTMENT') {
+      return _SmartAction(
+        label: 'Adjust Till'.tr,
+        icon: Icons.tune_rounded,
+        color: const Color(0xFF5EEAD4),
+        onTap: () => AdjustCashDrawerBottomSheet.show(context: context, controller: controller),
+      );
+    }
+    if (sec == 'BAKI_FLOW' || title.contains('baki')) {
+      return _SmartAction(
+        label: 'Baki Khata'.tr,
+        icon: Icons.menu_book_outlined,
+        color: const Color(0xFFFDE68A),
+        onTap: () => Get.toNamed(Routes.BAKI_KHATA),
+      );
+    }
+    if (title.contains('pos') || title.contains('sales') || title.contains('digital') || title.contains('refund') || title.contains('cod')) {
+      return _SmartAction(
+        label: 'Orders'.tr,
+        icon: Icons.arrow_forward_rounded,
+        color: Colors.white70,
+        onTap: () => Get.toNamed(Routes.ORDER_SHOP_LIST),
+      );
+    }
+    return null;
+  }
+
+  double _getLedgerAmount(LedgerRowItem row) {
+    var amount = row.debit.abs();
+    if (row.credit.abs() > amount) amount = row.credit.abs();
+    if (row.netImpact.abs() > amount) amount = row.netImpact.abs();
+    return amount;
+  }
+
+  String _formatRowAmount(LedgerRowItem row, double amount) {
+    if (amount <= 0.0001) return '৳0.00';
+    final sec = row.section.toUpperCase();
+    if (sec == 'CASH_OUTFLOW') {
+      return '-৳${_formatCurrency(amount)}';
+    }
+    if (sec == 'REVENUE_INFLOW' || sec == 'OPENING_BALANCE') {
+      return '+৳${_formatCurrency(amount)}';
+    }
+    if (sec == 'DRAWER_ADJUSTMENT') {
+      final sign = row.netImpact >= 0 ? '+' : '-';
+      return '$sign৳${_formatCurrency(amount)}';
+    }
+    if (sec == 'BAKI_FLOW') {
+      final sign = row.netImpact > 0 ? '+' : (row.netImpact < 0 ? '-' : '');
+      return '$sign৳${_formatCurrency(amount)}';
+    }
+    return '৳${_formatCurrency(amount)}';
+  }
+
+  Color _getRowAmountColor(LedgerRowItem row, double amount) {
+    if (amount <= 0.0001) return Colors.white38;
+    final sec = row.section.toUpperCase();
+    if (sec == 'CASH_OUTFLOW') return const Color(0xFFFCA5A5);
+    if (sec == 'REVENUE_INFLOW' || sec == 'OPENING_BALANCE') return const Color(0xFF6EE7B7);
+    if (sec == 'DRAWER_ADJUSTMENT') return const Color(0xFF5EEAD4);
+    if (sec == 'BAKI_FLOW') return const Color(0xFFFDE68A);
+    return Colors.white;
+  }
+
+  Color _getFlowBadgeColor(LedgerRowItem row) {
+    final flow = row.flowType.toLowerCase();
+    final sec = row.section.toUpperCase();
+    if (flow.contains('cash in') || flow.contains('recovery') || sec == 'REVENUE_INFLOW') {
+      return const Color(0xFF6EE7B7);
+    }
+    if (flow.contains('cash out') || sec == 'CASH_OUTFLOW') {
+      return const Color(0xFFFCA5A5);
+    }
+    if (flow.contains('digital')) {
+      return const Color(0xFF93C5FD);
+    }
+    if (flow.contains('drawer') || flow.contains('starting') || sec == 'OPENING_BALANCE' || sec == 'DRAWER_ADJUSTMENT') {
+      return const Color(0xFF5EEAD4);
+    }
+    if (flow.contains('debt') || sec == 'BAKI_FLOW') {
+      return const Color(0xFFFDE68A);
+    }
+    return Colors.white60;
+  }
+
+  IconData _getLedgerRowIcon(LedgerRowItem row) {
+    final title = row.title.toLowerCase();
+    final sec = row.section.toUpperCase();
+
+    if (title.contains('opening') || sec == 'OPENING_BALANCE') return Icons.wb_sunny_outlined;
+    if (title.contains('quick manual')) return Icons.flash_on_rounded;
+    if (title.contains('pos')) return Icons.point_of_sale_rounded;
+    if (title.contains('cod')) return Icons.local_shipping_outlined;
+    if (title.contains('baki recovered') || title.contains('recovery')) return Icons.payments_outlined;
+    if (title.contains('digital') || title.contains('bkash') || title.contains('nagad')) return Icons.account_balance_wallet_outlined;
+    if (title.contains('refund')) return Icons.currency_exchange_outlined;
+    if (title.contains('expense') || sec == 'CASH_OUTFLOW') return Icons.shopping_bag_outlined;
+    if (title.contains('adjust') || sec == 'DRAWER_ADJUSTMENT') return Icons.tune_rounded;
+    if (title.contains('new baki')) return Icons.assignment_late_outlined;
+    if (title.contains('total baki')) return Icons.assignment_turned_in_outlined;
+    return Icons.receipt_long_outlined;
+  }
+
   // --- Bottom Highlighted Summary Cards ---
   Widget _buildBottomSummaryCards(BuildContext context) {
-    final totals = controller.reportData.value?.totals ?? LedgerTotals();
+    return Obx(() {
+      final isExpanded = controller.isBottomSummaryExpanded.value;
+      final totals = controller.reportData.value?.totals ?? LedgerTotals();
 
-    return Column(
-      children: [
-        // Expected Cash in Drawer (Hand)
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => AdjustCashDrawerBottomSheet.show(
-              context: context,
-              controller: controller,
-            ),
-            borderRadius: BorderRadius.circular(18),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.32),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: Colors.white.withOpacity(0.35), width: 1.2),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: _green.withOpacity(0.25),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.point_of_sale_rounded, color: Colors.white, size: 24),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'EXPECTED CASH IN DRAWER (HAND)'.tr,
-                          style: const TextStyle(
-                            color: Color(0xFF6EE7B7),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.4,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Tap to adjust till'.tr,
-                          style: const TextStyle(color: Colors.white60, fontSize: 9.5),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '৳${_formatCurrency(totals.expectedCashDrawer)}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 14,
-                    color: Colors.white.withOpacity(0.55),
-                  ),
-                ],
-              ),
-            ),
-          ),
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.24),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.white.withOpacity(0.18)),
         ),
-        const SizedBox(height: 10),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          children: [
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: controller.toggleBottomSummary,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.wallet_outlined, color: Colors.white, size: 18),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Cash Drawer & Market Baki'.tr,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              isExpanded
+                                  ? 'Tap to collapse summary cards'.tr
+                                  : 'Drawer: ৳${_formatCurrency(totals.expectedCashDrawer)} • Baki: ৳${_formatCurrency(totals.overallStoreBaki)}',
+                              style: const TextStyle(color: Colors.white60, fontSize: 10.5),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isExpanded ? Colors.white.withOpacity(0.15) : Colors.white.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              isExpanded ? 'Hide'.tr : 'Show'.tr,
+                              style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(width: 4),
+                            AnimatedRotation(
+                              turns: isExpanded ? 0.5 : 0.0,
+                              duration: const Duration(milliseconds: 200),
+                              child: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white, size: 18),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            AnimatedCrossFade(
+              firstChild: const SizedBox(width: double.infinity, height: 0),
+              secondChild: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+                child: Column(
+                  children: [
+                    Divider(color: Colors.white.withOpacity(0.15), height: 1),
+                    const SizedBox(height: 10),
 
-        // Overall Store Baki in Market
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => Get.toNamed(Routes.BAKI_KHATA),
-            borderRadius: BorderRadius.circular(18),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.32),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: _red.withOpacity(0.35), width: 1.2),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: _red.withOpacity(0.25),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.account_balance_wallet_outlined, color: Colors.white, size: 24),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'STORE OVERALL MARKET OUTSTANDING BAKI'.tr,
-                          style: const TextStyle(
-                            color: Color(0xFFFCA5A5),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.4,
+                    // Expected Cash in Drawer (Hand)
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => AdjustCashDrawerBottomSheet.show(
+                          context: context,
+                          controller: controller,
+                        ),
+                        borderRadius: BorderRadius.circular(18),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.32),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: Colors.white.withOpacity(0.35), width: 1.2),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: _green.withOpacity(0.25),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.point_of_sale_rounded, color: Colors.white, size: 24),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'EXPECTED CASH IN DRAWER (HAND)'.tr,
+                                      style: const TextStyle(
+                                        color: Color(0xFF6EE7B7),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 0.4,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Tap to adjust till'.tr,
+                                      style: const TextStyle(color: Colors.white60, fontSize: 9.5),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '৳${_formatCurrency(totals.expectedCashDrawer)}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 14,
+                                color: Colors.white.withOpacity(0.55),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Tap to open Baki Khata'.tr,
-                          style: const TextStyle(color: Colors.white60, fontSize: 9.5),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '৳${_formatCurrency(totals.overallStoreBaki)}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Overall Store Baki in Market
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => Get.toNamed(Routes.BAKI_KHATA),
+                        borderRadius: BorderRadius.circular(18),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.32),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: _red.withOpacity(0.35), width: 1.2),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: _red.withOpacity(0.25),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.account_balance_wallet_outlined, color: Colors.white, size: 24),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'STORE OVERALL MARKET OUTSTANDING BAKI'.tr,
+                                      style: const TextStyle(
+                                        color: Color(0xFFFCA5A5),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 0.4,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Tap to open Baki Khata'.tr,
+                                      style: const TextStyle(color: Colors.white60, fontSize: 9.5),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '৳${_formatCurrency(totals.overallStoreBaki)}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 14,
+                                color: Colors.white.withOpacity(0.55),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 14,
-                    color: Colors.white.withOpacity(0.55),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              crossFadeState: isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 250),
             ),
-          ),
+          ],
         ),
-      ],
-    );
+      );
+    });
   }
 
   static String _formatCurrency(double val) {
@@ -1044,4 +1343,18 @@ class ShopCashFlowReportWidget extends GetWidget<ShopCashFlowController> {
       return iso;
     }
   }
+}
+
+class _SmartAction {
+  final String label;
+  final IconData? icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _SmartAction({
+    required this.label,
+    this.icon,
+    required this.color,
+    required this.onTap,
+  });
 }

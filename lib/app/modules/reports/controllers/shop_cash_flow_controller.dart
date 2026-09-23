@@ -21,6 +21,13 @@ class ShopCashFlowController extends GetxController {
   final Rxn<DateTime> customStartDate = Rxn<DateTime>();
   final Rxn<DateTime> customEndDate = Rxn<DateTime>();
 
+  // Expansion state for collapsible report sections
+  final RxBool isLedgerTableExpanded = false.obs;
+  final RxBool isBottomSummaryExpanded = false.obs;
+
+  void toggleLedgerTable() => isLedgerTableExpanded.toggle();
+  void toggleBottomSummary() => isBottomSummaryExpanded.toggle();
+
   // Quick Action Form Controllers & State
   // 1. Set Opening Cash
   final TextEditingController openingAmountController = TextEditingController();
