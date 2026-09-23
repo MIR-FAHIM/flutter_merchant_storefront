@@ -280,78 +280,7 @@ class HomeView extends GetView<HomeController> {
                             onRetry: controller.refreshShopOrderReport,
                           ),
                         ),
-                        const SizedBox(height: 18),
-                        Obx(
-                          () => _SimpleProductLimitReportCard(
-                            report: controller.shopProductLimitReport.value,
-                            isLoading: controller
-                                .isShopProductLimitReportLoading.value,
-                            errorMessage:
-                                controller.shopProductLimitReportErrorText,
-                            onTap: () => Get.toNamed(Routes.PRODUCT_LIST),
-                            onRetry: controller.refreshShopProductLimitReport,
-                          ),
-                        ),
-                        const SizedBox(height: 18),
 
-
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _MetricCard(
-                                title: "Shops",
-                                value: _FormatUtil.compactNumber(
-                                  dashboard.shopsCount ?? 0,
-                                ),
-                                subtitle: "Active shop profile",
-                                icon: Icons.storefront_outlined,
-                                iconColor: const Color(0xFFA78BFA),
-                                backgroundColor: const Color(0xFF312E81),
-                                onTap: () {
-                                  Get.snackbar(
-                                    "Shop",
-                                    "Connect shop profile route here",
-                                    snackPosition: SnackPosition.BOTTOM,
-                                  );
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _MetricCard(
-                                title: "Order Amount",
-                                value: _FormatUtil.moneyShort(
-                                  dashboard.ordersAmount ?? 0,
-                                ),
-                                subtitle: "Total order value",
-                                icon: Icons.payments_outlined,
-                                iconColor: const Color(0xFFFBBF24),
-                                backgroundColor: const Color(0xFF4A3413),
-                                onTap: () {},
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 22),
-                        const _SectionTitle(
-                          title: "Order Period Summary",
-                          subtitle: "Orders grouped by business period",
-                        ),
-                        const SizedBox(height: 12),
-                        _OrderPeriodCard(
-                          today: dashboard.ordersByPeriod?.today ??
-                              dashboard.todayTotalOrders ??
-                              0,
-                          lastWeek: dashboard.ordersByPeriod?.lastWeek ??
-                              dashboard.lastWeekTotalOrders ??
-                              0,
-                          lastMonth: dashboard.ordersByPeriod?.lastMonth ??
-                              dashboard.lastMonthTotalOrders ??
-                              0,
-                          year: dashboard.ordersByPeriod?.year ??
-                              dashboard.yearTotalOrders ??
-                              0,
-                        ),
                         const SizedBox(height: 22),
                         const _SectionTitle(
                           title: "Quick Actions",
@@ -444,6 +373,42 @@ class HomeView extends GetView<HomeController> {
                             ),
                           ],
                         ),
+                        const SizedBox(height: 18),
+                        Obx(
+                          () => _SimpleProductLimitReportCard(
+                            report: controller.shopProductLimitReport.value,
+                            isLoading: controller
+                                .isShopProductLimitReportLoading.value,
+                            errorMessage:
+                                controller.shopProductLimitReportErrorText,
+                            onTap: () => Get.toNamed(Routes.PRODUCT_LIST),
+                            onRetry: controller.refreshShopProductLimitReport,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+
+
+
+                        const _SectionTitle(
+                          title: "Order Period Summary",
+                          subtitle: "Orders grouped by business period",
+                        ),
+                        const SizedBox(height: 12),
+                        _OrderPeriodCard(
+                          today: dashboard.ordersByPeriod?.today ??
+                              dashboard.todayTotalOrders ??
+                              0,
+                          lastWeek: dashboard.ordersByPeriod?.lastWeek ??
+                              dashboard.lastWeekTotalOrders ??
+                              0,
+                          lastMonth: dashboard.ordersByPeriod?.lastMonth ??
+                              dashboard.lastMonthTotalOrders ??
+                              0,
+                          year: dashboard.ordersByPeriod?.year ??
+                              dashboard.yearTotalOrders ??
+                              0,
+                        ),
+
                         const SizedBox(height: 22),
                         const _SectionTitle(
                           title: "Business Snapshot",

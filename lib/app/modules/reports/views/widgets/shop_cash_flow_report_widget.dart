@@ -594,152 +594,218 @@ class ShopCashFlowReportWidget extends GetWidget<ShopCashFlowController> {
 
   // --- Master Financial & Cash Ledger Table ---
   Widget _buildMasterLedgerTable(BuildContext context) {
-    final grouped = controller.groupedLedgerRows;
+    return Obx(() {
+      final isExpanded = controller.isLedgerTableExpanded.value;
+      final grouped = controller.groupedLedgerRows;
+      final totalRowsCount = controller.reportData.value?.ledgerRows.length ?? 0;
 
-    final sectionConfigs = [
-      {
-        'key': 'OPENING_BALANCE',
-        'title': 'OPENING CASH BALANCE'.tr,
-        'icon': Icons.wb_sunny_outlined,
-        'color': const Color(0xFF6EE7B7),
-      },
-      {
-        'key': 'REVENUE_INFLOW',
-        'title': 'REVENUE & CASH INFLOW'.tr,
-        'icon': Icons.arrow_downward_rounded,
-        'color': const Color(0xFF6EE7B7),
-      },
-      {
-        'key': 'CASH_OUTFLOW',
-        'title': 'CASH OUTFLOW & EXPENSES'.tr,
-        'icon': Icons.arrow_upward_rounded,
-        'color': const Color(0xFFFCA5A5),
-      },
-      {
-        'key': 'DRAWER_ADJUSTMENT',
-        'title': 'DRAWER ADJUSTMENTS & CORRECTIONS'.tr,
-        'icon': Icons.tune_rounded,
-        'color': const Color(0xFF5EEAD4),
-      },
-      {
-        'key': 'BAKI_FLOW',
-        'title': 'BAKI (CREDIT) MARKET FLOW'.tr,
-        'icon': Icons.account_balance_wallet_outlined,
-        'color': const Color(0xFFFDE68A),
-      },
-    ];
+      final sectionConfigs = [
+        {
+          'key': 'OPENING_BALANCE',
+          'title': 'OPENING CASH BALANCE'.tr,
+          'icon': Icons.wb_sunny_outlined,
+          'color': const Color(0xFF6EE7B7),
+        },
+        {
+          'key': 'REVENUE_INFLOW',
+          'title': 'REVENUE & CASH INFLOW'.tr,
+          'icon': Icons.arrow_downward_rounded,
+          'color': const Color(0xFF6EE7B7),
+        },
+        {
+          'key': 'CASH_OUTFLOW',
+          'title': 'CASH OUTFLOW & EXPENSES'.tr,
+          'icon': Icons.arrow_upward_rounded,
+          'color': const Color(0xFFFCA5A5),
+        },
+        {
+          'key': 'DRAWER_ADJUSTMENT',
+          'title': 'DRAWER ADJUSTMENTS & CORRECTIONS'.tr,
+          'icon': Icons.tune_rounded,
+          'color': const Color(0xFF5EEAD4),
+        },
+        {
+          'key': 'BAKI_FLOW',
+          'title': 'BAKI (CREDIT) MARKET FLOW'.tr,
+          'icon': Icons.account_balance_wallet_outlined,
+          'color': const Color(0xFFFDE68A),
+        },
+      ];
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.28),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.18)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Table Header
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              children: [
-                const Icon(Icons.table_chart_outlined, color: Colors.white, size: 18),
-                const SizedBox(width: 8),
-                Text(
-                  'Master Cash & Financial Ledger'.tr,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Divider(color: Colors.white.withOpacity(0.15), height: 1),
-
-          // Column titles header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            color: Colors.black.withOpacity(0.22),
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 5,
-                  child: Text(
-                    'Title & Flow Type'.tr,
-                    style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w700),
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    'Debit (৳)'.tr,
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w700),
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    'Credit (৳)'.tr,
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w700),
-                  ),
-                ),
-                Expanded(
-                  flex: 3,
-                  child: Text(
-                    'Net (৳)'.tr,
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Divider(color: Colors.white.withOpacity(0.15), height: 1),
-
-          // Render Sections
-          ...sectionConfigs.map((sec) {
-            final key = sec['key'] as String;
-            final rows = grouped[key] ?? [];
-            if (rows.isEmpty) return const SizedBox.shrink();
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Section Header Bar
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  color: (sec['color'] as Color).withOpacity(0.12),
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.28),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.white.withOpacity(0.18)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Table Header (Interactive toggle)
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: controller.toggleLedgerTable,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   child: Row(
                     children: [
-                      Icon(sec['icon'] as IconData, size: 12, color: sec['color'] as Color),
-                      const SizedBox(width: 6),
-                      Text(
-                        sec['title'] as String,
-                        style: TextStyle(
-                          color: sec['color'] as Color,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.4,
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.table_chart_outlined, color: Colors.white, size: 18),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Master Cash & Financial Ledger'.tr,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              isExpanded
+                                  ? 'Tap to collapse ledger breakdown'.tr
+                                  : '$totalRowsCount ${'ledger entries (Tap to expand)'.tr}',
+                              style: const TextStyle(color: Colors.white60, fontSize: 10.5),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isExpanded ? Colors.white.withOpacity(0.15) : Colors.white.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              isExpanded ? 'Hide'.tr : 'Show'.tr,
+                              style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(width: 4),
+                            AnimatedRotation(
+                              turns: isExpanded ? 0.5 : 0.0,
+                              duration: const Duration(milliseconds: 200),
+                              child: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white, size: 18),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                Divider(color: Colors.white.withOpacity(0.10), height: 1),
+              ),
+            ),
 
-                // Section Rows
-                ...rows.map((row) => _buildLedgerRow(context, row)),
-              ],
-            );
-          }),
-        ],
-      ),
-    );
+            // Animated Expandable Content
+            AnimatedCrossFade(
+              firstChild: const SizedBox(width: double.infinity, height: 0),
+              secondChild: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Divider(color: Colors.white.withOpacity(0.15), height: 1),
+
+                  // Column titles header
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    color: Colors.black.withOpacity(0.22),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 5,
+                          child: Text(
+                            'Title & Flow Type'.tr,
+                            style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            'Debit (৳)'.tr,
+                            textAlign: TextAlign.right,
+                            style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            'Credit (৳)'.tr,
+                            textAlign: TextAlign.right,
+                            style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            'Net (৳)'.tr,
+                            textAlign: TextAlign.right,
+                            style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Divider(color: Colors.white.withOpacity(0.15), height: 1),
+
+                  // Render Sections
+                  ...sectionConfigs.map((sec) {
+                    final key = sec['key'] as String;
+                    final rows = grouped[key] ?? [];
+                    if (rows.isEmpty) return const SizedBox.shrink();
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Section Header Bar
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                          color: (sec['color'] as Color).withOpacity(0.12),
+                          child: Row(
+                            children: [
+                              Icon(sec['icon'] as IconData, size: 12, color: sec['color'] as Color),
+                              const SizedBox(width: 6),
+                              Text(
+                                sec['title'] as String,
+                                style: TextStyle(
+                                  color: sec['color'] as Color,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.4,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Divider(color: Colors.white.withOpacity(0.10), height: 1),
+
+                        // Section Rows
+                        ...rows.map((row) => _buildLedgerRow(context, row)),
+                      ],
+                    );
+                  }),
+                ],
+              ),
+              crossFadeState: isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 250),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   VoidCallback? _getLedgerRowAction(BuildContext context, LedgerRowItem row) {
@@ -886,149 +952,241 @@ class ShopCashFlowReportWidget extends GetWidget<ShopCashFlowController> {
 
   // --- Bottom Highlighted Summary Cards ---
   Widget _buildBottomSummaryCards(BuildContext context) {
-    final totals = controller.reportData.value?.totals ?? LedgerTotals();
+    return Obx(() {
+      final isExpanded = controller.isBottomSummaryExpanded.value;
+      final totals = controller.reportData.value?.totals ?? LedgerTotals();
 
-    return Column(
-      children: [
-        // Expected Cash in Drawer (Hand)
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => AdjustCashDrawerBottomSheet.show(
-              context: context,
-              controller: controller,
-            ),
-            borderRadius: BorderRadius.circular(18),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.32),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: Colors.white.withOpacity(0.35), width: 1.2),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: _green.withOpacity(0.25),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.point_of_sale_rounded, color: Colors.white, size: 24),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'EXPECTED CASH IN DRAWER (HAND)'.tr,
-                          style: const TextStyle(
-                            color: Color(0xFF6EE7B7),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.4,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Tap to adjust till'.tr,
-                          style: const TextStyle(color: Colors.white60, fontSize: 9.5),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '৳${_formatCurrency(totals.expectedCashDrawer)}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 14,
-                    color: Colors.white.withOpacity(0.55),
-                  ),
-                ],
-              ),
-            ),
-          ),
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.24),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.white.withOpacity(0.18)),
         ),
-        const SizedBox(height: 10),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          children: [
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: controller.toggleBottomSummary,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.wallet_outlined, color: Colors.white, size: 18),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Cash Drawer & Market Baki'.tr,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              isExpanded
+                                  ? 'Tap to collapse summary cards'.tr
+                                  : 'Drawer: ৳${_formatCurrency(totals.expectedCashDrawer)} • Baki: ৳${_formatCurrency(totals.overallStoreBaki)}',
+                              style: const TextStyle(color: Colors.white60, fontSize: 10.5),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isExpanded ? Colors.white.withOpacity(0.15) : Colors.white.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              isExpanded ? 'Hide'.tr : 'Show'.tr,
+                              style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(width: 4),
+                            AnimatedRotation(
+                              turns: isExpanded ? 0.5 : 0.0,
+                              duration: const Duration(milliseconds: 200),
+                              child: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white, size: 18),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            AnimatedCrossFade(
+              firstChild: const SizedBox(width: double.infinity, height: 0),
+              secondChild: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+                child: Column(
+                  children: [
+                    Divider(color: Colors.white.withOpacity(0.15), height: 1),
+                    const SizedBox(height: 10),
 
-        // Overall Store Baki in Market
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => Get.toNamed(Routes.BAKI_KHATA),
-            borderRadius: BorderRadius.circular(18),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.32),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: _red.withOpacity(0.35), width: 1.2),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: _red.withOpacity(0.25),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.account_balance_wallet_outlined, color: Colors.white, size: 24),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'STORE OVERALL MARKET OUTSTANDING BAKI'.tr,
-                          style: const TextStyle(
-                            color: Color(0xFFFCA5A5),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.4,
+                    // Expected Cash in Drawer (Hand)
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => AdjustCashDrawerBottomSheet.show(
+                          context: context,
+                          controller: controller,
+                        ),
+                        borderRadius: BorderRadius.circular(18),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.32),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: Colors.white.withOpacity(0.35), width: 1.2),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: _green.withOpacity(0.25),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.point_of_sale_rounded, color: Colors.white, size: 24),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'EXPECTED CASH IN DRAWER (HAND)'.tr,
+                                      style: const TextStyle(
+                                        color: Color(0xFF6EE7B7),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 0.4,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Tap to adjust till'.tr,
+                                      style: const TextStyle(color: Colors.white60, fontSize: 9.5),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '৳${_formatCurrency(totals.expectedCashDrawer)}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 14,
+                                color: Colors.white.withOpacity(0.55),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Tap to open Baki Khata'.tr,
-                          style: const TextStyle(color: Colors.white60, fontSize: 9.5),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '৳${_formatCurrency(totals.overallStoreBaki)}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Overall Store Baki in Market
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => Get.toNamed(Routes.BAKI_KHATA),
+                        borderRadius: BorderRadius.circular(18),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.32),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: _red.withOpacity(0.35), width: 1.2),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: _red.withOpacity(0.25),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.account_balance_wallet_outlined, color: Colors.white, size: 24),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'STORE OVERALL MARKET OUTSTANDING BAKI'.tr,
+                                      style: const TextStyle(
+                                        color: Color(0xFFFCA5A5),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 0.4,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Tap to open Baki Khata'.tr,
+                                      style: const TextStyle(color: Colors.white60, fontSize: 9.5),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '৳${_formatCurrency(totals.overallStoreBaki)}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 14,
+                                color: Colors.white.withOpacity(0.55),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 14,
-                    color: Colors.white.withOpacity(0.55),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              crossFadeState: isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 250),
             ),
-          ),
+          ],
         ),
-      ],
-    );
+      );
+    });
   }
 
   static String _formatCurrency(double val) {

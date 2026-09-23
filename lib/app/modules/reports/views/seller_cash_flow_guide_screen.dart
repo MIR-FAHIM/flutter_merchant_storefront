@@ -2,6 +2,7 @@ import 'package:ecom_delivery_flutter/app/models/reports/shop_cash_flow_report_m
 import 'package:ecom_delivery_flutter/app/modules/reports/controllers/shop_cash_flow_controller.dart';
 import 'package:ecom_delivery_flutter/app/modules/reports/views/widgets/add_expense_bottom_sheet.dart';
 import 'package:ecom_delivery_flutter/app/modules/reports/views/widgets/adjust_cash_drawer_bottom_sheet.dart';
+import 'package:ecom_delivery_flutter/app/modules/reports/views/widgets/quick_cash_sale_bottom_sheet.dart';
 import 'package:ecom_delivery_flutter/app/modules/reports/views/widgets/set_opening_cash_bottom_sheet.dart';
 import 'package:ecom_delivery_flutter/app/routes/app_pages.dart';
 import 'package:flutter/material.dart';
@@ -10,15 +11,8 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
-class SellerCashFlowGuideScreen extends StatelessWidget {
+class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
   const SellerCashFlowGuideScreen({super.key});
-
-  ShopCashFlowController get controller {
-    if (Get.isRegistered<ShopCashFlowController>()) {
-      return Get.find<ShopCashFlowController>();
-    }
-    return Get.put(ShopCashFlowController());
-  }
 
   static String _formatCurrency(double val) {
     return NumberFormat('#,##0.00').format(val);
@@ -32,7 +26,8 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
         elevation: 0,
         backgroundColor: const Color(0xFF1E293B),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              color: Colors.white, size: 20),
           onPressed: () => Get.back(),
         ),
         title: Column(
@@ -107,13 +102,27 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
           backgroundColor: const Color(0xFF1E293B),
           onRefresh: () => controller.fetchReport(),
           child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+            physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics()),
             padding: const EdgeInsets.fromLTRB(14, 16, 14, 32),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // 1. Philosophy Hero Banner
                 _buildPhilosophyHeroCard(context),
+                const SizedBox(height: 16),
+
+                // Start here: complete today's cash-flow routine.
+                _buildDailyActionPlan(
+                  context: context,
+                  hasOpeningEntry:
+                      (grouped['OPENING_BALANCE'] ?? <LedgerRowItem>[])
+                          .isNotEmpty,
+                  openingCash: openingCash,
+                  cashExpenses: cashExpenses,
+                  expectedDrawer: expectedDrawer,
+                  todayNewBaki: todayNewBaki,
+                ),
                 const SizedBox(height: 16),
 
                 // 2. Period Filter Selector
@@ -125,6 +134,16 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
                   expectedDrawer: expectedDrawer,
                   digitalWallet: digitalWallet,
                   todayNewBaki: todayNewBaki,
+                  totalOutstandingBaki: totalOutstandingBaki,
+                ),
+                const SizedBox(height: 20),
+
+                _buildBeginnerBasicsCard(),
+                const SizedBox(height: 20),
+
+                _buildWeeklyCashPlanCard(
+                  expectedDrawer: expectedDrawer,
+                  digitalWallet: digitalWallet,
                   totalOutstandingBaki: totalOutstandingBaki,
                 ),
                 const SizedBox(height: 20),
@@ -216,9 +235,11 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.amber.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.amberAccent.withOpacity(0.6)),
+                  border:
+                      Border.all(color: Colors.amberAccent.withOpacity(0.6)),
                 ),
-                child: const Icon(Icons.lightbulb_rounded, color: Colors.amberAccent, size: 22),
+                child: const Icon(Icons.lightbulb_rounded,
+                    color: Colors.amberAccent, size: 22),
               ),
               const SizedBox(width: 12),
               const Expanded(
@@ -266,6 +287,414 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildDailyActionPlan({
+    required BuildContext context,
+    required bool hasOpeningEntry,
+    required double openingCash,
+    required double cashExpenses,
+    required double expectedDrawer,
+    required double todayNewBaki,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFF10B981).withOpacity(0.55)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.task_alt_rounded, color: Color(0xFF34D399), size: 22),
+              SizedBox(width: 9),
+              Expanded(
+                child: Text(
+                  'আজকের কাজ: সকাল থেকে দোকান বন্ধ পর্যন্ত',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 7),
+          const Text(
+            'শুধু পড়বেন না। প্রতিটি ধাপের বাটনে চাপ দিয়ে আজকের হিসাব সম্পন্ন করুন।',
+            style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
+          ),
+          const SizedBox(height: 14),
+          _buildActionStep(
+            step: '১',
+            timeLabel: 'দোকান খোলার সময়',
+            title: 'ক্যাশ বাক্সের টাকা গুনুন',
+            instruction:
+                'শুধু নোট ও কয়েন গুনে Opening Cash লিখুন। বিকাশ/নগদ/ব্যাংকের টাকা এখানে দেবেন না।',
+            status: hasOpeningEntry
+                ? 'আজ রেকর্ড হয়েছে: ৳${_formatCurrency(openingCash)}'
+                : 'আজ এখনো Opening Cash রেকর্ড হয়নি',
+            statusColor: hasOpeningEntry
+                ? const Color(0xFF34D399)
+                : const Color(0xFFFBBF24),
+            buttonLabel: hasOpeningEntry
+                ? 'ওপেনিং ক্যাশ দেখুন/সংশোধন'
+                : 'ওপেনিং ক্যাশ সেট করুন',
+            buttonIcon: Icons.account_balance_wallet_outlined,
+            buttonColor: const Color(0xFF10B981),
+            onAction: () => SetOpeningCashBottomSheet.show(
+              context: context,
+              controller: controller,
+            ),
+          ),
+          const SizedBox(height: 10),
+          _buildActionStep(
+            step: '২',
+            timeLabel: 'প্রতিটি বিক্রির সময়',
+            title: 'সঠিক পেমেন্ট ধরন দিয়ে বিক্রি রেকর্ড করুন',
+            instruction:
+                'POS অর্ডারে Cash, Digital বা Baki ঠিকভাবে বাছুন। কার্ট ছাড়া সরাসরি নগদ বিক্রি হলে Quick Cash Sale ব্যবহার করুন।',
+            status: 'বাদ পড়া নগদ বিক্রি এখনই যোগ করুন',
+            statusColor: const Color(0xFF60A5FA),
+            buttonLabel: 'দ্রুত নগদ বিক্রি যোগ করুন',
+            buttonIcon: Icons.point_of_sale_rounded,
+            buttonColor: const Color(0xFF60A5FA),
+            onAction: () => QuickCashSaleBottomSheet.show(
+              context: context,
+              controller: controller,
+            ),
+          ),
+          const SizedBox(height: 10),
+          _buildActionStep(
+            step: '৩',
+            timeLabel: 'টাকা বের হওয়ার সঙ্গে সঙ্গে',
+            title: 'প্রতিটি দোকান খরচ লিখুন',
+            instruction:
+                'চা, পরিবহন, ইউটিলিটি, সাপ্লায়ার বা অন্য কোনো খরচ ক্যাশ বাক্স থেকে দিলেই এন্ট্রি করুন।',
+            status: 'রেকর্ডকৃত নগদ খরচ: ৳${_formatCurrency(cashExpenses)}',
+            statusColor: const Color(0xFFF87171),
+            buttonLabel: 'খরচ যোগ করুন',
+            buttonIcon: Icons.receipt_long_outlined,
+            buttonColor: const Color(0xFFF87171),
+            onAction: () => AddExpenseBottomSheet.show(
+              context: context,
+              controller: controller,
+            ),
+          ),
+          const SizedBox(height: 10),
+          _buildActionStep(
+            step: '৪',
+            timeLabel: 'বাকিতে দেওয়া বা টাকা আদায়ের সময়',
+            title: 'কাস্টমারের বাকি আলাদা রাখুন',
+            instruction:
+                'বাকিতে বিক্রি হলে কাস্টমারের খাতায় লিখুন। টাকা হাতে না পাওয়া পর্যন্ত সেটি ক্যাশ বাক্সের টাকা নয়।',
+            status: 'আজকের নতুন বাকি: ৳${_formatCurrency(todayNewBaki)}',
+            statusColor: const Color(0xFFFBBF24),
+            buttonLabel: 'বাকি খাতা খুলুন',
+            buttonIcon: Icons.menu_book_outlined,
+            buttonColor: const Color(0xFFFBBF24),
+            onAction: () => Get.toNamed(Routes.BAKI_KHATA),
+          ),
+          const SizedBox(height: 10),
+          _buildActionStep(
+            step: '৫',
+            timeLabel: 'দোকান বন্ধের আগে',
+            title: 'ক্যাশ গুনে সিস্টেমের সঙ্গে মিলান',
+            instruction:
+                'প্রথমে বাদ পড়া বিক্রি, খরচ ও রিফান্ড খুঁজুন। কারণ পাওয়ার পরেই প্রয়োজন হলে Drawer Adjustment দিন।',
+            status:
+                'সিস্টেম অনুযায়ী ক্যাশ থাকার কথা: ৳${_formatCurrency(expectedDrawer)}',
+            statusColor: const Color(0xFF34D399),
+            buttonLabel: 'দিনশেষের ক্যাশ মিলান',
+            buttonIcon: Icons.fact_check_outlined,
+            buttonColor: const Color(0xFF10B981),
+            onAction: () => _showClosingCashCheck(
+              context: context,
+              expectedDrawer: expectedDrawer,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionStep({
+    required String step,
+    required String timeLabel,
+    required String title,
+    required String instruction,
+    required String status,
+    required Color statusColor,
+    required String buttonLabel,
+    required IconData buttonIcon,
+    required Color buttonColor,
+    required VoidCallback onAction,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F172A),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: buttonColor.withOpacity(0.18),
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  step,
+                  style: TextStyle(
+                    color: buttonColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      timeLabel,
+                      style: TextStyle(
+                        color: buttonColor,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            instruction,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 11.5,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            status,
+            style: TextStyle(
+              color: statusColor,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: onAction,
+              icon: Icon(buttonIcon, size: 16),
+              label: Text(buttonLabel),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: buttonColor,
+                side: BorderSide(color: buttonColor.withOpacity(0.65)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showClosingCashCheck({
+    required BuildContext context,
+    required double expectedDrawer,
+  }) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: const Color(0xFF1E293B),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 14, 18, 22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              const Text(
+                'দিনশেষের ক্যাশ মিলানোর ৩ ধাপ',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 14),
+              _buildClosingCheckRow(
+                number: '১',
+                text: 'ক্যাশ বাক্সের সব নোট ও কয়েন গুনুন।',
+              ),
+              _buildClosingCheckRow(
+                number: '২',
+                text:
+                    'গোনা টাকার সঙ্গে ৳${_formatCurrency(expectedDrawer)} মিলিয়ে দেখুন।',
+              ),
+              _buildClosingCheckRow(
+                number: '৩',
+                text:
+                    'অমিল হলে আগে বাদ পড়া বিক্রি, খরচ, রিফান্ড বা ভাংতির ভুল খুঁজুন।',
+              ),
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF59E0B).withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: const Color(0xFFF59E0B).withOpacity(0.45),
+                  ),
+                ),
+                child: const Text(
+                  'Drawer Adjustment নতুন বিক্রি বা খরচ নয়। কারণ যাচাই করে নোটসহ শুধু প্রকৃত অমিল সংশোধনের জন্য ব্যবহার করুন।',
+                  style: TextStyle(
+                    color: Color(0xFFFDE68A),
+                    fontSize: 11.5,
+                    height: 1.4,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => Navigator.of(sheetContext).pop(),
+                      icon: const Icon(Icons.check_circle_outline_rounded),
+                      label: const Text('মিলে গেছে'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF34D399),
+                        side: const BorderSide(color: Color(0xFF34D399)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.of(sheetContext).pop();
+                        Future<void>.delayed(
+                          const Duration(milliseconds: 180),
+                          () {
+                            if (!context.mounted) return;
+                            AdjustCashDrawerBottomSheet.show(
+                              context: context,
+                              controller: controller,
+                            );
+                          },
+                        );
+                      },
+                      icon: const Icon(Icons.tune_rounded, size: 18),
+                      label: const Text('অমিল আছে'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0EA5E9),
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildClosingCheckRow({
+    required String number,
+    required String text,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 24,
+            height: 24,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              color: Color(0xFF0F766E),
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              number,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // --- 2. Period Filter Selector ---
   Widget _buildPeriodFilterRow(BuildContext context) {
     final periods = [
@@ -288,12 +717,16 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFF10B981) : const Color(0xFF1E293B),
+                  color: isSelected
+                      ? const Color(0xFF10B981)
+                      : const Color(0xFF1E293B),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: isSelected ? const Color(0xFF34D399) : Colors.white12,
+                    color:
+                        isSelected ? const Color(0xFF34D399) : Colors.white12,
                   ),
                 ),
                 child: Text(
@@ -462,6 +895,303 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildBeginnerBasicsCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFF334155)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(
+                Icons.school_outlined,
+                color: Color(0xFF60A5FA),
+                size: 21,
+              ),
+              SizedBox(width: 9),
+              Expanded(
+                child: Text(
+                  'কাজ শুরুর আগে এই ৪টি পার্থক্য বুঝুন',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _buildBasicFact(
+            icon: Icons.swap_vert_circle_outlined,
+            color: const Color(0xFF34D399),
+            title: 'ক্যাশ ফ্লো = আসল টাকা নড়াচড়া',
+            text:
+                'নগদ বা ডিজিটাল হিসাবে টাকা সত্যিই ঢুকলে Cash In, সত্যিই বের হলে Cash Out।',
+          ),
+          _buildBasicFact(
+            icon: Icons.shopping_bag_outlined,
+            color: const Color(0xFFFBBF24),
+            title: 'বিক্রি আর হাতে পাওয়া টাকা এক নয়',
+            text:
+                'বাকিতে বিক্রি হলে বিক্রি হয়েছে, কিন্তু টাকা এখনো আসেনি। আদায় হওয়ার আগে সেটি ক্যাশ নয়।',
+          ),
+          _buildBasicFact(
+            icon: Icons.trending_up_rounded,
+            color: const Color(0xFFA78BFA),
+            title: 'লাভ আর হাতে থাকা ক্যাশ এক নয়',
+            text:
+                'লাভ হলো বিক্রয় থেকে খরচ/পণ্যের খরচ বাদ দেওয়ার ফল। ক্যাশ হলো এখন বিল দেওয়ার জন্য সত্যিই হাতে বা ওয়ালেটে থাকা টাকা।',
+          ),
+          _buildBasicFact(
+            icon: Icons.account_balance_wallet_outlined,
+            color: const Color(0xFF60A5FA),
+            title: 'সব টাকা ক্যাশ বাক্সে থাকে না',
+            text:
+                'Opening Cash আয় নয়। বিকাশ/নগদ/কার্ডে পাওয়া টাকা Cash In হলেও সেটি ক্যাশ বাক্সে নয়, ডিজিটাল হিসাবে থাকে।',
+            showDivider: false,
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0F172A),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: const Color(0xFF34D399).withOpacity(0.35),
+              ),
+            ),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'দিনশেষের সহজ সূত্র',
+                  style: TextStyle(
+                    color: Color(0xFFA7F3D0),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                SizedBox(height: 5),
+                Text(
+                  'ক্যাশ বাক্সে থাকার কথা = Opening Cash + নগদ আদায় - নগদ খরচ/রিফান্ড ± যাচাইকৃত সমন্বয়',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    height: 1.4,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBasicFact({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String text,
+    bool showDivider = true,
+  }) {
+    return Column(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.14),
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: Icon(icon, color: color, size: 18),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    text,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 11.5,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        if (showDivider) const Divider(color: Colors.white12, height: 22),
+      ],
+    );
+  }
+
+  Widget _buildWeeklyCashPlanCard({
+    required double expectedDrawer,
+    required double digitalWallet,
+    required double totalOutstandingBaki,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFF334155)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(
+                Icons.calendar_view_week_outlined,
+                color: Color(0xFFFBBF24),
+                size: 21,
+              ),
+              SizedBox(width: 9),
+              Expanded(
+                child: Text(
+                  'সপ্তাহে ১০ মিনিট: টাকা কম পড়বে কি না আগে দেখুন',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildWeeklyAmount(
+                  label: 'ড্রয়ারে থাকার কথা',
+                  amount: expectedDrawer,
+                  color: const Color(0xFF34D399),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildWeeklyAmount(
+                  label: 'নির্বাচিত সময়ে ডিজিটাল আদায়',
+                  amount: digitalWallet,
+                  color: const Color(0xFF60A5FA),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            '১. আগামী ৭ দিনের স্টক, সাপ্লায়ার, ভাড়া, বেতন ও ইউটিলিটি পেমেন্ট লিখুন।\n'
+            '২. গোনা ক্যাশ + বর্তমান ওয়ালেট/ব্যাংক ব্যালেন্স + নিশ্চিতভাবে আদায় হবে এমন টাকা যোগ করুন।\n'
+            '৩. প্রয়োজনীয় পেমেন্ট বেশি হলে আগে বাকি আদায় করুন, অপ্রয়োজনীয় কেনা পিছিয়ে দিন বা সাপ্লায়ারের সঙ্গে সময় ঠিক করুন।',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 11.5,
+              height: 1.65,
+            ),
+          ),
+          const SizedBox(height: 9),
+          Text(
+            'মোট বাকি ৳${_formatCurrency(totalOutstandingBaki)}। পুরো বাকি বা এই সময়ের মোট ডিজিটাল আদায়কে বর্তমান ব্যবহারযোগ্য ব্যালেন্স ধরে পরিকল্পনা করবেন না; আগে আসল ব্যালেন্স যাচাই করুন।',
+            style: const TextStyle(
+              color: Color(0xFFFCA5A5),
+              fontSize: 11.5,
+              height: 1.4,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => Get.toNamed(Routes.BAKI_KHATA),
+              icon: const Icon(Icons.menu_book_outlined, size: 17),
+              label: const Text('বাকি আদায়ের তালিকা দেখুন'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFFFBBF24),
+                side: const BorderSide(color: Color(0xFFFBBF24)),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeeklyAmount({
+    required String label,
+    required double amount,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(11),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F172A),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            maxLines: 2,
+            style: const TextStyle(
+              color: Colors.white60,
+              fontSize: 10.5,
+              height: 1.25,
+            ),
+          ),
+          const SizedBox(height: 5),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              '৳${_formatCurrency(amount)}',
+              style: TextStyle(
+                color: color,
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // --- 4. Section 1: Debit vs Credit ---
   Widget _buildSectionDebitCredit({
     required BuildContext context,
@@ -480,11 +1210,11 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
         children: [
           _buildSectionHeader(
             number: '১',
-            title: 'ডেবিট (Debit) ও ক্রেডিট (Credit) এর সহজ অর্থ',
+            title: 'এই রিপোর্টে Cash In ও Cash Out কীভাবে পড়বেন',
           ),
           const SizedBox(height: 8),
           const Text(
-            'দোকানের হিসাব মেলানোর জন্য কঠিন অ্যাকাউন্টিং বোঝার দরকার নেই, শুধু এই দুটি শব্দ বুঝলেই হবে:',
+            'এই পেজে Credit / + দিয়ে টাকা বা সংশ্লিষ্ট ব্যালেন্স যোগ হওয়া এবং Debit / - দিয়ে কমা দেখানো হয়েছে। পেশাদার হিসাববিজ্ঞানে Debit ও Credit-এর অর্থ অ্যাকাউন্টভেদে বদলায়; এখানে কাজ বোঝার জন্য Cash In ও Cash Out অনুসরণ করুন।',
             style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
           ),
           const SizedBox(height: 14),
@@ -508,12 +1238,13 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
                         color: Color(0xFF059669),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.add_rounded, color: Colors.white, size: 16),
+                      child: const Icon(Icons.add_rounded,
+                          color: Colors.white, size: 16),
                     ),
                     const SizedBox(width: 10),
                     const Expanded(
                       child: Text(
-                        '🟢 ক্রেডিট (Credit / Cash In ➕)',
+                        'Cash In / টাকা আসা (+)',
                         style: TextStyle(
                           color: Color(0xFF34D399),
                           fontSize: 13.5,
@@ -525,17 +1256,22 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'সহজ অর্থ: দোকানে টাকা বা পেমেন্ট আসলো।',
-                  style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                  'কাজের অর্থ: দোকানে নগদ বা ডিজিটাল পেমেন্ট সত্যিই এসেছে।',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 4),
                 const Text(
-                  'উদাহরণ: কাস্টমারের নগদ বিক্রি, কাস্টমার বাকির টাকা শোধ করলে, বিকাশ/কার্ড পেমেন্ট, দ্রুত নগদ বিক্রি।',
-                  style: TextStyle(color: Colors.white70, fontSize: 11.5, height: 1.35),
+                  'উদাহরণ: নগদ বিক্রি, পুরনো বাকি আদায়, বিকাশ/নগদ/কার্ড পেমেন্ট এবং Quick Cash Sale। ডিজিটাল পেমেন্ট ক্যাশ বাক্সে নয়, ওয়ালেট বা ব্যাংকে থাকে।',
+                  style: TextStyle(
+                      color: Colors.white70, fontSize: 11.5, height: 1.35),
                 ),
                 const SizedBox(height: 10),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(8),
@@ -544,8 +1280,9 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'আপনার স্টোরে মোট ক্রেডিট (ইনকাম):',
-                        style: TextStyle(color: Color(0xFFA7F3D0), fontSize: 11),
+                        'রিপোর্টে মোট Credit / যোগ:',
+                        style:
+                            TextStyle(color: Color(0xFFA7F3D0), fontSize: 11),
                       ),
                       Text(
                         '৳${_formatCurrency(totalCredit)}',
@@ -582,12 +1319,13 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
                         color: Color(0xFFDC2626),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.remove_rounded, color: Colors.white, size: 16),
+                      child: const Icon(Icons.remove_rounded,
+                          color: Colors.white, size: 16),
                     ),
                     const SizedBox(width: 10),
                     const Expanded(
                       child: Text(
-                        '🔴 ডেবিট (Debit / Cash Out ➖)',
+                        'Cash Out / টাকা বের হওয়া (-)',
                         style: TextStyle(
                           color: Color(0xFFF87171),
                           fontSize: 13.5,
@@ -599,17 +1337,22 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'সহজ অর্থ: দোকান থেকে টাকা বের হলো।',
-                  style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                  'কাজের অর্থ: দোকানের নগদ বা ডিজিটাল টাকা সত্যিই বের হয়েছে।',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 4),
                 const Text(
-                  'উদাহরণ: চা/নাশতার খরচ, মালামাল পরিবহন খরচ, কাস্টমারকে ফেরত দেওয়া টাকা, নতুন বাকি দেওয়া।',
-                  style: TextStyle(color: Colors.white70, fontSize: 11.5, height: 1.35),
+                  'উদাহরণ: চা/নাশতা, পরিবহন, ইউটিলিটি, সাপ্লায়ার পেমেন্ট বা কাস্টমারকে রিফান্ড। নতুন বাকি Cash Out নয়; সেটি কাস্টমারের কাছে পাওনা।',
+                  style: TextStyle(
+                      color: Colors.white70, fontSize: 11.5, height: 1.35),
                 ),
                 const SizedBox(height: 10),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(8),
@@ -618,8 +1361,9 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'আপনার স্টোরে মোট ডেবিট (খরচ/বাকি):',
-                        style: TextStyle(color: Color(0xFFFECACA), fontSize: 11),
+                        'রিপোর্টে মোট Debit / কমা:',
+                        style:
+                            TextStyle(color: Color(0xFFFECACA), fontSize: 11),
                       ),
                       Text(
                         '৳${_formatCurrency(totalDebit)}',
@@ -674,22 +1418,35 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
             icon: Icons.payments_rounded,
             iconColor: const Color(0xFF34D399),
             title: '১. 💵 ক্যাশ বাক্সের টাকা (Cash in Drawer)',
-            description: 'এটি আপনার ক্যাশ বাক্সে (গাল্লায়) আসল কাগজ বা নোটের টাকা।',
-            formula: 'হিসাব: (সকালের শুরুর ক্যাশ) + (আজকের নগদ ইনকাম) - (আজকের নগদ খরচ)',
+            description:
+                'এটি আপনার ক্যাশ বাক্সে (গাল্লায়) আসল কাগজ বা নোটের টাকা।',
+            formula:
+                'হিসাব: (সকালের শুরুর ক্যাশ) + (আজকের নগদ ইনকাম) - (আজকের নগদ খরচ)',
             liveWidget: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: const Color(0xFF0F172A),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF34D399).withOpacity(0.35)),
+                border: Border.all(
+                    color: const Color(0xFF34D399).withOpacity(0.35)),
               ),
               child: Column(
                 children: [
-                  _buildMiniMathRow('সকালের শুরুর ক্যাশ (Opening):', '৳${_formatCurrency(openingCash)}', Colors.white70),
-                  _buildMiniMathRow('নগদ ইনকাম (বিক্রি ও উদ্ধার):', '+ ৳${_formatCurrency(cashInflow)}', const Color(0xFF34D399)),
-                  _buildMiniMathRow('নগদ খরচ (চা-নাশতা/অন্যান্য):', '- ৳${_formatCurrency(cashExpenses)}', const Color(0xFFF87171)),
+                  _buildMiniMathRow('সকালের শুরুর ক্যাশ (Opening):',
+                      '৳${_formatCurrency(openingCash)}', Colors.white70),
+                  _buildMiniMathRow(
+                      'নগদ ইনকাম (বিক্রি ও উদ্ধার):',
+                      '+ ৳${_formatCurrency(cashInflow)}',
+                      const Color(0xFF34D399)),
+                  _buildMiniMathRow(
+                      'নগদ খরচ (চা-নাশতা/অন্যান্য):',
+                      '- ৳${_formatCurrency(cashExpenses)}',
+                      const Color(0xFFF87171)),
                   if (drawerAdjustment != 0)
-                    _buildMiniMathRow('ড্রয়ার সমন্বয় (সিস্টেম এডজাস্টমেন্ট):', '${drawerAdjustment > 0 ? '+' : ''} ৳${_formatCurrency(drawerAdjustment)}', const Color(0xFF60A5FA)),
+                    _buildMiniMathRow(
+                        'ড্রয়ার সমন্বয় (সিস্টেম এডজাস্টমেন্ট):',
+                        '${drawerAdjustment > 0 ? '+' : ''} ৳${_formatCurrency(drawerAdjustment)}',
+                        const Color(0xFF60A5FA)),
                   const Divider(color: Colors.white24, height: 12),
                   _buildMiniMathRow(
                     'ক্যাশ বাক্সে থাকার কথা (Expected):',
@@ -708,13 +1465,15 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
             icon: Icons.qr_code_scanner_rounded,
             iconColor: const Color(0xFF60A5FA),
             title: '২. 📱 ডিজিটাল টাকা (Digital Wallets)',
-            description: 'বিকাশ, নগদ বা কার্ডে পাওয়া টাকা। এই টাকা আপনার ক্যাশ বাক্সে থাকে না, সরাসরি ব্যাংক বা ওয়ালেটে জমা হয়।',
+            description:
+                'বিকাশ, নগদ বা কার্ডে পাওয়া টাকা। এই টাকা আপনার ক্যাশ বাক্সে থাকে না, সরাসরি ব্যাংক বা ওয়ালেটে জমা হয়।',
             liveWidget: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 color: const Color(0xFF0F172A),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF60A5FA).withOpacity(0.35)),
+                border: Border.all(
+                    color: const Color(0xFF60A5FA).withOpacity(0.35)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -742,13 +1501,15 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
             icon: Icons.assignment_late_outlined,
             iconColor: const Color(0xFFF87171),
             title: '৩. 🔴 আজকের নতুন বাকি (New Baki Given)',
-            description: 'আজ সারাদিনে মোট কত টাকার পণ্য কাস্টমাররা বাকিতে নিয়ে গেল (যা এখনো পাননি)।',
+            description:
+                'আজ সারাদিনে মোট কত টাকার পণ্য কাস্টমাররা বাকিতে নিয়ে গেল (যা এখনো পাননি)।',
             liveWidget: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 color: const Color(0xFF0F172A),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFF87171).withOpacity(0.35)),
+                border: Border.all(
+                    color: const Color(0xFFF87171).withOpacity(0.35)),
               ),
               child: Row(
                 children: [
@@ -756,7 +1517,9 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('আজকের নতুন বাকি:', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                        const Text('আজকের নতুন বাকি:',
+                            style:
+                                TextStyle(color: Colors.white70, fontSize: 11)),
                         const SizedBox(height: 2),
                         Text(
                           '৳${_formatCurrency(todayNewBaki)}',
@@ -773,7 +1536,8 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
                     onTap: () => Get.toNamed(Routes.BAKI_KHATA),
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF87171).withOpacity(0.2),
                         borderRadius: BorderRadius.circular(8),
@@ -783,10 +1547,14 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
                         children: [
                           Text(
                             'বাকি খাতা',
-                            style: TextStyle(color: Color(0xFFF87171), fontSize: 10.5, fontWeight: FontWeight.w800),
+                            style: TextStyle(
+                                color: Color(0xFFF87171),
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w800),
                           ),
                           SizedBox(width: 4),
-                          Icon(Icons.arrow_forward_ios_rounded, size: 9, color: Color(0xFFF87171)),
+                          Icon(Icons.arrow_forward_ios_rounded,
+                              size: 9, color: Color(0xFFF87171)),
                         ],
                       ),
                     ),
@@ -802,13 +1570,15 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
             icon: Icons.assignment_turned_in_outlined,
             iconColor: const Color(0xFF34D399),
             title: '৪. 🟢 আজকের বাকি উদ্ধার (Baki Recovered)',
-            description: 'পুরনো বাকির কাস্টমারদের কাছ থেকে আজ নগদ বা বিকাশে কত টাকা ফেরত পেলেন।',
+            description:
+                'পুরনো বাকির কাস্টমারদের কাছ থেকে আজ নগদ বা বিকাশে কত টাকা ফেরত পেলেন।',
             liveWidget: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 color: const Color(0xFF0F172A),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF34D399).withOpacity(0.35)),
+                border: Border.all(
+                    color: const Color(0xFF34D399).withOpacity(0.35)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -864,7 +1634,8 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           description,
-          style: const TextStyle(color: Colors.white70, fontSize: 11.5, height: 1.35),
+          style: const TextStyle(
+              color: Colors.white70, fontSize: 11.5, height: 1.35),
         ),
         if (formula != null) ...[
           const SizedBox(height: 6),
@@ -890,7 +1661,8 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMiniMathRow(String label, String value, Color valueColor, {bool isBold = false}) {
+  Widget _buildMiniMathRow(String label, String value, Color valueColor,
+      {bool isBold = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.5),
       child: Row(
@@ -937,7 +1709,7 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
         children: [
           _buildSectionHeader(
             number: '৩',
-            title: 'ক্যাশ বাক্স ১০০% সঠিক রাখার ৪টি স্বর্ণালী নিয়ম 💡',
+            title: 'ভুল হলে কী করবেন: ৪টি দ্রুত সমাধান',
           ),
           const SizedBox(height: 14),
 
@@ -945,64 +1717,66 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
           _buildGoldenRuleCard(
             context: context,
             ruleNumber: '১',
-            title: 'প্রতিদিন সকালে "Opening Cash" বসান',
+            title: 'Opening Cash দিতে ভুলে গেছেন?',
             description:
-                'দোকান খুলে ক্যাশ বাক্সে খুচরা/ভাঙতির জন্য কত টাকা রাখছেন (যেমন: ১,০০০ টাকা), সেটা অ্যাপের Set Opening Cash বাটনে দিয়ে দিন। তাহলে গতকালের জমানো টাকার সাথে আজকের হিসাব গুলিয়ে যাবে না।',
+                'এখন ক্যাশ বাক্সের শুরুতে রাখা টাকা নিশ্চিত করে এন্ট্রি দিন। এটি বিক্রয় বা আয় নয়; দিনের শুরুর ব্যালেন্স।',
             statusText: 'আজকের ওপেনিং ক্যাশ: ৳${_formatCurrency(openingCash)}',
-            buttonLabel: '✏️ Set Opening Cash',
+            buttonLabel: 'Opening Cash ঠিক করুন',
             buttonColor: const Color(0xFF10B981),
-            onAction: () => SetOpeningCashBottomSheet.show(context: context, controller: controller),
+            onAction: () => SetOpeningCashBottomSheet.show(
+                context: context, controller: controller),
           ),
           const SizedBox(height: 12),
 
-          // Rule 2: Add Expense
+          // Rule 2: Record a missed cash sale
           _buildGoldenRuleCard(
             context: context,
             ruleNumber: '২',
-            title: 'ছোটখাট খরচ সাথে সাথে অ্যাপে তুলুন',
+            title: 'কার্ট ছাড়া নগদ বিক্রি বাদ পড়েছে?',
             description:
-                'দোকানের চা-নাশতা, পলিথিন কেনা, রিকশা ভাড়া বা দোকান ঝাড়ুদারের খরচ ক্যাশ বাক্স থেকে দিলে সাথে সাথে - Add Expense দিন। ছোট খরচ না তুললে দিনশেষে ক্যাশ মিলাতে পারবেন না!',
-            statusText: 'রেকর্ডকৃত নগদ খরচ: ৳${_formatCurrency(cashExpenses)}',
-            buttonLabel: '🧾 Add Expense',
-            buttonColor: const Color(0xFFF87171),
-            onAction: () => AddExpenseBottomSheet.show(context: context, controller: controller),
+                'বিক্রির টাকা ক্যাশ বাক্সে এসেছে কিন্তু অর্ডার বানানো হয়নি হলে Quick Cash Sale দিয়ে পরিমাণ ও ছোট নোট লিখুন।',
+            statusText: 'বিক্রি বাদ পড়লে Drawer Adjustment দেবেন না',
+            buttonLabel: 'Quick Cash Sale দিন',
+            buttonColor: const Color(0xFF60A5FA),
+            onAction: () => QuickCashSaleBottomSheet.show(
+              context: context,
+              controller: controller,
+            ),
           ),
           const SizedBox(height: 12),
 
-          // Rule 3: Rush Hour Drawer Adjust
+          // Rule 3: Add a missed expense
           _buildGoldenRuleCard(
             context: context,
             ruleNumber: '৩',
-            title: 'ব্যস্ত সময়ে (Rush Hour) ভয় পাবেন না!',
+            title: 'ক্যাশ বাক্স থেকে খরচ লিখতে ভুলেছেন?',
             description:
-                'বিকেলে বা সন্ধ্যায় দোকানে ভিড় থাকলে সব পণ্যের কার্ট বানানো সম্ভব নাও হতে পারে। ভিড় কমার পর ক্যাশ বাক্সের টাকা গুনে অ্যাপে ⚖️ Adjust Cash Drawer বাটনে চাপ দিন। আপনার হাতের আসল টাকার সাথে সিস্টেমের হিসাব মুহূর্তে মিলে যাবে!',
-            statusText: 'বর্তমান ড্রয়ার এডজাস্টমেন্ট: ৳${_formatCurrency(drawerAdjustment)}',
-            buttonLabel: '⚖️ Adjust Cash Drawer',
-            buttonColor: const Color(0xFF0EA5E9),
-            onAction: () => AdjustCashDrawerBottomSheet.show(context: context, controller: controller),
+                'চা, পরিবহন, সাপ্লায়ার বা অন্য খরচের সঠিক ক্যাটাগরি, পরিমাণ এবং উদ্দেশ্য লিখে Add Expense দিন।',
+            statusText: 'রেকর্ডকৃত নগদ খরচ: ৳${_formatCurrency(cashExpenses)}',
+            buttonLabel: 'বাদ পড়া খরচ যোগ করুন',
+            buttonColor: const Color(0xFFF87171),
+            onAction: () => AddExpenseBottomSheet.show(
+              context: context,
+              controller: controller,
+            ),
           ),
           const SizedBox(height: 12),
 
-          // Rule 4: Night Galla Match
+          // Rule 4: Investigate and correct a verified difference
           _buildGoldenRuleCard(
             context: context,
             ruleNumber: '৪',
-            title: 'দোকান বন্ধের সময় "Galla Match" করুন',
+            title: 'গোনা ক্যাশ ও সিস্টেমের হিসাব মিলছে না?',
             description:
-                'রাত শেষে দোকান বন্ধ করার আগে অ্যাপের "Expected Cash in Drawer" এর টাকার সাথে আপনার ক্যাশ বাক্সের নোটগুলো গুনে মিলিয়ে নিন। মিলে গেলে নিশ্চিন্তে বাড়ি যান!',
-            statusText: 'ক্যাশ বাক্সে নোট থাকা উচিত: ৳${_formatCurrency(expectedDrawer)}',
-            buttonLabel: '✅ মিল হয়েছে কি যাচাই করুন',
+                'আগে বাদ পড়া বিক্রি, খরচ, রিফান্ড ও ভাংতির ভুল খুঁজুন। কারণ পাওয়া গেলে সঠিক এন্ট্রি দিন। অজানা বা প্রকৃত পার্থক্য থাকলেই নোটসহ Drawer Adjustment ব্যবহার করুন।',
+            statusText:
+                'Expected: ৳${_formatCurrency(expectedDrawer)} • Adjustment: ৳${_formatCurrency(drawerAdjustment)}',
+            buttonLabel: 'ক্যাশ মিলানোর ধাপ দেখুন',
             buttonColor: const Color(0xFFF59E0B),
-            onAction: () {
-              Get.snackbar(
-                'গাল্লা মেলান (Galla Match)',
-                'আপনার ক্যাশ বাক্সে ঠিক ৳${_formatCurrency(expectedDrawer)} টাকা নোট/কয়েন হিসেবে উপস্থিত আছে কি না গুনে মিলিয়ে নিন।',
-                backgroundColor: const Color(0xFF1E293B),
-                colorText: Colors.white,
-                snackPosition: SnackPosition.BOTTOM,
-                icon: const Icon(Icons.check_circle_outline_rounded, color: Color(0xFF10B981)),
-              );
-            },
+            onAction: () => _showClosingCashCheck(
+              context: context,
+              expectedDrawer: expectedDrawer,
+            ),
           ),
         ],
       ),
@@ -1039,7 +1813,10 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
                 ),
                 child: Text(
                   'নিয়ম $ruleNumber',
-                  style: TextStyle(color: buttonColor, fontSize: 10, fontWeight: FontWeight.w900),
+                  style: TextStyle(
+                      color: buttonColor,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900),
                 ),
               ),
               const SizedBox(width: 8),
@@ -1058,7 +1835,8 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             description,
-            style: const TextStyle(color: Colors.white70, fontSize: 11.5, height: 1.35),
+            style: const TextStyle(
+                color: Colors.white70, fontSize: 11.5, height: 1.35),
           ),
           const SizedBox(height: 8),
           Row(
@@ -1078,7 +1856,8 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
                 onTap: onAction,
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: buttonColor.withOpacity(0.18),
                     borderRadius: BorderRadius.circular(8),
@@ -1132,27 +1911,76 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
                   color: Color(0xFFF59E0B),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.stars_rounded, color: Colors.black, size: 18),
+                child: const Icon(Icons.stars_rounded,
+                    color: Colors.black, size: 18),
               ),
               const SizedBox(width: 10),
-              const Text(
-                '💡 সেলারদের জন্য একটি বিশেষ টিপস',
-                style: TextStyle(
-                  color: Color(0xFFFDE68A),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
+              const Expanded(
+                child: Text(
+                  'আংশিক নগদ + আংশিক বাকি কীভাবে লিখবেন',
+                  style: TextStyle(
+                    color: Color(0xFFFDE68A),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
           const Text(
-            '“যদি কাস্টমার ১,০০০ টাকার জিনিস কিনে ৩০০ টাকা নগদ দেয় আর ৭০০ টাকা বাকি রাখে — অ্যাপের হিসাব আপনার ক্যাশ বাক্সে যোগ করবে ৩০০ টাকা (নগদ), আর কাস্টমারের বাকি খাতায় যোগ করবে ৭০০ টাকা। ফলে আপনার নগদ ক্যাশ ও বাকির খাতা দুটোই নিখুঁত থাকবে!”',
+            'কাস্টমার ১,০০০ টাকার পণ্য নিয়ে ৩০০ টাকা নগদ দিল এবং ৭০০ টাকা বাকি রাখল। এই বিক্রিতে ক্যাশ বাক্সে শুধু ৩০০ টাকা যোগ হবে; ৭০০ টাকা কাস্টমারের পাওনা হিসেবে থাকবে।',
             style: TextStyle(
               color: Colors.white,
               fontSize: 12.5,
               fontWeight: FontWeight.w600,
               height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0F172A),
+              borderRadius: BorderRadius.circular(12),
+              border:
+                  Border.all(color: const Color(0xFFF59E0B).withOpacity(0.35)),
+            ),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'বিক্রির সময় যা করবেন',
+                  style: TextStyle(
+                    color: Color(0xFFFDE68A),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  '১. মোট বিল লিখুন: ৳১,০০০\n'
+                  '২. এখন পাওয়া নগদ লিখুন: ৳৩০০\n'
+                  '৩. কাস্টমারের বাকি লিখুন: ৳৭০০',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 11.5,
+                    height: 1.65,
+                  ),
+                ),
+                SizedBox(height: 7),
+                Text(
+                  'ভুল করবেন না: পুরো ৳১,০০০ Cash হিসেবে লিখলে ক্যাশ বাক্সের হিসাব ৳৭০০ বেশি দেখাবে।',
+                  style: TextStyle(
+                    color: Color(0xFFFCA5A5),
+                    fontSize: 11.5,
+                    height: 1.4,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 14),
@@ -1170,23 +1998,33 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
               children: [
                 const Row(
                   children: [
-                    Icon(Icons.shopping_cart_outlined, color: Colors.white70, size: 15),
+                    Icon(Icons.shopping_cart_outlined,
+                        color: Colors.white70, size: 15),
                     SizedBox(width: 6),
                     Text(
                       'মোট বিক্রয় বিল: ৳১,০০০',
-                      style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    const Text('├── ', style: TextStyle(color: Colors.white38, fontFamily: 'monospace')),
-                    const Icon(Icons.payments_outlined, color: Color(0xFF34D399), size: 14),
+                    const Text('├── ',
+                        style: TextStyle(
+                            color: Colors.white38, fontFamily: 'monospace')),
+                    const Icon(Icons.payments_outlined,
+                        color: Color(0xFF34D399), size: 14),
                     const SizedBox(width: 4),
                     const Text(
                       '৳৩০০ নগদ',
-                      style: TextStyle(color: Color(0xFF34D399), fontSize: 11.5, fontWeight: FontWeight.w800),
+                      style: TextStyle(
+                          color: Color(0xFF34D399),
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800),
                     ),
                     const Expanded(
                       child: Text(
@@ -1199,12 +2037,18 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    const Text('└── ', style: TextStyle(color: Colors.white38, fontFamily: 'monospace')),
-                    const Icon(Icons.menu_book_rounded, color: Color(0xFFF87171), size: 14),
+                    const Text('└── ',
+                        style: TextStyle(
+                            color: Colors.white38, fontFamily: 'monospace')),
+                    const Icon(Icons.menu_book_rounded,
+                        color: Color(0xFFF87171), size: 14),
                     const SizedBox(width: 4),
                     const Text(
                       '৳৭০০ বাকি',
-                      style: TextStyle(color: Color(0xFFF87171), fontSize: 11.5, fontWeight: FontWeight.w800),
+                      style: TextStyle(
+                          color: Color(0xFFF87171),
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800),
                     ),
                     const Expanded(
                       child: Text(
@@ -1283,7 +2127,8 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
               ),
               IconButton(
                 tooltip: 'শেয়ার বা কপি করুন',
-                icon: const Icon(Icons.share_rounded, color: Color(0xFF10B981), size: 20),
+                icon: const Icon(Icons.share_rounded,
+                    color: Color(0xFF10B981), size: 20),
                 onPressed: () {
                   Share.share(shareText, subject: 'MyZoo ক্যাশ ফ্লো রিপোর্ট');
                 },
@@ -1331,17 +2176,28 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
                       ),
                       Text(
                         dateRangeStr,
-                        style: const TextStyle(color: Colors.white38, fontSize: 10),
+                        style: const TextStyle(
+                            color: Colors.white38, fontSize: 10),
                       ),
                     ],
                   ),
                 ),
                 const Divider(color: Colors.white12, height: 20),
-                _buildReceiptRow('সকালের ওপেনিং ক্যাশ:', '৳${_formatCurrency(openingCash)}', Colors.white70),
-                _buildReceiptRow('মোট নগদ বিক্রি ও সংগ্রহ:', '+ ৳${_formatCurrency(cashInflow)}', const Color(0xFF34D399)),
-                _buildReceiptRow('নগদ খরচ (Expenses):', '- ৳${_formatCurrency(cashExpenses)}', const Color(0xFFF87171)),
+                _buildReceiptRow('সকালের ওপেনিং ক্যাশ:',
+                    '৳${_formatCurrency(openingCash)}', Colors.white70),
+                _buildReceiptRow(
+                    'মোট নগদ বিক্রি ও সংগ্রহ:',
+                    '+ ৳${_formatCurrency(cashInflow)}',
+                    const Color(0xFF34D399)),
+                _buildReceiptRow(
+                    'নগদ খরচ (Expenses):',
+                    '- ৳${_formatCurrency(cashExpenses)}',
+                    const Color(0xFFF87171)),
                 if (drawerAdjustment != 0)
-                  _buildReceiptRow('ড্রয়ার সমন্বয় (Adjustments):', '${drawerAdjustment > 0 ? '+' : ''} ৳${_formatCurrency(drawerAdjustment)}', const Color(0xFF60A5FA)),
+                  _buildReceiptRow(
+                      'ড্রয়ার সমন্বয় (Adjustments):',
+                      '${drawerAdjustment > 0 ? '+' : ''} ৳${_formatCurrency(drawerAdjustment)}',
+                      const Color(0xFF60A5FA)),
                 const Divider(color: Colors.white24, height: 16),
                 _buildReceiptRow(
                   '💵 ক্যাশ বাক্সে মোট টাকা (Expected):',
@@ -1350,9 +2206,18 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
                   isBold: true,
                 ),
                 const SizedBox(height: 6),
-                _buildReceiptRow('📱 ডিজিটাল ওয়ালেট সংগ্রহ:', '৳${_formatCurrency(kpis.totalDigitalPayments)}', const Color(0xFF60A5FA)),
-                _buildReceiptRow('🔴 নতুন বাকি দেওয়া হয়েছে:', '৳${_formatCurrency(kpis.todayNewBaki)}', const Color(0xFFF87171)),
-                _buildReceiptRow('🟢 মোট অনাদায়ী বকেয়া:', '৳${_formatCurrency(kpis.totalStoreOutstandingBaki)}', const Color(0xFFFBBF24)),
+                _buildReceiptRow(
+                    '📱 ডিজিটাল ওয়ালেট সংগ্রহ:',
+                    '৳${_formatCurrency(kpis.totalDigitalPayments)}',
+                    const Color(0xFF60A5FA)),
+                _buildReceiptRow(
+                    '🔴 নতুন বাকি দেওয়া হয়েছে:',
+                    '৳${_formatCurrency(kpis.todayNewBaki)}',
+                    const Color(0xFFF87171)),
+                _buildReceiptRow(
+                    '🟢 মোট অনাদায়ী বকেয়া:',
+                    '৳${_formatCurrency(kpis.totalStoreOutstandingBaki)}',
+                    const Color(0xFFFBBF24)),
               ],
             ),
           ),
@@ -1373,15 +2238,20 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
                       colorText: Colors.white,
                     );
                   },
-                  icon: const Icon(Icons.copy_rounded, size: 16, color: Colors.white70),
+                  icon: const Icon(Icons.copy_rounded,
+                      size: 16, color: Colors.white70),
                   label: const Text(
                     'রিপোর্ট কপি করুন',
-                    style: TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700),
                   ),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Colors.white24),
                     padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
               ),
@@ -1391,15 +2261,20 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
                   onPressed: () {
                     Share.share(shareText, subject: 'MyZoo ক্যাশ ফ্লো রিপোর্ট');
                   },
-                  icon: const Icon(Icons.share_rounded, size: 16, color: Colors.black),
+                  icon: const Icon(Icons.share_rounded,
+                      size: 16, color: Colors.black),
                   label: const Text(
                     'শেয়ার করুন',
-                    style: TextStyle(color: Colors.black, fontSize: 11.5, fontWeight: FontWeight.w800),
+                    style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w800),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF10B981),
                     padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
               ),
@@ -1410,7 +2285,8 @@ class SellerCashFlowGuideScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildReceiptRow(String label, String value, Color valueColor, {bool isBold = false}) {
+  Widget _buildReceiptRow(String label, String value, Color valueColor,
+      {bool isBold = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
