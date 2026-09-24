@@ -295,6 +295,7 @@ class ProductController extends GetxController {
         snackPosition: SnackPosition.BOTTOM,
       );
       resetProductAddForm();
+      getShopProductList();
       _isProductAddFlowPrepared = false;
       Get.offNamed(Routes.PRODUCT_LIST);
     }

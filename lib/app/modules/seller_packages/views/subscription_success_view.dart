@@ -55,7 +55,7 @@ class SubscriptionSuccessView extends StatelessWidget {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      Get.offAllNamed(Routes.SELLER_PACKAGES);
+                      Get.offAllNamed(Routes.ROOT);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF34D399),
@@ -66,7 +66,7 @@ class SubscriptionSuccessView extends StatelessWidget {
                       ),
                     ),
                     child: const Text(
-                      'Back to Packages',
+                      'Back to Home',
                       style: TextStyle(
                         fontWeight: FontWeight.w900,
                       ),
