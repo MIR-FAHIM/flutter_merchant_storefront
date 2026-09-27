@@ -175,6 +175,7 @@ class ProductData {
   final int? estShippingDays;
 
   final int? numOfSale;
+  final int? clickCount;
 
   final String? metaTitle;
   final String? metaDescription;
@@ -255,6 +256,7 @@ class ProductData {
     this.isQuantityMultiplied,
     this.estShippingDays,
     this.numOfSale,
+    this.clickCount,
     this.metaTitle,
     this.metaDescription,
     this.metaImg,
@@ -332,6 +334,7 @@ class ProductData {
       isQuantityMultiplied: _toInt(json['is_quantity_multiplied']),
       estShippingDays: _toInt(json['est_shipping_days']),
       numOfSale: _toInt(json['num_of_sale']),
+      clickCount: _toInt(json['click_count'] ?? json['clickCount']),
       metaTitle: json['meta_title']?.toString(),
       metaDescription: json['meta_description']?.toString(),
       metaImg: json['meta_img']?.toString(),
@@ -432,6 +435,7 @@ class ProductData {
       'is_quantity_multiplied': isQuantityMultiplied,
       'est_shipping_days': estShippingDays,
       'num_of_sale': numOfSale,
+      'click_count': clickCount,
       'meta_title': metaTitle,
       'meta_description': metaDescription,
       'meta_img': metaImg,
@@ -482,6 +486,19 @@ class ProductData {
     final int stock = currentStock ?? 0;
     final int lowStock = lowStockQuantity ?? 0;
     return stock > 0 && lowStock > 0 && stock <= lowStock;
+  }
+
+  bool get hasDiscount => (discount ?? 0) > 0;
+
+  String get discountBadgeText {
+    final num d = discount ?? 0;
+    if (d <= 0) return '';
+    final String val =
+        d % 1 == 0 ? d.toInt().toString() : d.toStringAsFixed(2);
+    if (discountType?.toLowerCase() == 'percent') {
+      return '$val% OFF';
+    }
+    return '৳$val OFF';
   }
 
   String imageUrl({

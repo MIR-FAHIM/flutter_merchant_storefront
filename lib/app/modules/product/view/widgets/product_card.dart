@@ -45,6 +45,9 @@ class ProductCard extends StatelessWidget {
                 imageUrl: hasImage ? imageUrl : null,
                 isOutOfStock: product.isOutOfStock,
                 isPublished: product.isPublished,
+                discountText:
+                    product.hasDiscount ? product.discountBadgeText : null,
+                clickCount: product.clickCount,
               ),
 
               Expanded(
@@ -67,15 +70,49 @@ class ProductCard extends StatelessWidget {
 
                       const Spacer(),
 
-                      Text(
-                        _formatMoney(product.unitPrice ?? 0),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Color(0xFF34D399),
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w900,
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _formatMoney(product.unitPrice ?? 0),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Color(0xFF34D399),
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                          if (product.hasDiscount) ...[
+                            const SizedBox(width: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 1.5,
+                              ),
+                              decoration: BoxDecoration(
+                                color:
+                                    const Color(0xFFEF4444).withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: const Color(0xFFEF4444)
+                                      .withOpacity(0.35),
+                                  width: 0.6,
+                                ),
+                              ),
+                              child: Text(
+                                product.discountBadgeText,
+                                maxLines: 1,
+                                style: const TextStyle(
+                                  color: Color(0xFFF87171),
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
 
                       const SizedBox(height: 5),
@@ -131,11 +168,15 @@ class _ProductImage extends StatelessWidget {
     required this.imageUrl,
     required this.isOutOfStock,
     required this.isPublished,
+    this.discountText,
+    this.clickCount,
   });
 
   final String? imageUrl;
   final bool isOutOfStock;
   final bool isPublished;
+  final String? discountText;
+  final int? clickCount;
 
   @override
   Widget build(BuildContext context) {
@@ -185,6 +226,24 @@ class _ProductImage extends StatelessWidget {
           ),
         ),
 
+        if (discountText != null && discountText!.isNotEmpty)
+          Positioned(
+            left: 5,
+            top: 5,
+            child: _DiscountBadge(text: discountText!),
+          ),
+
+        Positioned(
+          right: 5,
+          top: 5,
+          child: _StatusPill(
+            color: isPublished
+                ? const Color(0xFF34D399)
+                : const Color(0xFFFBBF24),
+            text: isPublished ? 'Live' : 'Draft',
+          ),
+        ),
+
         if (isOutOfStock)
           Positioned(
             left: 5,
@@ -208,18 +267,99 @@ class _ProductImage extends StatelessWidget {
               ),
             ),
           ),
+
         Positioned(
           right: 5,
-          top: 5,
-          child: _StatusPill(
-            color: isPublished
-                ? const Color(0xFF34D399)
-                : const Color(0xFFFBBF24),
-            text: isPublished ? 'Live' : 'Draft',
-          ),
+          bottom: 5,
+          child: _ClickCountBadge(count: clickCount ?? 0),
         ),
       ],
     );
+  }
+}
+
+class _DiscountBadge extends StatelessWidget {
+  const _DiscountBadge({
+    required this.text,
+  });
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEF4444),
+        borderRadius: BorderRadius.circular(999),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.35),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 8.5,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+class _ClickCountBadge extends StatelessWidget {
+  const _ClickCountBadge({
+    required this.count,
+  });
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.68),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.25),
+          width: 0.8,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.visibility_outlined,
+            color: Color(0xFFD1D5DB),
+            size: 10.5,
+          ),
+          const SizedBox(width: 3),
+          Text(
+            _formatCount(count),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 8.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _formatCount(int count) {
+    if (count >= 1000000) {
+      return '${(count / 1000000).toStringAsFixed(1)}M';
+    } else if (count >= 1000) {
+      return '${(count / 1000).toStringAsFixed(1)}k';
+    }
+    return '$count';
   }
 }
 
