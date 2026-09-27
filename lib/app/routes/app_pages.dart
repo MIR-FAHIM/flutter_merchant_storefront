@@ -22,7 +22,7 @@ import 'package:ecom_delivery_flutter/app/modules/order/view/order_detail_view.d
 import 'package:ecom_delivery_flutter/app/modules/order/view/order_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/product/binding/product_binding.dart';
 import 'package:ecom_delivery_flutter/app/modules/product/view/marketplace_categories_view.dart';
-import 'package:ecom_delivery_flutter/app/modules/product/view/product_add_view.dart';
+import 'package:ecom_delivery_flutter/app/modules/product/view/add_product/product_add_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/product/view/product_details_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/product/view/product_edit_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/product/view/product_list_view.dart';
