@@ -108,6 +108,7 @@ class HomeView extends GetView<HomeController> {
               ),
             ),
             actions: [
+              const _PackagePurchasePrompt(),
               InkWell(
                 onTap:(){
                   Get.toNamed(Routes.SELLER_CUSTOMER_LIST_VIEW);
@@ -207,12 +208,9 @@ class HomeView extends GetView<HomeController> {
               ),
             ],
           ),
-          body: Stack(
-            children: [
-              Positioned.fill(
-                child: dashboard == null
-                    ? const _DashboardLoading()
-                    : RefreshIndicator(
+          body: dashboard == null
+              ? const _DashboardLoading()
+              : RefreshIndicator(
                   onRefresh: () async {
                     await controller.refreshUnreadCount();
                     await controller.reportDashboardShopController();
@@ -427,11 +425,7 @@ class HomeView extends GetView<HomeController> {
                       ],
                     ),
                   ),
-                      ),
-              ),
-              const _PackagePurchasePrompt(),
-            ],
-          ),
+                ),
         );
       }),
     );
