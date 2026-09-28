@@ -207,9 +207,12 @@ class HomeView extends GetView<HomeController> {
               ),
             ],
           ),
-          body: dashboard == null
-              ? const _DashboardLoading()
-              : RefreshIndicator(
+          body: Stack(
+            children: [
+              Positioned.fill(
+                child: dashboard == null
+                    ? const _DashboardLoading()
+                    : RefreshIndicator(
                   onRefresh: () async {
                     await controller.refreshUnreadCount();
                     await controller.reportDashboardShopController();
@@ -424,9 +427,217 @@ class HomeView extends GetView<HomeController> {
                       ],
                     ),
                   ),
-                ),
+                      ),
+              ),
+              const _PackagePurchasePrompt(),
+            ],
+          ),
         );
       }),
+    );
+  }
+}
+
+class _PackagePurchasePrompt extends StatefulWidget {
+  const _PackagePurchasePrompt();
+
+  @override
+  State<_PackagePurchasePrompt> createState() =>
+      _PackagePurchasePromptState();
+}
+
+class _PackagePurchasePromptState extends State<_PackagePurchasePrompt> {
+  Worker? _profileWorker;
+  bool _handledThisVisit = false;
+  bool _dialogIsOpen = false;
+
+  HomeController get _controller => Get.find<HomeController>();
+
+  @override
+  void initState() {
+    super.initState();
+    _profileWorker = ever(
+      _controller.profileData,
+      (_) => _schedulePackageCheck(),
+    );
+    _schedulePackageCheck();
+  }
+
+  void _schedulePackageCheck() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showPackagePromptIfNeeded();
+    });
+  }
+
+  Future<void> _showPackagePromptIfNeeded() async {
+    if (!mounted || _handledThisVisit || _dialogIsOpen) return;
+
+    final profile = _controller.profileData.value;
+    final profileHasLoaded = profile.id != null || profile.mustBuyPackage != null;
+    if (!profileHasLoaded) return;
+
+    _handledThisVisit = true;
+    if (profile.mustBuyPackage != 1) return;
+
+    if (Get.isDialogOpen == true) {
+      _handledThisVisit = false;
+      Future<void>.delayed(
+        const Duration(milliseconds: 500),
+        _schedulePackageCheck,
+      );
+      return;
+    }
+
+    _dialogIsOpen = true;
+    final openPackages = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => const _PackagePurchaseDialog(),
+    );
+    _dialogIsOpen = false;
+
+    if (openPackages == true && mounted) {
+      await Get.toNamed(Routes.SELLER_PACKAGES);
+      if (mounted && Get.isRegistered<HomeController>()) {
+        _controller.getProfile();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _profileWorker?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
+}
+
+class _PackagePurchaseDialog extends StatelessWidget {
+  const _PackagePurchaseDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: const Color(0xFF1B1C1E),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+      contentPadding: const EdgeInsets.fromLTRB(20, 22, 20, 10),
+      actionsPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: AppColors.primaryColor.withOpacity(0.45)),
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              height: 48,
+              width: 48,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFBBF24).withOpacity(0.16),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.workspace_premium_rounded,
+                color: Color(0xFFFBBF24),
+                size: 28,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'packagePrompt.title'.tr,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'packagePrompt.subtitle'.tr,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 13,
+                height: 1.45,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _PackageBenefit(
+              icon: Icons.inventory_2_outlined,
+              text: 'packagePrompt.products'.tr,
+            ),
+            const SizedBox(height: 10),
+            _PackageBenefit(
+              icon: Icons.point_of_sale_outlined,
+              text: 'packagePrompt.orders'.tr,
+            ),
+            const SizedBox(height: 10),
+            _PackageBenefit(
+              icon: Icons.insights_outlined,
+              text: 'packagePrompt.reports'.tr,
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(
+            'packagePrompt.later'.tr,
+            style: const TextStyle(color: Colors.white60),
+          ),
+        ),
+        ElevatedButton.icon(
+          onPressed: () => Navigator.of(context).pop(true),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primaryColor,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+          label: Text(
+            'packagePrompt.viewPackages'.tr,
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PackageBenefit extends StatelessWidget {
+  const _PackageBenefit({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: const Color(0xFF6EE7B7), size: 19),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              height: 1.4,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

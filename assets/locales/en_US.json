@@ -107,6 +107,15 @@
     "sell": "Sell",
     "buyComingSoon": "Buying tools will be connected here."
   },
+  "packagePrompt": {
+    "title": "Choose a package for your store",
+    "subtitle": "Activate a subscription package to start using your seller tools and grow your storefront.",
+    "products": "Add products and keep stock up to date",
+    "orders": "Manage POS and online customer orders",
+    "reports": "Track store reports, cash flow, and performance",
+    "later": "Later",
+    "viewPackages": "View Packages"
+  },
   "orderReport": {
     "title": "Order Report",
     "today": "Today",

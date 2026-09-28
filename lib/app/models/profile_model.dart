@@ -59,6 +59,7 @@ class ProfileData {
   final String? phone;
   final int? balance;
   final int? banned;
+  final int? mustBuyPackage;
   final dynamic referralCode;
   final dynamic customerPackageId;
   final int? remainingUploads;
@@ -94,6 +95,7 @@ class ProfileData {
     this.phone,
     this.balance,
     this.banned,
+    this.mustBuyPackage,
     this.referralCode,
     this.customerPackageId,
     this.remainingUploads,
@@ -116,6 +118,7 @@ class ProfileData {
     userType: json["user_type"] as String?,
     name: json["name"] as String?,
     email: json["email"] as String?,
+    mustBuyPackage: _asInt(json["must_buy_package"]),
     emailVerifiedAt: _asDate(json["email_verified_at"]),
     deviceToken: json["device_token"],
     avatar: json["avatar"],
@@ -164,6 +167,7 @@ class ProfileData {
     "avatar_original": avatarOriginal,
     "address": address,
     "country": country,
+    "must_buy_package": mustBuyPackage,
     "state": state,
     "city": city,
     "postal_code": postalCode,
