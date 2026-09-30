@@ -40,6 +40,9 @@ abstract class Routes {
   static const CUSTOMER_LEDGER = _Paths.CUSTOMER_LEDGER;
   static const SHOP_CASH_FLOW_REPORT = _Paths.SHOP_CASH_FLOW_REPORT;
   static const CASH_FLOW_GUIDE = _Paths.CASH_FLOW_GUIDE;
+  static const CHALLENGES_LIST = _Paths.CHALLENGES_LIST;
+  static const CHALLENGE_CREATE = _Paths.CHALLENGE_CREATE;
+  static const CHALLENGE_DETAILS = _Paths.CHALLENGE_DETAILS;
 }
 
 abstract class _Paths {
@@ -79,4 +82,7 @@ abstract class _Paths {
   static const CUSTOMER_LEDGER = '/seller/baki-khata/ledger';
   static const SHOP_CASH_FLOW_REPORT = '/seller/reports/cash-flow';
   static const CASH_FLOW_GUIDE = '/seller/reports/cash-flow/guide';
+  static const CHALLENGES_LIST = '/seller/challenges';
+  static const CHALLENGE_CREATE = '/seller/challenges/create';
+  static const CHALLENGE_DETAILS = '/seller/challenges/details';
 }

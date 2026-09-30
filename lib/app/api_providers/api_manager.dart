@@ -270,6 +270,54 @@ class APIManager {
     }
   }
 
+  Future<Map<String, dynamic>> patchJsonWithHeaderStatus(
+      String url, Map<String, dynamic> param, Map<String, String> headerData) async {
+    print("Calling API: $url");
+    print("Calling parameters: $param");
+    headerData["Authorization"] =
+        "Bearer ${Get.find<AuthService>().currentUser.value.data!.token}";
+    headerData["Content-Type"] = "application/json";
+    headerData["Accept"] = "application/json";
+    print('token: $headerData');
+
+    try {
+      final response = await http.patch(
+        Uri.parse(url),
+        body: jsonEncode(param),
+        headers: headerData,
+      );
+      final body = _decodeResponseBody(response.body);
+
+      return {
+        'status_code': response.statusCode,
+        'body': body,
+      };
+    } on SocketException {
+      throw FetchDataException('No Internet connection');
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteWithHeaderStatus(
+      String url, Map<String, String> headerData) async {
+    print("Calling API: $url");
+    headerData["Authorization"] =
+        "Bearer ${Get.find<AuthService>().currentUser.value.data!.token}";
+    headerData["Accept"] = "application/json";
+    print('token: $headerData');
+
+    try {
+      final response = await http.delete(Uri.parse(url), headers: headerData);
+      final body = _decodeResponseBody(response.body);
+
+      return {
+        'status_code': response.statusCode,
+        'body': body,
+      };
+    } on SocketException {
+      throw FetchDataException('No Internet connection');
+    }
+  }
+
   Future<Map<String, dynamic>> postPublicJsonStatus(
       String url, Map<String, dynamic> param) async {
     try {

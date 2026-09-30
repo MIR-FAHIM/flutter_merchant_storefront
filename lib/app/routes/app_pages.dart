@@ -9,6 +9,10 @@ import 'package:ecom_delivery_flutter/app/modules/baki/views/customer_ledger_scr
 import 'package:ecom_delivery_flutter/app/modules/reports/bindings/shop_cash_flow_binding.dart';
 import 'package:ecom_delivery_flutter/app/modules/reports/views/shop_cash_flow_report_screen.dart';
 import 'package:ecom_delivery_flutter/app/modules/reports/views/seller_cash_flow_guide_screen.dart';
+import 'package:ecom_delivery_flutter/app/modules/challenge/bindings/challenge_binding.dart';
+import 'package:ecom_delivery_flutter/app/modules/challenge/views/challenge_detail_view.dart';
+import 'package:ecom_delivery_flutter/app/modules/challenge/views/challenge_list_view.dart';
+import 'package:ecom_delivery_flutter/app/modules/challenge/views/create_challenge_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/delivery_man/bindings/delivery_man_binding.dart';
 import 'package:ecom_delivery_flutter/app/modules/delivery_man/views/delivery_man_add_view.dart';
 import 'package:ecom_delivery_flutter/app/modules/delivery_man/views/delivery_man_list_view.dart';
@@ -203,6 +207,21 @@ class AppPages {
       name: _Paths.CASH_FLOW_GUIDE,
       page: () => const SellerCashFlowGuideScreen(),
       binding: ShopCashFlowBinding(),
+    ),
+    GetPage(
+      name: _Paths.CHALLENGES_LIST,
+      page: () => const ChallengeListView(),
+      binding: ChallengeBinding(),
+    ),
+    GetPage(
+      name: _Paths.CHALLENGE_CREATE,
+      page: () => const CreateChallengeView(),
+      binding: ChallengeBinding(),
+    ),
+    GetPage(
+      name: _Paths.CHALLENGE_DETAILS,
+      page: () => const ChallengeDetailView(),
+      binding: ChallengeBinding(),
     ),
   ];
 }

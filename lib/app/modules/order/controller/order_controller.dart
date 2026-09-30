@@ -6,6 +6,7 @@ import 'package:ecom_delivery_flutter/app/routes/app_pages.dart';
 import 'package:ecom_delivery_flutter/app/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 
 class OrderStatusOption {
   OrderStatusOption({
@@ -40,6 +41,7 @@ class OrderController extends GetxController {
 
   final ScrollController scrollController = ScrollController();
 
+  final RxList<OrderInfo> orders = <OrderInfo>[].obs;
   final RxList<ShopOrderItem> orderItems = <ShopOrderItem>[].obs;
 
   final RxBool isInitialLoading = false.obs;
@@ -82,31 +84,131 @@ class OrderController extends GetxController {
     selectedFilterStatus.value = 'all';
   }
 
+  List<OrderInfo> get filteredOrders {
+    return orders.where((order) {
+      // Filter status / type
+      final filter = selectedFilterStatus.value.toLowerCase().trim();
+      if (filter != 'all') {
+        final status = (order.status ?? '').toLowerCase();
+        final orderType = (order.orderType ?? '').toLowerCase();
+        final paymentMethod = (order.paymentMethod ?? '').toLowerCase();
+        final double dueAmount = order.dueAmount ?? 0;
+        final String orderNum = (order.orderNumber ?? '').toUpperCase();
+
+        if (filter == 'online') {
+          if (orderType != 'online' && orderNum.startsWith('POS-')) {
+            return false;
+          }
+        } else if (filter == 'pos') {
+          if (orderType != 'pos' && !orderNum.startsWith('POS-')) {
+            return false;
+          }
+        } else if (filter == 'baki') {
+          if (dueAmount <= 0 && paymentMethod != 'baki') {
+            return false;
+          }
+        } else if (filter == 'pending') {
+          if (status != 'pending' && status != 'unpaid') {
+            return false;
+          }
+        } else if (filter == 'confirmed' || filter == 'processing') {
+          if (status != 'confirmed' &&
+              status != 'processing' &&
+              status != 'accepted') {
+            return false;
+          }
+        } else if (filter == 'completed' || filter == 'delivered') {
+          if (status != 'completed' && status != 'delivered') {
+            return false;
+          }
+        } else if (filter == 'cancelled') {
+          if (status != 'cancelled' &&
+              status != 'canceled' &&
+              status != 'failed') {
+            return false;
+          }
+        }
+      }
+
+      // Search filter
+      if (searchQuery.value.trim().isNotEmpty) {
+        final query = searchQuery.value.trim().toLowerCase();
+        final orderNum = (order.orderNumber ?? '').toLowerCase();
+        final orderId = (order.id ?? '').toString().toLowerCase();
+        final customer = (order.customerName ?? order.user?.name ?? '').toLowerCase();
+        final phone = (order.customerPhone ?? order.user?.phone ?? '').toLowerCase();
+        final payment = (order.paymentMethod ?? '').toLowerCase();
+        final address = (order.shippingAddress ?? '').toLowerCase();
+
+        bool matchItem = false;
+        if (order.items != null) {
+          for (final item in order.items!) {
+            if ((item.productName ?? '').toLowerCase().contains(query) ||
+                (item.sku ?? '').toLowerCase().contains(query)) {
+              matchItem = true;
+              break;
+            }
+          }
+        }
+
+        return orderNum.contains(query) ||
+            orderId.contains(query) ||
+            customer.contains(query) ||
+            phone.contains(query) ||
+            payment.contains(query) ||
+            address.contains(query) ||
+            matchItem;
+      }
+
+      return true;
+    }).toList();
+  }
+
   List<ShopOrderItem> get filteredOrderItems {
     return orderItems.where((item) {
       final order = item.order;
 
       // Status filter
-      if (selectedFilterStatus.value != 'all') {
+      final filter = selectedFilterStatus.value.toLowerCase().trim();
+      if (filter != 'all') {
         final status = (item.status ?? order?.status ?? '').toLowerCase();
-        if (selectedFilterStatus.value == 'pending' &&
-            status != 'pending' &&
-            status != 'unpaid') {
-          return false;
-        } else if (selectedFilterStatus.value == 'processing' &&
-            status != 'processing' &&
-            status != 'confirmed' &&
-            status != 'accepted') {
-          return false;
-        } else if (selectedFilterStatus.value == 'delivered' &&
-            status != 'delivered' &&
-            status != 'completed') {
-          return false;
-        } else if (selectedFilterStatus.value == 'cancelled' &&
-            status != 'cancelled' &&
-            status != 'canceled' &&
-            status != 'failed') {
-          return false;
+        final orderType = (order?.orderType ?? '').toLowerCase();
+        final paymentMethod = (order?.paymentMethod ?? '').toLowerCase();
+        final double dueAmount = order?.dueAmount ?? 0;
+        final String orderNum = (order?.orderNumber ?? '').toUpperCase();
+
+        if (filter == 'online') {
+          if (orderType != 'online' && orderNum.startsWith('POS-')) {
+            return false;
+          }
+        } else if (filter == 'pos') {
+          if (orderType != 'pos' && !orderNum.startsWith('POS-')) {
+            return false;
+          }
+        } else if (filter == 'baki') {
+          if (dueAmount <= 0 && paymentMethod != 'baki') {
+            return false;
+          }
+        } else if (filter == 'pending') {
+          if (status != 'pending' && status != 'unpaid') {
+            return false;
+          }
+        } else if (filter == 'confirmed' || filter == 'processing') {
+          if (status != 'processing' &&
+              status != 'confirmed' &&
+              status != 'accepted') {
+            return false;
+          }
+        } else if (filter == 'completed' || filter == 'delivered') {
+          if (status != 'delivered' && status != 'completed') {
+            return false;
+          }
+        } else if (filter == 'cancelled') {
+          if (status != 'cancelled' &&
+              status != 'canceled' &&
+              status != 'failed') {
+            return false;
+          }
         }
       }
 
@@ -154,7 +256,27 @@ class OrderController extends GetxController {
   }
 
   String _resolveShopId() {
-    return Get.find<AuthService>().currentUser.value.data!.user!.id.toString();
+    try {
+      final user = Get.find<AuthService>().currentUser.value.data?.user;
+      final shopId = user?.shop?.id?.toString();
+      if (shopId != null && shopId.isNotEmpty && shopId != '0') {
+        return shopId;
+      }
+      final userId = user?.id?.toString();
+      if (userId != null && userId.isNotEmpty && userId != '0') {
+        return userId;
+      }
+    } catch (_) {}
+
+    final box = GetStorage();
+    final saved = box.read('storeId') ??
+        box.read('shopId') ??
+        box.read('selected_store_id');
+    if (saved != null && saved.toString().isNotEmpty) {
+      return saved.toString();
+    }
+
+    return defaultShopId;
   }
 
   void _onScroll() {
@@ -184,7 +306,7 @@ class OrderController extends GetxController {
         currentPage.value = 1;
       }
 
-      isInitialLoading.value = orderItems.isEmpty;
+      isInitialLoading.value = orders.isEmpty && orderItems.isEmpty;
 
       final response = await _orderRepository.shopOrderList(
         shopId: shopId,
@@ -193,20 +315,26 @@ class OrderController extends GetxController {
       );
 
       final ShopOrderResponseModel model =
-      ShopOrderResponseModel.fromJson(Map<String, dynamic>.from(response));
+          ShopOrderResponseModel.fromJson(Map<String, dynamic>.from(response));
 
       if (model.isSuccess) {
         final ShopOrderPagination? pagination = model.data;
+        final List<OrderInfo> newOrders = pagination?.orderList ?? [];
+        final List<ShopOrderItem> newItems = pagination?.orders ?? [];
 
-        orderItems.assignAll(pagination?.orders ?? []);
+        orders.assignAll(newOrders);
+        orderItems.assignAll(newItems);
         currentPage.value = pagination?.currentPage ?? 1;
         lastPage.value = pagination?.lastPage ?? 1;
-        totalOrders.value = pagination?.total ?? orderItems.length;
+        totalOrders.value = pagination?.total ??
+            (newOrders.isNotEmpty ? newOrders.length : newItems.length);
       } else {
+        orders.clear();
         orderItems.clear();
         errorMessage.value = model.message ?? 'Failed to load orders';
       }
     } catch (e) {
+      orders.clear();
       orderItems.clear();
       errorMessage.value = e.toString();
       debugPrint('getShopOrderList error: $e');
@@ -232,12 +360,15 @@ class OrderController extends GetxController {
       );
 
       final ShopOrderResponseModel model =
-      ShopOrderResponseModel.fromJson(Map<String, dynamic>.from(response));
+          ShopOrderResponseModel.fromJson(Map<String, dynamic>.from(response));
 
       if (model.isSuccess) {
         final ShopOrderPagination? pagination = model.data;
+        final List<OrderInfo> newOrders = pagination?.orderList ?? [];
+        final List<ShopOrderItem> newItems = pagination?.orders ?? [];
 
-        orderItems.addAll(pagination?.orders ?? []);
+        orders.addAll(newOrders);
+        orderItems.addAll(newItems);
         currentPage.value = pagination?.currentPage ?? nextPage;
         lastPage.value = pagination?.lastPage ?? lastPage.value;
         totalOrders.value = pagination?.total ?? totalOrders.value;
@@ -252,11 +383,25 @@ class OrderController extends GetxController {
     }
   }
 
+  Future<void> openOrder(OrderInfo order) async {
+    selectedOrder.value = order;
+    selectedOrderItem.value = (order.items != null && order.items!.isNotEmpty)
+        ? order.items!.first
+        : null;
+
+    Get.toNamed(Routes.ORDER_SHOP_DETAIL);
+
+    final int? orderId = order.id;
+    if (orderId != null) {
+      await getOrderDetails(orderId.toString());
+    }
+  }
+
   Future<void> openOrderDetail(ShopOrderItem item) async {
     selectedOrderItem.value = item;
     selectedOrder.value = item.order;
 
-   Get.toNamed(Routes.ORDER_SHOP_DETAIL);
+    Get.toNamed(Routes.ORDER_SHOP_DETAIL);
 
     final int? orderId = item.orderId ?? item.order?.id;
 
@@ -379,33 +524,14 @@ class OrderController extends GetxController {
         statusUpdateMessage.value = payload['message']?.toString() ?? 'Order status updated successfully';
 
         if (selectedOrder.value != null) {
-          selectedOrder.value = OrderInfo(
-            id: selectedOrder.value!.id,
-            userId: selectedOrder.value!.userId,
-            orderNumber: selectedOrder.value!.orderNumber,
-            paymentGroupId: selectedOrder.value!.paymentGroupId,
-            status: normalizedStatus,
-            paymentStatus: selectedOrder.value!.paymentStatus,
-            customerName: selectedOrder.value!.customerName,
-            customerPhone: selectedOrder.value!.customerPhone,
-            shippingAddress: selectedOrder.value!.shippingAddress,
-            zone: selectedOrder.value!.zone,
-            district: selectedOrder.value!.district,
-            area: selectedOrder.value!.area,
-            lat: selectedOrder.value!.lat,
-            lon: selectedOrder.value!.lon,
-            subtotal: selectedOrder.value!.subtotal,
-            shippingFee: selectedOrder.value!.shippingFee,
-            discount: selectedOrder.value!.discount,
-            total: selectedOrder.value!.total,
-            note: selectedOrder.value!.note,
-            platform: selectedOrder.value!.platform,
-            userAddressId: selectedOrder.value!.userAddressId,
-            isActive: selectedOrder.value!.isActive,
-            createdAt: selectedOrder.value!.createdAt,
-            updatedAt: selectedOrder.value!.updatedAt,
-            user: selectedOrder.value!.user,
-          );
+          selectedOrder.value = selectedOrder.value!.copyWith(status: normalizedStatus);
+        }
+
+        final int parsedId = int.tryParse(orderId) ?? 0;
+        final int orderIdx = orders.indexWhere((o) => o.id == parsedId);
+        if (orderIdx != -1) {
+          orders[orderIdx] = orders[orderIdx].copyWith(status: normalizedStatus);
+          orders.refresh();
         }
 
         if (selectedOrderItem.value != null) {

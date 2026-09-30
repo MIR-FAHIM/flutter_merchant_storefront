@@ -372,6 +372,14 @@ class HomeView extends GetView<HomeController> {
                                 Get.toNamed(Routes.SHOP_CASH_FLOW_REPORT);
                               },
                             ),
+                            _QuickActionCard(
+                              title: "Challenges",
+                              icon: Icons.emoji_events_outlined,
+                              color: const Color(0xFFF59E0B),
+                              onTap: () {
+                                Get.toNamed(Routes.CHALLENGES_LIST);
+                              },
+                            ),
                           ],
                         ),
                         const SizedBox(height: 18),
@@ -2003,6 +2011,15 @@ class _ShopDashboardDrawer extends StatelessWidget {
                       onTap: () {
                         Navigator.pop(context);
                         Get.toNamed(Routes.SHOP_CASH_FLOW_REPORT);
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.emoji_events_outlined,
+                      title: "Reward Races",
+                      color: const Color(0xFFF59E0B),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Get.toNamed(Routes.CHALLENGES_LIST);
                       },
                     ),
                     _DrawerItem(

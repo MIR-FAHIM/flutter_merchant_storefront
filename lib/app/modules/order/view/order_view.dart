@@ -43,15 +43,22 @@ class OrderListView extends GetView<OrderController> {
           );
         }
 
-        if (controller.errorMessage.value.isNotEmpty &&
-            controller.orderItems.isEmpty) {
+        final bool hasAnyOrders =
+            controller.orders.isNotEmpty || controller.orderItems.isNotEmpty;
+
+        if (controller.errorMessage.value.isNotEmpty && !hasAnyOrders) {
           return _OrderErrorView(
             message: controller.errorMessage.value,
             onRetry: controller.refreshOrders,
           );
         }
 
-        final filteredItems = controller.filteredOrderItems;
+        final filteredOrders = controller.filteredOrders;
+        final totalCount = controller.totalOrders.value > 0
+            ? controller.totalOrders.value
+            : (controller.orders.isNotEmpty
+                ? controller.orders.length
+                : controller.orderItems.length);
 
         return RefreshIndicator(
           onRefresh: controller.refreshOrders,
@@ -71,8 +78,8 @@ class OrderListView extends GetView<OrderController> {
                     children: [
                       // Overview Header Card
                       _OrderHeader(
-                        total: controller.totalOrders.value,
-                        showing: filteredItems.length,
+                        total: totalCount,
+                        showing: filteredOrders.length,
                       ),
                       const SizedBox(height: 12),
 
@@ -82,7 +89,7 @@ class OrderListView extends GetView<OrderController> {
                         style: const TextStyle(color: Colors.white, fontSize: 13.5),
                         onChanged: (val) => controller.setSearchQuery(val),
                         decoration: InputDecoration(
-                          hintText: 'Search order #, product, customer, SKU...',
+                          hintText: 'Search order #, customer, phone, product...',
                           hintStyle: const TextStyle(color: Color(0xFF6B7280), fontSize: 13),
                           prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF9CA3AF), size: 20),
                           suffixIcon: controller.searchQuery.value.isNotEmpty
@@ -119,24 +126,48 @@ class OrderListView extends GetView<OrderController> {
                             ),
                             const SizedBox(width: 8),
                             _FilterPill(
+                              label: 'Online',
+                              icon: Icons.language_rounded,
+                              isSelected: controller.selectedFilterStatus.value == 'online',
+                              color: const Color(0xFF38BDF8),
+                              onTap: () => controller.setFilterStatus('online'),
+                            ),
+                            const SizedBox(width: 8),
+                            _FilterPill(
+                              label: 'POS',
+                              icon: Icons.point_of_sale_rounded,
+                              isSelected: controller.selectedFilterStatus.value == 'pos',
+                              color: const Color(0xFF14B8A6),
+                              onTap: () => controller.setFilterStatus('pos'),
+                            ),
+                            const SizedBox(width: 8),
+                            _FilterPill(
+                              label: 'Baki (Due)',
+                              icon: Icons.warning_amber_rounded,
+                              isSelected: controller.selectedFilterStatus.value == 'baki',
+                              color: const Color(0xFFF59E0B),
+                              onTap: () => controller.setFilterStatus('baki'),
+                            ),
+                            const SizedBox(width: 8),
+                            _FilterPill(
+                              label: 'Confirmed',
+                              isSelected: controller.selectedFilterStatus.value == 'confirmed',
+                              color: const Color(0xFF3B82F6),
+                              onTap: () => controller.setFilterStatus('confirmed'),
+                            ),
+                            const SizedBox(width: 8),
+                            _FilterPill(
                               label: 'Pending',
                               isSelected: controller.selectedFilterStatus.value == 'pending',
-                              color: const Color(0xFFF59E0B),
+                              color: const Color(0xFFF97316),
                               onTap: () => controller.setFilterStatus('pending'),
                             ),
                             const SizedBox(width: 8),
                             _FilterPill(
-                              label: 'Processing',
-                              isSelected: controller.selectedFilterStatus.value == 'processing',
-                              color: const Color(0xFF3B82F6),
-                              onTap: () => controller.setFilterStatus('processing'),
-                            ),
-                            const SizedBox(width: 8),
-                            _FilterPill(
-                              label: 'Delivered',
-                              isSelected: controller.selectedFilterStatus.value == 'delivered',
+                              label: 'Completed',
+                              isSelected: controller.selectedFilterStatus.value == 'completed',
                               color: const Color(0xFF10B981),
-                              onTap: () => controller.setFilterStatus('delivered'),
+                              onTap: () => controller.setFilterStatus('completed'),
                             ),
                             const SizedBox(width: 8),
                             _FilterPill(
@@ -154,7 +185,7 @@ class OrderListView extends GetView<OrderController> {
               ),
 
               // Empty Filter State
-              if (filteredItems.isEmpty && controller.orderItems.isNotEmpty)
+              if (filteredOrders.isEmpty && hasAnyOrders)
                 SliverFillRemaining(
                   hasScrollBody: false,
                   child: Center(
@@ -189,7 +220,7 @@ class OrderListView extends GetView<OrderController> {
                     ),
                   ),
                 )
-              else if (controller.orderItems.isEmpty)
+              else if (!hasAnyOrders)
                 SliverFillRemaining(
                   hasScrollBody: false,
                   child: _OrderEmptyView(onRefresh: controller.refreshOrders),
@@ -201,7 +232,7 @@ class OrderListView extends GetView<OrderController> {
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
-                        if (index == filteredItems.length) {
+                        if (index == filteredOrders.length) {
                           return Obx(() {
                             if (controller.isMoreLoading.value) {
                               return const Padding(
@@ -212,7 +243,7 @@ class OrderListView extends GetView<OrderController> {
                               );
                             }
 
-                            if (!controller.hasMore && controller.orderItems.isNotEmpty) {
+                            if (!controller.hasMore && hasAnyOrders) {
                               return const Padding(
                                 padding: EdgeInsets.only(top: 16, bottom: 8),
                                 child: Center(
@@ -232,17 +263,17 @@ class OrderListView extends GetView<OrderController> {
                           });
                         }
 
-                        final item = filteredItems[index];
+                        final order = filteredOrders[index];
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: OrderCard(
-                            item: item,
-                            onTap: () => controller.openOrderDetail(item),
+                            order: order,
+                            onTap: () => controller.openOrder(order),
                           ),
                         );
                       },
-                      childCount: filteredItems.length + 1,
+                      childCount: filteredOrders.length + 1,
                     ),
                   ),
                 ),
@@ -260,12 +291,14 @@ class _FilterPill extends StatelessWidget {
     required this.isSelected,
     required this.onTap,
     this.color,
+    this.icon,
   });
 
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
   final Color? color;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
@@ -275,22 +308,37 @@ class _FilterPill extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
         decoration: BoxDecoration(
-          color: isSelected ? activeColor.withValues(alpha: 0.18) : OrderListView.cardColor,
+          color: isSelected
+              ? activeColor.withValues(alpha: 0.18)
+              : OrderListView.cardColor,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? activeColor : OrderListView.borderColor,
             width: isSelected ? 1.5 : 1,
           ),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? activeColor : const Color(0xFF9CA3AF),
-            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-            fontSize: 12,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(
+                icon,
+                size: 13,
+                color: isSelected ? activeColor : const Color(0xFF9CA3AF),
+              ),
+              const SizedBox(width: 5),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? activeColor : const Color(0xFF9CA3AF),
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                fontSize: 12,
+              ),
+            ),
+          ],
         ),
       ),
     );

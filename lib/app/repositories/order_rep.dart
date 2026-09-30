@@ -16,7 +16,7 @@ class OrderRepository {
     final APIManager manager = APIManager();
 
     final String url =
-        '${ApiClient.shopOrderList}$shopId?page=$page&per_page=$perPage';
+        '${ApiClient.storeOrderList(shopId)}?page=$page&per_page=$perPage';
 
     final response = await manager.getWithHeader(url, {});
 

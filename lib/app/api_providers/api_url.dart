@@ -54,6 +54,8 @@ class ApiClient {
   static const String publicStoreProducts = '$baseUrl/api/products/list';
   static const String publicStoreFeaturedProducts = '$baseUrl/api/products/list/featured';
   static const String publicStoreTodayDealProducts = '$baseUrl/api/products/list/today-deal';
+  static String storeOrderList(dynamic storeId) =>
+      '$baseUrl/api/orders/store/$storeId/list';
   static const String shopOrderList = '$baseUrl/api/orders/shop/';
   static const String shopUserOrders = '$baseUrl/api/orders/user-orders-by-shop';
   static const String shopOrderReport = '$baseUrl/api/orders/shop/';
@@ -135,4 +137,21 @@ class ApiClient {
       '$baseUrl/api/seller/stores/$storeId/cash-logs/expense';
   static String cashLogAdjustDrawer(String storeId) =>
       '$baseUrl/api/seller/stores/$storeId/cash-logs/adjust-drawer';
+
+  // Seller Challenges & Reward Races
+  static String sellerChallenges(dynamic shopId) =>
+      '$baseUrl/api/seller/challenges?shop_id=$shopId';
+  static const String createSellerChallenge = '$baseUrl/api/seller/challenges';
+  static String challengeStatistics(dynamic challengeId) =>
+      '$baseUrl/api/seller/challenges/$challengeId/statistics';
+  static String challengeParticipants(
+    dynamic challengeId, {
+    int page = 1,
+    int perPage = 20,
+  }) =>
+      '$baseUrl/api/seller/challenges/$challengeId/participants?page=$page&per_page=$perPage';
+  static String deleteSellerChallenge(dynamic challengeId) =>
+      '$baseUrl/api/seller/challenges/$challengeId';
+  static String toggleSellerChallengeStatus(dynamic challengeId) =>
+      '$baseUrl/api/seller/challenges/$challengeId/status';
 }
