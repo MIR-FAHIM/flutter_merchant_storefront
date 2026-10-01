@@ -6,44 +6,62 @@ import 'package:get/get.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:ecom_delivery_flutter/main.dart';
 
-
 class FireBaseMessagingService extends GetxService {
   late List<String?> numbers;
   final FlutterTts _flutterTts = FlutterTts();
-  Future<FireBaseMessagingService> init() async {
 
-    firebaseCloudMessagingListeners();
+  static const String orderChannelId = 'new_order_channel_v1';
 
-    var initializationSettingsAndroid =
-        const AndroidInitializationSettings('@drawable/notification_icon');
-    var initialzationSettings =
-        InitializationSettings(android: initializationSettingsAndroid);
+  final AndroidNotificationChannel channel = const AndroidNotificationChannel(
+    'high_importance_channel',
+    'High Importance Notifications',
+    description: 'Important seller notifications',
+    importance: Importance.high,
+    playSound: true,
+  );
 
-    flutterLocalNotificationsPlugin.initialize(initialzationSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse response) async {
-        // Handle the notification tap here
-        print('Notification tapped: ${response.payload}');
-      },);
-
-    return this;
-  }
-
-  AndroidNotificationChannel channel = const AndroidNotificationChannel(
-      'high_importance_channel', // id
-      'High Importance Notifications', // title
-      // 'This channel is used for important notifications.', // description
-      importance: Importance.high,
-      playSound: true);
+  final AndroidNotificationChannel orderChannel =
+      const AndroidNotificationChannel(
+    orderChannelId,
+    'New Orders',
+    description: 'Notifications for newly received orders',
+    importance: Importance.max,
+    playSound: true,
+    sound: RawResourceAndroidNotificationSound('new_order'),
+  );
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
+
+  Future<FireBaseMessagingService> init() async {
+    const initializationSettings = InitializationSettings(
+      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      iOS: DarwinInitializationSettings(),
+    );
+
+    await flutterLocalNotificationsPlugin.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: (NotificationResponse response) async {
+        print('Notification tapped: ${response.payload}');
+      },
+    );
+
+    final androidNotifications =
+        flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+    await androidNotifications?.createNotificationChannel(channel);
+    await androidNotifications?.createNotificationChannel(orderChannel);
+
+    firebaseCloudMessagingListeners();
+
+    return this;
+  }
 
   void firebaseCloudMessagingListeners() {
     ///gives you the message on which user taps
     ///and it opened the app from terminated state
     FirebaseMessaging.instance.getInitialMessage().then((message) async {
       if (message != null) {
-        RemoteNotification notification = message.notification!;
         _handleChatNavigation(message.data);
         type = message.data['notification_type'] != '' &&
                 message.data['notification_type'] != null
@@ -86,47 +104,47 @@ class FireBaseMessagingService extends GetxService {
         .requestPermission(sound: true, badge: true, alert: true);
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      RemoteNotification notification = message.notification!;
-      print(notification.title!);
-      print("I am here");
-    //  _speak(notification.body!);
-      print('I am in on message function:${message.data['notification_type']}');
-      //new added
-      // NotificationLocal.showBigTextNotification(title: notification.title!, body: "hlw",
-      //     fln: flutterLocalNotificationsPlugin, payload:"3" );
-      // new end
+      final notification = message.notification;
+      final title = notification?.title ??
+          message.data['title']?.toString() ??
+          (_isNewOrder(message.data) ? 'New order received' : 'MyZoo');
+      final body = notification?.body ??
+          message.data['body']?.toString() ??
+          message.data['message']?.toString() ??
+          '';
+      final isNewOrder = _isNewOrder(message.data);
+      final selectedChannel = isNewOrder ? orderChannel : channel;
 
-      // snackbar
-
-      flutterLocalNotificationsPlugin.show(
-        message.data.hashCode,
-        notification.title!,
-        notification.body!,
+      await flutterLocalNotificationsPlugin.show(
+        message.messageId?.hashCode ?? message.data.hashCode,
+        title,
+        body,
         NotificationDetails(
           android: AndroidNotificationDetails(
-            channel.id,
-            channel.name,
-            // channel.description,
-            // TODO add a proper drawable resource to android, for now using
-            //      one that already exists in example app.
-            // icon: message.notification!.android!.smallIcon,
+            selectedChannel.id,
+            selectedChannel.name,
+            channelDescription: selectedChannel.description,
+            importance: isNewOrder ? Importance.max : Importance.high,
+            priority: Priority.high,
+            playSound: true,
+            sound: isNewOrder
+                ? const RawResourceAndroidNotificationSound('new_order')
+                : null,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+            sound: isNewOrder ? 'new_order.wav' : null,
           ),
         ),
-        payload: notification.title!.contains("Robi Recharge")
-            ? notification.body!
-            : notification.title!.contains("Airtel Recharge")
-                ? notification.body!
-                : notification.title!.contains("Teletalk Recharge")
-                    ? notification.body!
-                    : message.data['notification_type'].toString(),
+        payload: _notificationPayload(message, title, body),
       );
-
     });
     print("starting on message opened app function ++++++++++++++++++++++ ");
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
       print("i am in on message opened app function ");
 
-      RemoteNotification notification = message.notification!;
       _handleChatNavigation(message.data);
       String? payloadOfOpenedApp =
           message.data['notification_type']?.toString() ?? '';
@@ -136,7 +154,7 @@ class FireBaseMessagingService extends GetxService {
       //   message: notification.body!,
       // ));
       print(
-          'on message opened app ${payloadOfOpenedApp} : ${message.notification!.title!}');
+          'on message opened app $payloadOfOpenedApp : ${message.notification?.title ?? ''}');
       print("on message opened app 7777777 ");
       // flutterLocalNotificationsPlugin.show(
       //     message.data.hashCode,
@@ -152,10 +170,36 @@ class FireBaseMessagingService extends GetxService {
       //         // icon: message.notification!.android!.smallIcon,
       //       ),
       //     ));
-
-
-
     });
+  }
+
+  bool _isNewOrder(Map<String, dynamic> data) {
+    final notificationType = (data['type'] ??
+            data['notification_type'] ??
+            data['notification_sub_type'] ??
+            '')
+        .toString()
+        .trim()
+        .toLowerCase();
+
+    return notificationType == 'order_created' ||
+        notificationType == 'new_order' ||
+        notificationType == 'new-order';
+  }
+
+  String _notificationPayload(
+    RemoteMessage message,
+    String title,
+    String body,
+  ) {
+    if (title.contains('Robi Recharge') ||
+        title.contains('Airtel Recharge') ||
+        title.contains('Teletalk Recharge')) {
+      return body;
+    }
+
+    return (message.data['notification_type'] ?? message.data['type'] ?? '')
+        .toString();
   }
 
   void _handleChatNavigation(Map<String, dynamic> data) {
@@ -187,11 +231,8 @@ class FireBaseMessagingService extends GetxService {
   void onSelectNotification(String? payload) async {
     print("I am in onselect notification function $payload");
 
-
-
     // Map notificationModelMap = jsonDecode(payload!);
   }
-
 
   Future<void> _speak(String text) async {
     print("i am talking to you >>>>>>>>>");
