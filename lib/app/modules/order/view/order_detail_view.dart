@@ -1071,10 +1071,20 @@ class _OrderLifecycleCardState extends State<_OrderLifecycleCard> {
     if (['cancelled', 'canceled', 'rejected', 'failed'].contains(s)) {
       return -1;
     }
-    if (['delivered', 'completed', 'fulfilled'].contains(s)) {
+    if (['completed', 'fulfilled'].contains(s)) {
       return 3;
     }
-    if (['processing', 'shipping', 'shipped', 'in_transit', 'packed', 'picked_up'].contains(s)) {
+    if ([
+      'processing',
+      'shipping',
+      'shipped',
+      'in_transit',
+      'out for delivery',
+      'out_for_delivery',
+      'packed',
+      'picked_up',
+      'delivered',
+    ].contains(s)) {
       return 2;
     }
     if (['confirmed', 'accepted', 'approved'].contains(s)) {
@@ -1277,7 +1287,7 @@ class _OrderLifecycleCardState extends State<_OrderLifecycleCard> {
                 ),
               ),
             ] else if (stepIndex == 2) ...[
-              // Status: Processing -> Next: Delivered / Completed
+              // Delivery stages -> final backend status: Completed
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -1287,7 +1297,7 @@ class _OrderLifecycleCardState extends State<_OrderLifecycleCard> {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  onPressed: isUpdating ? null : () => _updateStatus('delivered'),
+                  onPressed: isUpdating ? null : () => _updateStatus('completed'),
                   icon: isUpdating
                       ? const SizedBox(
                           width: 16,
@@ -1296,7 +1306,7 @@ class _OrderLifecycleCardState extends State<_OrderLifecycleCard> {
                         )
                       : const Icon(Icons.task_alt_rounded, size: 18),
                   label: const Text(
-                    'Complete & Mark Delivered',
+                    'Mark Order Completed',
                     style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13.5),
                   ),
                 ),
@@ -1315,7 +1325,7 @@ class _OrderLifecycleCardState extends State<_OrderLifecycleCard> {
                     SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Order delivered and fulfilled successfully',
+                        'Order completed and closed successfully',
                         style: TextStyle(
                           color: OrderDetailView.emeraldColor,
                           fontWeight: FontWeight.w700,
@@ -1475,7 +1485,7 @@ class _ProgressStepper extends StatelessWidget {
     {'title': 'Placed', 'subtitle': 'Pending'},
     {'title': 'Confirmed', 'subtitle': 'Accepted'},
     {'title': 'Shipping', 'subtitle': 'In Transit'},
-    {'title': 'Delivered', 'subtitle': 'Complete'},
+    {'title': 'Completed', 'subtitle': 'Closed'},
   ];
 
   @override

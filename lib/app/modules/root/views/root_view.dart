@@ -70,7 +70,7 @@ class RootView extends GetView<RootController> {
                     },
                   ),
                   _BottomBarItem(
-                    icon: 'assets/icons/home.png',
+                    icon: 'assets/icons/billpay.png',
                     label: 'Orders',
                     isSelected: controller.currentIndex.value == 1,
                     badgeCount: controller.pendingOrderCount.value,
