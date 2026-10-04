@@ -20,11 +20,11 @@ class CreateChallengeView extends GetView<CreateChallengeController> {
         backgroundColor: _cardColor,
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
-          'Create Challenge',
+          'নতুন চ্যালেঞ্জ তৈরি করুন',
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w900,
-            fontSize: 19,
+            fontSize: 18,
           ),
         ),
       ),
@@ -35,10 +35,10 @@ class CreateChallengeView extends GetView<CreateChallengeController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top Info Banner
-              _buildTopInfoBanner(),
+              // Top Guide Note: What to do and Why to do
+              _buildGuideNote(),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
 
               // Error Message Banner (if any)
               Obx(() {
@@ -83,11 +83,11 @@ class CreateChallengeView extends GetView<CreateChallengeController> {
 
               // Section 1: Basic Information
               _buildSectionCard(
-                title: 'Basic Information',
+                title: 'প্রাথমিক তথ্য',
                 icon: Icons.info_outline_rounded,
                 children: [
                   const Text(
-                    'Challenge Title *',
+                    'চ্যালেঞ্জের নাম / টাইটেল *',
                     style: TextStyle(
                       color: Color(0xFFD1D5DB),
                       fontSize: 12.5,
@@ -99,7 +99,7 @@ class CreateChallengeView extends GetView<CreateChallengeController> {
                     controller: controller.titleController,
                     style: const TextStyle(color: Colors.white, fontSize: 13.5),
                     decoration: _inputDecoration(
-                      hintText: 'e.g. Summer Shopping Run or Ramadan Special',
+                      hintText: 'যেমন: উইকলি শপিং রেস বা ঈদ স্পেশাল অফার',
                       prefixIcon: const Icon(
                         Icons.edit_note_rounded,
                         color: _accentGreen,
@@ -109,7 +109,7 @@ class CreateChallengeView extends GetView<CreateChallengeController> {
                   ),
                   const SizedBox(height: 14),
                   const Text(
-                    'Description (Optional)',
+                    'চ্যালেঞ্জের বিবরণ (ঐচ্ছিক)',
                     style: TextStyle(
                       color: Color(0xFFD1D5DB),
                       fontSize: 12.5,
@@ -125,7 +125,7 @@ class CreateChallengeView extends GetView<CreateChallengeController> {
                       filled: true,
                       fillColor: const Color(0xFF242528),
                       hintText:
-                          'Explain how customers earn points and the exciting rewards they can claim...',
+                          'কাস্টমাররা কীভাবে কেনাকাটা করে পয়েন্ট পাবে এবং কী পুরস্কার জিততে পারবে তা সহজ ভাষায় লিখুন...',
                       hintStyle: const TextStyle(
                         color: Color(0xFF6B7280),
                         fontSize: 12,
@@ -155,9 +155,9 @@ class CreateChallengeView extends GetView<CreateChallengeController> {
 
               // Section 2: Duration / Dates
               _buildSectionCard(
-                title: 'Duration & Timeline',
+                title: 'সময়সীমা ও মেয়াদ',
                 icon: Icons.calendar_month_rounded,
-                subtitle: 'Optional start and end dates',
+                subtitle: 'অফারের শুরু এবং শেষের তারিখ নির্ধারণ করুন (ঐচ্ছিক)',
                 children: [
                   Row(
                     children: [
@@ -166,7 +166,7 @@ class CreateChallengeView extends GetView<CreateChallengeController> {
                         child: Obx(
                           () => _buildDatePickerField(
                             context: context,
-                            label: 'Start Date',
+                            label: 'শুরুর তারিখ',
                             date: controller.startDate.value,
                             onTap: () => controller.pickDate(context, true),
                             onClear: () => controller.clearDate(true),
@@ -179,7 +179,7 @@ class CreateChallengeView extends GetView<CreateChallengeController> {
                         child: Obx(
                           () => _buildDatePickerField(
                             context: context,
-                            label: 'End Date',
+                            label: 'শেষের তারিখ',
                             date: controller.endDate.value,
                             onTap: () => controller.pickDate(context, false),
                             onClear: () => controller.clearDate(false),
@@ -195,9 +195,9 @@ class CreateChallengeView extends GetView<CreateChallengeController> {
 
               // Section 3: Earning Rule
               _buildSectionCard(
-                title: 'Earning Rule',
+                title: 'পয়েন্ট উপার্জনের নিয়ম',
                 icon: Icons.tune_rounded,
-                subtitle: 'Set how spending converts to reward points',
+                subtitle: 'কত টাকার কেনাকাটায় কত পয়েন্ট পাবে তা নির্ধারণ করুন',
                 children: [
                   Row(
                     children: [
@@ -207,7 +207,7 @@ class CreateChallengeView extends GetView<CreateChallengeController> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Spend Amount (৳) *',
+                              'খরচের পরিমাণ (৳) *',
                               style: TextStyle(
                                 color: Color(0xFFD1D5DB),
                                 fontSize: 12.5,
@@ -224,9 +224,9 @@ class CreateChallengeView extends GetView<CreateChallengeController> {
                                 fontWeight: FontWeight.w800,
                               ),
                               decoration: _inputDecoration(
-                                hintText: '100',
+                                hintText: '১০০',
                                 prefixIcon: const Icon(
-                                  Icons.currency_pound_rounded,
+                                  Icons.payments_outlined,
                                   color: Color(0xFF60A5FA),
                                   size: 18,
                                 ),
@@ -242,7 +242,7 @@ class CreateChallengeView extends GetView<CreateChallengeController> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Points Awarded *',
+                              'প্রাপ্ত পয়েন্ট *',
                               style: TextStyle(
                                 color: Color(0xFFD1D5DB),
                                 fontSize: 12.5,
@@ -259,7 +259,7 @@ class CreateChallengeView extends GetView<CreateChallengeController> {
                                 fontWeight: FontWeight.w800,
                               ),
                               decoration: _inputDecoration(
-                                hintText: '5',
+                                hintText: '৫',
                                 prefixIcon: const Icon(
                                   Icons.stars_rounded,
                                   color: Color(0xFFF59E0B),
@@ -291,10 +291,10 @@ class CreateChallengeView extends GetView<CreateChallengeController> {
                           color: Color(0xFF34D399),
                           size: 16,
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            "Example: For every ৳100 spent, the customer earns 5 points.",
+                            "💡 উদাহরণ: প্রতি ১০০ টাকা কেনাকাটায় কাস্টমার ৫ পয়েন্ট অর্জন করবে।",
                             style: TextStyle(
                               color: Color(0xFF6EE7B7),
                               fontSize: 11.5,
@@ -312,9 +312,9 @@ class CreateChallengeView extends GetView<CreateChallengeController> {
 
               // Section 4: Dynamic Milestone Rewards
               _buildSectionCard(
-                title: 'Milestone Rewards',
+                title: 'মাইলস্টোন পুরস্কারসমূহ',
                 icon: Icons.card_giftcard_rounded,
-                subtitle: 'Add one or more rewards unlocked at point targets',
+                subtitle: 'পয়েন্ট টার্গেটে পৌঁছালে কাস্টমার যে উপহার আনলক করবে',
                 children: [
                   Obx(
                     () => Column(
@@ -356,7 +356,7 @@ class CreateChallengeView extends GetView<CreateChallengeController> {
                           ),
                           SizedBox(width: 8),
                           Text(
-                            '+ Add Another Milestone Reward',
+                            '+ আরেকটি মাইলস্টোন পুরস্কার যোগ করুন',
                             style: TextStyle(
                               color: _accentGreen,
                               fontSize: 13,
@@ -400,10 +400,10 @@ class CreateChallengeView extends GetView<CreateChallengeController> {
                             ),
                           )
                         : const Text(
-                            'Publish Challenge',
+                            'চ্যালেঞ্জ চালু করুন (Publish Challenge)',
                             style: TextStyle(
                               color: Colors.black,
-                              fontSize: 15,
+                              fontSize: 14.5,
                               fontWeight: FontWeight.w900,
                             ),
                           ),
@@ -417,33 +417,99 @@ class CreateChallengeView extends GetView<CreateChallengeController> {
     );
   }
 
-  Widget _buildTopInfoBanner() {
+  Widget _buildGuideNote() {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF59E0B).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: const Color(0xFFF59E0B).withOpacity(0.3),
-        ),
+        color: _cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.35)),
       ),
-      child: const Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.stars_rounded,
-            color: Color(0xFFF59E0B),
-            size: 22,
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF59E0B).withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.stars_rounded,
+                  color: Color(0xFFF59E0B),
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  '💡 চ্যালেঞ্জ তৈরির নিয়ম: কী করবেন এবং কেন করবেন?',
+                  style: TextStyle(
+                    color: Color(0xFFFDE68A),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
           ),
-          SizedBox(width: 10),
+          const SizedBox(height: 12),
+          // কী করবেন
+          const Text(
+            '📌 কী করবেন (What to do):',
+            style: TextStyle(
+              color: Color(0xFF34D399),
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 5),
+          _bulletPoint('চ্যালেঞ্জের নাম ও বিবরণ লিখুন যাতে কাস্টমাররা সহজেই বুঝতে পারে।'),
+          _bulletPoint('মেয়াদ ঠিক করুন (খালি রাখলে চ্যালেঞ্জটি সবসময় চলবে)।'),
+          _bulletPoint('পয়েন্ট নির্ধারণ করুন: কত টাকার কেনাকাটায় কাস্টমার কত পয়েন্ট পাবে তা সেট করুন।'),
+          _bulletPoint('আকর্ষণীয় গিফট যুক্ত করুন: নির্দিষ্ট পয়েন্ট অর্জন করলে কাস্টমার কী উপহার বা ছাড় পাবে তা যোগ করুন।'),
+          const SizedBox(height: 10),
+          // কেন করবেন
+          const Text(
+            '🎯 কেন করবেন ও কী সুবিধা (Why to do):',
+            style: TextStyle(
+              color: Color(0xFF60A5FA),
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 5),
+          _bulletPoint('অর্ডারের সাইজ বৃদ্ধি: পয়েন্ট টার্গেট ছোঁয়ার জন্য কাস্টমাররা অল্প টাকার বদলে বেশি টাকার অর্ডার করবে।'),
+          _bulletPoint('কাস্টমার ধরে রাখা (Loyalty): রিওয়ার্ড পয়েন্ট জমে থাকলে কাস্টমার অন্য দোকান ছেড়ে আপনার দোকানেই বারবার আসবে।'),
+        ],
+      ),
+    );
+  }
+
+  Widget _bulletPoint(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '• ',
+            style: TextStyle(
+              color: Color(0xFF9CA3AF),
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           Expanded(
             child: Text(
-              'Set up a Reward Race for your shop. Customers earn points every time they buy from your store and unlock custom gifts or discounts when reaching milestones.',
-              style: TextStyle(
-                color: Color(0xFFFDE68A),
+              text,
+              style: const TextStyle(
+                color: Color(0xFFD1D5DB),
                 fontSize: 12,
                 height: 1.35,
-                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -548,7 +614,7 @@ class CreateChallengeView extends GetView<CreateChallengeController> {
                   child: Text(
                     date != null
                         ? '${date.day}/${date.month}/${date.year}'
-                        : 'Select date',
+                        : 'তারিখ বেছে নিন',
                     style: TextStyle(
                       color: date != null ? Colors.white : const Color(0xFF6B7280),
                       fontSize: 12.5,

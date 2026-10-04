@@ -108,8 +108,8 @@ class CreateChallengeController extends GetxController {
   void removeReward(int index) {
     if (rewards.length <= 1) {
       Get.snackbar(
-        'Reward Required',
-        'At least one reward milestone is required for the challenge.',
+        'পুরস্কার আবশ্যক',
+        'চ্যালেঞ্জের জন্য অন্তত একটি মাইলস্টোন পুরস্কার থাকতে হবে।',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.redAccent.withOpacity(0.9),
         colorText: Colors.white,
@@ -157,8 +157,8 @@ class CreateChallengeController extends GetxController {
       } else {
         if (startDate.value != null && picked.isBefore(startDate.value!)) {
           Get.snackbar(
-            'Invalid Date Range',
-            'End date cannot be earlier than start date.',
+            'ভুল তারিখ সীমা',
+            'শেষের তারিখ শুরুর তারিখের আগের হতে পারে না।',
             snackPosition: SnackPosition.BOTTOM,
             backgroundColor: Colors.redAccent.withOpacity(0.9),
             colorText: Colors.white,
@@ -186,26 +186,26 @@ class CreateChallengeController extends GetxController {
     // Validate Title
     final title = titleController.text.trim();
     if (title.isEmpty) {
-      errorMessage.value = 'Please enter a Challenge Title.';
+      errorMessage.value = 'অনুগ্রহ করে চ্যালেঞ্জের নাম লিখুন।';
       return;
     }
 
     // Validate Earning rule
     final spendAmount = double.tryParse(spendAmountController.text.trim());
     if (spendAmount == null || spendAmount <= 0) {
-      errorMessage.value = 'Please specify a valid Spend Amount (e.g. 100).';
+      errorMessage.value = 'সঠিক খরচের পরিমাণ লিখুন (যেমন: ১০০)।';
       return;
     }
 
     final pointsAwarded = int.tryParse(pointsAwardedController.text.trim());
     if (pointsAwarded == null || pointsAwarded <= 0) {
-      errorMessage.value = 'Please specify valid Points Awarded (e.g. 5).';
+      errorMessage.value = 'সঠিক পয়েন্ট সংখ্যা লিখুন (যেমন: ৫)।';
       return;
     }
 
     // Validate Rewards
     if (rewards.isEmpty) {
-      errorMessage.value = 'Please add at least one reward milestone.';
+      errorMessage.value = 'অন্তত একটি মাইলস্টোন পুরস্কার যোগ করুন।';
       return;
     }
 
@@ -214,11 +214,11 @@ class CreateChallengeController extends GetxController {
       final pts = int.tryParse(r.pointsRequiredController.text.trim());
       if (pts == null || pts <= 0) {
         errorMessage.value =
-            'Reward #${i + 1}: Please enter valid Points Required (e.g. 5000).';
+            'পুরস্কার #${i + 1}: সঠিক প্রয়োজনীয় পয়েন্ট লিখুন (যেমন: ৫০০০)।';
         return;
       }
       if (r.nameController.text.trim().isEmpty) {
-        errorMessage.value = 'Reward #${i + 1}: Please enter a Reward Name.';
+        errorMessage.value = 'পুরস্কার #${i + 1}: পুরস্কারের নাম লিখুন।';
         return;
       }
     }

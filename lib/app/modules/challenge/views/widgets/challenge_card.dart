@@ -130,7 +130,7 @@ class ChallengeCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            challenge.statusBadgeText,
+                            challenge.statusBadgeTextBn,
                             style: TextStyle(
                               color: statusColor,
                               fontSize: 10,
@@ -153,21 +153,21 @@ class ChallengeCard extends StatelessWidget {
                     // Earning Rule
                     _InfoChip(
                       icon: Icons.monetization_on_outlined,
-                      label: challenge.earningRuleText,
+                      label: challenge.earningRuleTextBn,
                       color: const Color(0xFF60A5FA),
                     ),
                     // Target / Milestone Points
                     if (challenge.maxMilestonePoints > 0)
                       _InfoChip(
                         icon: Icons.military_tech_outlined,
-                        label: 'Goal: ${challenge.maxMilestonePoints} pts',
+                        label: 'টার্গেট: ${challenge.maxMilestonePoints} পয়েন্ট',
                         color: _accentGold,
                       ),
                     // Participants count
                     if ((challenge.participantsCount ?? 0) > 0)
                       _InfoChip(
                         icon: Icons.people_outline_rounded,
-                        label: '${challenge.participantsCount} joined',
+                        label: '${challenge.participantsCount} জন যুক্ত',
                         color: const Color(0xFF34D399),
                       ),
                   ],
@@ -191,7 +191,7 @@ class ChallengeCard extends StatelessWidget {
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        challenge.dateRangeText,
+                        challenge.dateRangeTextBn,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -223,7 +223,7 @@ class ChallengeCard extends StatelessWidget {
                           ConstrainedBox(
                             constraints: const BoxConstraints(maxWidth: 130),
                             child: Text(
-                              challenge.primaryRewardTitle,
+                              challenge.primaryRewardTitleBn,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(

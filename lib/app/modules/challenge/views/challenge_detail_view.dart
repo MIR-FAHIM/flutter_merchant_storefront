@@ -25,7 +25,7 @@ class ChallengeDetailView extends GetWidget<ChallengeDetailController> {
         title: Obx(() {
           final c = controller.challenge.value;
           return Text(
-            c?.title ?? 'Challenge Details',
+            c?.title ?? 'চ্যালেঞ্জের বিবরণ',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
@@ -39,7 +39,7 @@ class ChallengeDetailView extends GetWidget<ChallengeDetailController> {
           IconButton(
             onPressed: () => controller.refreshAll(),
             icon: const Icon(Icons.refresh_rounded, color: Colors.white70),
-            tooltip: 'Refresh',
+            tooltip: 'রিফ্রেশ',
           ),
           Obx(() {
             final c = controller.challenge.value;
@@ -60,14 +60,14 @@ class ChallengeDetailView extends GetWidget<ChallengeDetailController> {
                   PopupMenuItem(
                     value: 'toggle',
                     child: Text(
-                      c.isActive ? 'Pause Challenge' : 'Activate Challenge',
+                      c.isActive ? 'চ্যালেঞ্জ সাময়িক বন্ধ রাখুন (Pause)' : 'চ্যালেঞ্জ চালু করুন (Activate)',
                       style: const TextStyle(color: Colors.white),
                     ),
                   ),
                   const PopupMenuItem(
                     value: 'delete',
                     child: Text(
-                      'Delete Challenge',
+                      'চ্যালেঞ্জ মুছে ফেলুন (Delete)',
                       style: TextStyle(color: Colors.redAccent),
                     ),
                   ),
@@ -97,6 +97,11 @@ class ChallengeDetailView extends GetWidget<ChallengeDetailController> {
             child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Top Guide Note: What to do and Why to do
+              _buildGuideNote(),
+
+              const SizedBox(height: 14),
+
               // Challenge Overview Header Card
               Obx(() {
                 final c = controller.challenge.value;
@@ -116,7 +121,7 @@ class ChallengeDetailView extends GetWidget<ChallengeDetailController> {
                   ),
                   SizedBox(width: 8),
                   Text(
-                    'Performance & Statistics',
+                    'পারফরম্যান্স ও পরিসংখ্যান',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 16,
@@ -152,7 +157,7 @@ class ChallengeDetailView extends GetWidget<ChallengeDetailController> {
                       children: [
                         Expanded(
                           child: StatsKpiCard(
-                            title: 'Total Participants',
+                            title: 'মোট কাস্টমার',
                             value: '${s.totalParticipants}',
                             icon: Icons.people_alt_rounded,
                             accentColor: const Color(0xFF60A5FA),
@@ -161,7 +166,7 @@ class ChallengeDetailView extends GetWidget<ChallengeDetailController> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: StatsKpiCard(
-                            title: 'Points Issued',
+                            title: 'মোট পয়েন্ট ইস্যু',
                             value: _formatNumber(s.totalPointsIssued),
                             icon: Icons.stars_rounded,
                             accentColor: _accentGold,
@@ -177,7 +182,7 @@ class ChallengeDetailView extends GetWidget<ChallengeDetailController> {
                       children: [
                         Expanded(
                           child: StatsKpiCard(
-                            title: 'Unlocked',
+                            title: 'আনলক হয়েছে',
                             value: '${s.rewardsUnlocked}',
                             icon: Icons.lock_open_rounded,
                             accentColor: const Color(0xFF34D399),
@@ -186,7 +191,7 @@ class ChallengeDetailView extends GetWidget<ChallengeDetailController> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: StatsKpiCard(
-                            title: 'Claimed',
+                            title: 'দাবি করা হয়েছে',
                             value: '${s.rewardsClaimed}',
                             icon: Icons.card_giftcard_rounded,
                             accentColor: const Color(0xFFA78BFA),
@@ -195,7 +200,7 @@ class ChallengeDetailView extends GetWidget<ChallengeDetailController> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: StatsKpiCard(
-                            title: 'Redeemed',
+                            title: 'রিডিম সম্পন্ন',
                             value: '${s.rewardsRedeemed}',
                             icon: Icons.check_circle_rounded,
                             accentColor: const Color(0xFF2DD4BF),
@@ -222,7 +227,7 @@ class ChallengeDetailView extends GetWidget<ChallengeDetailController> {
                       ),
                       SizedBox(width: 8),
                       Text(
-                        'Participant Leaderboard',
+                        'অংশগ্রহণকারী লিডারবোর্ড',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -233,7 +238,7 @@ class ChallengeDetailView extends GetWidget<ChallengeDetailController> {
                   ),
                   Obx(
                     () => Text(
-                      '${controller.participants.length} Ranked',
+                      '${controller.participants.length} জন র‍্যাংকড',
                       style: const TextStyle(
                         color: Color(0xFF9CA3AF),
                         fontSize: 12,
@@ -295,6 +300,106 @@ class ChallengeDetailView extends GetWidget<ChallengeDetailController> {
     );
   }
 
+  Widget _buildGuideNote() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF59E0B).withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.lightbulb_rounded,
+                  color: Color(0xFFF59E0B),
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  '💡 বিবরণ ও লিডারবোর্ড গাইড: কী করবেন এবং কেন করবেন?',
+                  style: TextStyle(
+                    color: Color(0xFFFDE68A),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // কী করবেন
+          const Text(
+            '📌 কী করবেন (What to do):',
+            style: TextStyle(
+              color: Color(0xFF34D399),
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 5),
+          _bulletPoint('লিডারবোর্ড থেকে টপ কাস্টমারদের পয়েন্ট ও অবস্থান পর্যবেক্ষণ করুন।'),
+          _bulletPoint('কাস্টমাররা কত পয়েন্ট অর্জন করছে এবং কে কোন রিওয়ার্ড আনলক বা ক্লেইম করেছে তা স্ট্যাটসে দেখুন।'),
+          _bulletPoint('প্রয়োজনে উপরের ৩-ডট মেনু থেকে চ্যালেঞ্জ সাময়িক বন্ধ (Pause) অথবা মুছে ফেলতে পারবেন।'),
+          const SizedBox(height: 10),
+          // কেন করবেন
+          const Text(
+            '🎯 কেন করবেন ও কী সুবিধা (Why to do):',
+            style: TextStyle(
+              color: Color(0xFF60A5FA),
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 5),
+          _bulletPoint('টপ কাস্টমারদের শনাক্তকরণ: যারা বেশি কেনাকাটা করে লিডারবোর্ডের শীর্ষে রয়েছে তাদের বিশেষ ভিআইপি খাতির ও যত্ন নিন।'),
+          _bulletPoint('মার্কেটিং ক্যাম্পেইনের বিশ্লেষণ: কোন অফারে কাস্টমার বেশি সাড়া দিচ্ছে তা বুঝে পরবর্তী ক্যাম্পেইনের পরিকল্পনা করুন।'),
+        ],
+      ),
+    );
+  }
+
+  Widget _bulletPoint(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '• ',
+            style: TextStyle(
+              color: Color(0xFF9CA3AF),
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: Color(0xFFD1D5DB),
+                fontSize: 12,
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildChallengeOverviewCard(ChallengeModel challenge) {
     return Container(
       width: double.infinity,
@@ -338,7 +443,7 @@ class ChallengeDetailView extends GetWidget<ChallengeDetailController> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      challenge.statusBadgeText,
+                      challenge.statusBadgeTextBn,
                       style: TextStyle(
                         color: challenge.isActive ? _accentGreen : Colors.grey,
                         fontSize: 10.5,
@@ -357,7 +462,7 @@ class ChallengeDetailView extends GetWidget<ChallengeDetailController> {
                   ),
                   const SizedBox(width: 5),
                   Text(
-                    challenge.dateRangeText,
+                    challenge.dateRangeTextBn,
                     style: const TextStyle(
                       color: Color(0xFF9CA3AF),
                       fontSize: 11.5,
@@ -413,7 +518,7 @@ class ChallengeDetailView extends GetWidget<ChallengeDetailController> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'Earning Rule: ${challenge.earningRuleText}',
+                  'পয়েন্ট অর্জনের নিয়ম: ${challenge.earningRuleTextBn}',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
@@ -427,7 +532,7 @@ class ChallengeDetailView extends GetWidget<ChallengeDetailController> {
           if (challenge.rewards.isNotEmpty) ...[
             const SizedBox(height: 12),
             const Text(
-              'Milestone Rewards:',
+              'মাইলস্টোন পুরস্কারসমূহ:',
               style: TextStyle(
                 color: Color(0xFF9CA3AF),
                 fontSize: 11.5,
@@ -456,7 +561,7 @@ class ChallengeDetailView extends GetWidget<ChallengeDetailController> {
                       Icon(r.rewardTypeIcon, color: r.rewardTypeColor, size: 12),
                       const SizedBox(width: 4),
                       Text(
-                        '${r.pointsRequired} pts: ${r.name}',
+                        '${r.pointsRequired} পয়েন্ট: ${r.name}',
                         style: TextStyle(
                           color: r.rewardTypeColor,
                           fontSize: 11,
@@ -492,7 +597,7 @@ class ChallengeDetailView extends GetWidget<ChallengeDetailController> {
           ),
           SizedBox(height: 10),
           Text(
-            'No participants yet',
+            'এখনও কোনো প্রতিযোগী নেই',
             style: TextStyle(
               color: Colors.white,
               fontSize: 15,
@@ -501,7 +606,7 @@ class ChallengeDetailView extends GetWidget<ChallengeDetailController> {
           ),
           SizedBox(height: 4),
           Text(
-            'Customers who purchase and earn points during this challenge will appear here.',
+            'যেসব কাস্টমার এই অফারের সময় কেনাকাটা করে পয়েন্ট অর্জন করবেন, তাদের তালিকা এখানে দেখা যাবে।',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Color(0xFF9CA3AF),
@@ -530,24 +635,24 @@ class ChallengeDetailView extends GetWidget<ChallengeDetailController> {
         return AlertDialog(
           backgroundColor: _cardColor,
           title: const Text(
-            'Delete Challenge',
+            'চ্যালেঞ্জ মুছে ফেলবেন?',
             style: TextStyle(color: Colors.white),
           ),
           content: const Text(
-            'Are you sure you want to delete this challenge? This action cannot be undone and will delete all associated data.',
+            'আপনি কি নিশ্চিত যে এই চ্যালেঞ্জটি মুছে ফেলতে চান? এটি মুছে ফেললে এর সাথে সম্পর্কিত তথ্য আর ফেরত পাওয়া যাবে না।',
             style: TextStyle(color: Colors.white70),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+              child: const Text('বাতিল', style: TextStyle(color: Colors.white54)),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
                 controller.deleteChallenge();
               },
-              child: const Text('Delete', style: TextStyle(color: Colors.redAccent)),
+              child: const Text('মুছে ফেলুন', style: TextStyle(color: Colors.redAccent)),
             ),
           ],
         );

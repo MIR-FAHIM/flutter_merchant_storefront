@@ -85,7 +85,7 @@ class LeaderboardTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  rank <= 3 ? rankBadge.title : 'Participant',
+                  rank <= 3 ? rankBadge.title : 'অংশগ্রহণকারী',
                   style: TextStyle(
                     color: rankBadge.color,
                     fontSize: 11,
@@ -179,9 +179,9 @@ class LeaderboardTile extends StatelessWidget {
   static String _formatPoints(num points) {
     if (points % 1 == 0) {
       final int intVal = points.toInt();
-      return '$intVal pts';
+      return '$intVal পয়েন্ট';
     }
-    return '${points.toStringAsFixed(1)} pts';
+    return '${points.toStringAsFixed(1)} পয়েন্ট';
   }
 
   static _RankStyle _getRankBadge(int rank) {
@@ -189,19 +189,19 @@ class LeaderboardTile extends StatelessWidget {
       case 1:
         return _RankStyle(
           color: const Color(0xFFFFD700), // Gold
-          title: '🏆 1st Place',
+          title: '🏆 ১ম স্থান',
           icon: Icons.emoji_events_rounded,
         );
       case 2:
         return _RankStyle(
           color: const Color(0xFFC0C0C0), // Silver
-          title: '🥈 2nd Place',
+          title: '🥈 ২য় স্থান',
           icon: Icons.military_tech_rounded,
         );
       case 3:
         return _RankStyle(
           color: const Color(0xFFCD7F32), // Bronze
-          title: '🥉 3rd Place',
+          title: '🥉 ৩য় স্থান',
           icon: Icons.military_tech_outlined,
         );
       default:

@@ -53,7 +53,7 @@ class RewardFormCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Milestone Reward #${index + 1}',
+                    'মাইলস্টোন পুরস্কার #${index + 1}',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 14,
@@ -70,7 +70,7 @@ class RewardFormCard extends StatelessWidget {
                     color: Colors.redAccent,
                     size: 20,
                   ),
-                  tooltip: 'Remove Reward',
+                  tooltip: 'পুরস্কার মুছুন',
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                 ),
@@ -90,7 +90,7 @@ class RewardFormCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Points Required *',
+                      'প্রয়োজনীয় পয়েন্ট *',
                       style: TextStyle(
                         color: Color(0xFFD1D5DB),
                         fontSize: 12,
@@ -107,7 +107,7 @@ class RewardFormCard extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                       decoration: _inputDecoration(
-                        hintText: 'e.g. 5000',
+                        hintText: 'যেমন: ৫০০০',
                         prefixIcon: const Icon(
                           Icons.stars_rounded,
                           color: Color(0xFFF59E0B),
@@ -128,7 +128,7 @@ class RewardFormCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Reward Type *',
+                      'পুরস্কারের ধরন *',
                       style: TextStyle(
                         color: Color(0xFFD1D5DB),
                         fontSize: 12,
@@ -182,7 +182,7 @@ class RewardFormCard extends StatelessWidget {
 
           // Reward Name
           const Text(
-            'Reward Name *',
+            'পুরস্কারের নাম *',
             style: TextStyle(
               color: Color(0xFFD1D5DB),
               fontSize: 12,
@@ -194,7 +194,7 @@ class RewardFormCard extends StatelessWidget {
             controller: item.nameController,
             style: const TextStyle(color: Colors.white, fontSize: 13),
             decoration: _inputDecoration(
-              hintText: 'e.g. Free Double Burger or 10% Discount',
+              hintText: 'যেমন: ১টি ফ্রি টি-শার্ট অথবা ১০% ছাড়',
               prefixIcon: const Icon(
                 Icons.card_giftcard_rounded,
                 color: _accentColor,
@@ -213,7 +213,7 @@ class RewardFormCard extends StatelessWidget {
                 Row(
                   children: [
                     const Text(
-                      'Reward Value',
+                      'পুরস্কারের মান / কোড',
                       style: TextStyle(
                         color: Color(0xFFD1D5DB),
                         fontSize: 12,
@@ -280,42 +280,42 @@ class RewardFormCard extends StatelessWidget {
   static String _typeLabel(String type) {
     switch (type) {
       case 'PRODUCT':
-        return '🎁 Product';
+        return '🎁 ফ্রি প্রোডাক্ট';
       case 'DISCOUNT':
-        return '🏷️ Discount';
+        return '🏷️ স্পেশাল ছাড়';
       case 'VOUCHER':
-        return '🎟️ Voucher';
+        return '🎟️ ভাউচার';
       case 'FREE_DELIVERY':
-        return '🚚 Free Delivery';
+        return '🚚 ফ্রি ডেলিভারি';
       case 'CUSTOM':
       default:
-        return '⭐ Custom';
+        return '⭐ বিশেষ উপহার';
     }
   }
 
   static String _valueHintSuffix(String type) {
     switch (type) {
       case 'DISCOUNT':
-        return '(e.g. 10% or 100)';
+        return '(যেমন: 10% বা ৳100)';
       case 'PRODUCT':
-        return '(e.g. Product ID: 123)';
+        return '(যেমন: প্রোডাক্ট আইডি)';
       case 'VOUCHER':
-        return '(e.g. Coupon Code: SUM50)';
+        return '(যেমন: ভাউচার কোড: EID50)';
       default:
-        return '(Optional value or notes)';
+        return '(ঐচ্ছিক মান বা বিবরণ)';
     }
   }
 
   static String _valuePlaceholder(String type) {
     switch (type) {
       case 'DISCOUNT':
-        return '10% or ৳100';
+        return '10% অথবা ৳100';
       case 'PRODUCT':
-        return '123 (Product ID)';
+        return 'প্রোডাক্ট আইডি লিখুন';
       case 'VOUCHER':
-        return 'SUMMER50';
+        return 'EID50';
       default:
-        return 'Enter value or code';
+        return 'মান বা কোড লিখুন';
     }
   }
 }

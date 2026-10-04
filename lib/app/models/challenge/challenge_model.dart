@@ -176,6 +176,7 @@ class ChallengeModel {
   }
 
   String get statusBadgeText => isActive ? 'Active' : 'Inactive';
+  String get statusBadgeTextBn => isActive ? 'চলমান (Active)' : 'বন্ধ আছে (Paused)';
 
   String get earningRuleText {
     final spend = spendAmount != null
@@ -185,6 +186,14 @@ class ChallengeModel {
     return '৳$spend spent = $points pts';
   }
 
+  String get earningRuleTextBn {
+    final spend = spendAmount != null
+        ? (spendAmount! % 1 == 0 ? spendAmount!.toInt() : spendAmount!)
+        : 100;
+    final points = pointsAwarded ?? 5;
+    return 'প্রতি ৳$spend কেনাকাটায় = $points পয়েন্ট';
+  }
+
   String get dateRangeText {
     if (startDate == null && endDate == null) return 'No time limit';
     if (startDate != null && endDate != null) {
@@ -192,6 +201,15 @@ class ChallengeModel {
     }
     if (startDate != null) return 'Starts ${_formatDate(startDate!)}';
     return 'Ends ${_formatDate(endDate!)}';
+  }
+
+  String get dateRangeTextBn {
+    if (startDate == null && endDate == null) return 'কোনো সময়সীমা নেই';
+    if (startDate != null && endDate != null) {
+      return '${_formatDate(startDate!)} থেকে ${_formatDate(endDate!)}';
+    }
+    if (startDate != null) return 'শুরু: ${_formatDate(startDate!)}';
+    return 'শেষ: ${_formatDate(endDate!)}';
   }
 
   int get maxMilestonePoints {
@@ -208,6 +226,12 @@ class ChallengeModel {
     if (rewards.isEmpty) return 'No rewards added';
     if (rewards.length == 1) return rewards.first.name;
     return '${rewards.first.name} (+${rewards.length - 1} more)';
+  }
+
+  String get primaryRewardTitleBn {
+    if (rewards.isEmpty) return 'কোনো গিফট যোগ করা হয়নি';
+    if (rewards.length == 1) return rewards.first.name;
+    return '${rewards.first.name} (+আরও ${rewards.length - 1}টি)';
   }
 }
 
@@ -270,6 +294,22 @@ class ChallengeRewardModel {
       case 'CUSTOM':
       default:
         return 'Special Gift';
+    }
+  }
+
+  String get rewardTypeLabelBn {
+    switch (rewardType.toUpperCase()) {
+      case 'PRODUCT':
+        return '🎁 ফ্রি প্রোডাক্ট';
+      case 'DISCOUNT':
+        return '🏷️ স্পেশাল ডিসকাউন্ট';
+      case 'VOUCHER':
+        return '🎟️ ভাউচার';
+      case 'FREE_DELIVERY':
+        return '🚚 ফ্রি ডেলিভারি';
+      case 'CUSTOM':
+      default:
+        return '⭐ বিশেষ উপহার';
     }
   }
 
@@ -496,11 +536,9 @@ class ChallengeParticipantModel {
       avatar = cust['avatar']?.toString() ?? cust['image']?.toString();
     }
 
-    if (avatar == null) {
-      avatar = json['customer_avatar']?.toString() ??
-          json['avatar']?.toString() ??
-          json['profile_image']?.toString();
-    }
+    avatar ??= json['customer_avatar']?.toString() ??
+        json['avatar']?.toString() ??
+        json['profile_image']?.toString();
 
     return ChallengeParticipantModel(
       id: _toInt(json['id']),

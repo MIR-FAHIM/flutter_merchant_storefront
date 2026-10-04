@@ -63,10 +63,10 @@ class ChallengeDetailController extends GetxController {
         final parsed = ChallengeStatsResponse.fromJson(body);
         stats.value = parsed.data ?? ChallengeStatsModel();
       } else {
-        statsError.value = 'Failed to load stats';
+        statsError.value = 'পরিসংখ্যান লোড করতে ব্যর্থ হয়েছে';
       }
     } catch (e) {
-      statsError.value = 'Failed to load stats';
+      statsError.value = 'পরিসংখ্যান লোড করতে ব্যর্থ হয়েছে';
     } finally {
       isStatsLoading.value = false;
     }
@@ -108,12 +108,12 @@ class ChallengeDetailController extends GetxController {
         }
       } else {
         if (currentPage == 1) {
-          participantsError.value = 'Failed to load participants';
+          participantsError.value = 'অংশগ্রহণকারীদের তালিকা লোড করতে ব্যর্থ হয়েছে';
         }
       }
     } catch (e) {
       if (currentPage == 1) {
-        participantsError.value = 'Failed to load participants';
+        participantsError.value = 'অংশগ্রহণকারীদের তালিকা লোড করতে ব্যর্থ হয়েছে';
       }
     } finally {
       isParticipantsLoading.value = false;
@@ -138,17 +138,17 @@ class ChallengeDetailController extends GetxController {
       if (statusCode >= 200 && statusCode < 300) {
         Get.back(result: true);
         Get.snackbar(
-          'Success',
-          'Challenge deleted successfully',
+          'সফল',
+          'চ্যালেঞ্জ সফলভাবে মুছে ফেলা হয়েছে',
           snackPosition: SnackPosition.BOTTOM,
-          backgroundColor:  Color(0xFF34D399).withOpacity(0.9),
+          backgroundColor: const Color(0xFF34D399).withOpacity(0.9),
           colorText: const Color(0xFFFFFFFF),
         );
       } else {
         final body = response['body'];
-        final message = body?['message'] ?? 'Failed to delete challenge';
+        final message = body?['message'] ?? 'চ্যালেঞ্জ মুছতে সমস্যা হয়েছে';
         Get.snackbar(
-          'Error',
+          'ত্রুটি',
           message,
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: const Color(0xFFEF4444).withOpacity(0.9),
@@ -157,8 +157,8 @@ class ChallengeDetailController extends GetxController {
       }
     } catch (e) {
       Get.snackbar(
-        'Error',
-        'An error occurred: $e',
+        'ত্রুটি',
+        'একটি সমস্যা দেখা দিয়েছে: $e',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: const Color(0xFFEF4444).withOpacity(0.9),
         colorText: const Color(0xFFFFFFFF),
@@ -185,17 +185,19 @@ class ChallengeDetailController extends GetxController {
         }
         
         Get.snackbar(
-          'Success',
-          isActive ? 'Challenge activated' : 'Challenge paused',
+          'সফল',
+          isActive
+              ? 'চ্যালেঞ্জ সফলভাবে চালু করা হয়েছে'
+              : 'চ্যালেঞ্জ সাময়িক বন্ধ (Pause) করা হয়েছে',
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: const Color(0xFF34D399).withOpacity(0.9),
           colorText: const Color(0xFFFFFFFF),
         );
       } else {
         final body = response['body'];
-        final message = body?['message'] ?? 'Failed to update status';
+        final message = body?['message'] ?? 'স্ট্যাটাস আপডেট করতে সমস্যা হয়েছে';
         Get.snackbar(
-          'Error',
+          'ত্রুটি',
           message,
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: const Color(0xFFEF4444).withOpacity(0.9),
@@ -204,8 +206,8 @@ class ChallengeDetailController extends GetxController {
       }
     } catch (e) {
       Get.snackbar(
-        'Error',
-        'An error occurred: $e',
+        'ত্রুটি',
+        'একটি সমস্যা দেখা দিয়েছে: $e',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: const Color(0xFFEF4444).withOpacity(0.9),
         colorText: const Color(0xFFFFFFFF),
