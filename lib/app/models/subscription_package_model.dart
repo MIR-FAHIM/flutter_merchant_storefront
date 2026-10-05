@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class SubscriptionPackage {
   final int? id;
   final String name;
@@ -32,19 +34,33 @@ class SubscriptionPackage {
   });
 
   factory SubscriptionPackage.fromJson(Map<String, dynamic> json) {
+    final rawFeatures = json['features'] ??
+        json['package_features'] ??
+        json['items'] ??
+        json['package_items'] ??
+        json['inclusions'] ??
+        json['feature_list'];
+
     return SubscriptionPackage(
       id: _toInt(json['id']),
-      name: _text(json['name']) ?? 'Subscription Package',
-      shortDescription: _text(json['short_description']) ?? '',
+      name: _text(json['name']) ??
+          _text(json['title']) ??
+          _text(json['package_name']) ??
+          'Subscription Package',
+      shortDescription: _text(json['short_description']) ??
+          _text(json['description']) ??
+          _text(json['details']) ??
+          '',
       price: _toDouble(json['price']),
       billingCycle: _text(json['billing_cycle']) ?? 'monthly',
       trialDays: _toInt(json['trial_days']),
-      maxProducts: _toInt(json['max_products']),
-      maxOrdersPerMonth: _toInt(json['max_orders_per_month']),
-      maxStaff: _toInt(json['max_staff']),
-      maxBranches: _toInt(json['max_branches']),
+      maxProducts: _toInt(json['max_products']) ?? _toInt(json['product_limit']),
+      maxOrdersPerMonth:
+          _toInt(json['max_orders_per_month']) ?? _toInt(json['order_limit']),
+      maxStaff: _toInt(json['max_staff']) ?? _toInt(json['staff_limit']),
+      maxBranches: _toInt(json['max_branches']) ?? _toInt(json['branch_limit']),
       commissionRate: _toDouble(json['commission_rate']),
-      features: _features(json['features']),
+      features: _features(rawFeatures),
       isPopular: _toBool(json['is_popular']),
       isFeatured: _toBool(json['is_featured']),
     );
@@ -149,20 +165,43 @@ String? _text(dynamic value) {
 }
 
 List<String> _features(dynamic value) {
-  if (value is List) {
-    return value.map((item) => item.toString()).where((item) {
-      return item.trim().isNotEmpty;
-    }).toList();
+  if (value == null) return [];
+
+  if (value is String) {
+    final trimmed = value.trim();
+    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+      try {
+        final decoded = jsonDecode(trimmed);
+        if (decoded is List) {
+          return _features(decoded);
+        }
+      } catch (_) {}
+    }
+
+    return trimmed
+        .split(RegExp(r'[\r\n,]+'))
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList();
   }
 
-  final text = _text(value);
-  if (text == null) return [];
+  if (value is List) {
+    return value.map((item) {
+      if (item is Map) {
+        final map = Map<String, dynamic>.from(item);
+        final val = map['name'] ??
+            map['title'] ??
+            map['feature'] ??
+            map['item'] ??
+            map['label'] ??
+            map['description'];
+        return val?.toString().trim() ?? '';
+      }
+      return item.toString().trim();
+    }).where((item) => item.isNotEmpty).toList();
+  }
 
-  return text
-      .split(RegExp(r'[\n,]'))
-      .map((item) => item.trim())
-      .where((item) => item.isNotEmpty)
-      .toList();
+  return [];
 }
 
 int? _toInt(dynamic value) {

@@ -23,105 +23,109 @@ class SellerPackagesView extends GetView<SellerPackagesController> {
           ),
         ),
       ),
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
-        }
+      body: SafeArea(
+        child: Obx(() {
+          if (controller.isLoading.value) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-        if (controller.stores.isEmpty) {
-          return const _StateMessage(
-            icon: Icons.storefront_outlined,
-            message: 'No store found for this seller account.',
-          );
-        }
+          if (controller.stores.isEmpty) {
+            return const _StateMessage(
+              icon: Icons.storefront_outlined,
+              message: 'No store found for this seller account.',
+            );
+          }
 
-        return RefreshIndicator(
-          onRefresh: () async {
-            await controller.fetchSubscriptionPackages();
-            await controller.fetchStoreSubscription();
-          },
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(
-              parent: BouncingScrollPhysics(),
-            ),
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Subscription Packages',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  'Choose a package to unlock your storefront, products, POS, orders, and reports.',
-                  style: TextStyle(
-                    color: Color(0xFF9CA3AF),
-                    fontSize: 13.5,
-                    height: 1.35,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                // const SizedBox(height: 18),
-                // _StoreDropdown(controller: controller),
-                const SizedBox(height: 16),
-                _CurrentSubscriptionCard(controller: controller),
-                const SizedBox(height: 22),
-                if (controller.boughtPackage != null) ...[
+          return RefreshIndicator(
+            onRefresh: () async {
+              await controller.fetchSubscriptionPackages();
+              await controller.fetchStoreSubscription();
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 36),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   const Text(
-                    'Bought Package',
+                    'Subscription Packages',
                     style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Choose a package to unlock your storefront, products, POS, orders, and reports.',
+                    style: TextStyle(
+                      color: Color(0xFF9CA3AF),
+                      fontSize: 13.5,
+                      height: 1.35,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (controller.stores.length > 1) ...[
+                    const SizedBox(height: 14),
+                    _StoreDropdown(controller: controller),
+                  ],
+                  const SizedBox(height: 16),
+                  _CurrentSubscriptionCard(controller: controller),
+                  const SizedBox(height: 22),
+                  if (controller.boughtPackage != null) ...[
+                    const Text(
+                      'Bought Package',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SubscriptionPackageCard(
+                      package: controller.boughtPackage!,
+                      isCurrent: true,
+                      isLoading: false,
+                      onSubscribe: null,
+                    ),
+                    const SizedBox(height: 14),
+                  ],
+                  Text(
+                    controller.boughtPackage == null
+                        ? 'Available Packages'
+                        : 'Other Packages',
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 17,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  SubscriptionPackageCard(
-                    package: controller.boughtPackage!,
-                    isCurrent: true,
-                    isLoading: false,
-                    onSubscribe: null,
-                  ),
-                  const SizedBox(height: 8),
+                  if (controller.otherPackages.isEmpty)
+                    _StatePanel(
+                      message: controller.boughtPackage == null
+                          ? 'No active subscription packages found.'
+                          : 'No other active subscription packages found.',
+                    )
+                  else
+                    ...controller.otherPackages.map((package) {
+                      return SubscriptionPackageCard(
+                        package: package,
+                        isCurrent: controller.isCurrentPackage(package),
+                        isLoading: controller.isSubscribing(package),
+                        onSubscribe: controller.subscribingPackageId.value != null
+                            ? null
+                            : () => controller.subscribe(package),
+                      );
+                    }),
                 ],
-                Text(
-                  controller.boughtPackage == null
-                      ? 'Available Packages'
-                      : 'Other Packages',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                if (controller.otherPackages.isEmpty)
-                  _StatePanel(
-                    message: controller.boughtPackage == null
-                        ? 'No active subscription packages found.'
-                        : 'No other active subscription packages found.',
-                  )
-                else
-                  ...controller.otherPackages.map((package) {
-                    return SubscriptionPackageCard(
-                      package: package,
-                      isCurrent: controller.isCurrentPackage(package),
-                      isLoading: controller.isSubscribing(package),
-                      onSubscribe: controller.subscribingPackageId.value != null
-                          ? null
-                          : () => controller.subscribe(package),
-                    );
-                  }),
-              ],
+              ),
             ),
-          ),
-        );
-      }),
+          );
+        }),
+      ),
     );
   }
 }

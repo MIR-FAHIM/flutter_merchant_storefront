@@ -61,10 +61,12 @@ class SellerPackagesController extends GetxController
 
     if (subscription.package != null) return subscription.package;
 
-    for (final package in packages) {
-      if (package.id != null &&
-          package.id == subscription.subscriptionPackageId) {
-        return package;
+    final subId = subscription.subscriptionPackageId?.toString();
+    if (subId != null && subId.isNotEmpty) {
+      for (final package in packages) {
+        if (package.id != null && package.id.toString() == subId) {
+          return package;
+        }
       }
     }
 
@@ -72,10 +74,15 @@ class SellerPackagesController extends GetxController
   }
 
   List<SubscriptionPackage> get otherPackages {
-    final currentPackageId = currentSubscription.value?.subscriptionPackageId;
+    if (boughtPackage == null) return packages.toList();
+
+    final currentPackageId =
+        currentSubscription.value?.subscriptionPackageId?.toString();
     if (currentPackageId == null) return packages.toList();
 
-    return packages.where((package) => package.id != currentPackageId).toList();
+    return packages
+        .where((package) => package.id?.toString() != currentPackageId)
+        .toList();
   }
 
   Future<void> loadInitialData() async {
@@ -260,8 +267,18 @@ class SellerPackagesController extends GetxController
   }
 
   bool isCurrentPackage(SubscriptionPackage package) {
-    final currentPackageId = currentSubscription.value?.subscriptionPackageId;
-    return currentPackageId != null && package.id == currentPackageId;
+    if (package.id == null) return false;
+    final currentPackageId =
+        currentSubscription.value?.subscriptionPackageId?.toString();
+    if (currentPackageId != null &&
+        package.id.toString() == currentPackageId) {
+      return true;
+    }
+    final subPkgId = currentSubscription.value?.package?.id?.toString();
+    if (subPkgId != null && package.id.toString() == subPkgId) {
+      return true;
+    }
+    return false;
   }
 
   bool isSubscribing(SubscriptionPackage package) {

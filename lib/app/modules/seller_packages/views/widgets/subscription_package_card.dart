@@ -55,10 +55,20 @@ class SubscriptionPackageCard extends StatelessWidget {
                   ),
                 ),
               ),
-              if (package.isPopular)
-                const _Badge(text: 'Popular', color: Color(0xFF2DD4BF))
-              else if (package.isFeatured)
-                const _Badge(text: 'Featured', color: Color(0xFFFBBF24)),
+              const SizedBox(width: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                alignment: WrapAlignment.end,
+                children: [
+                  if (isCurrent)
+                    const _Badge(text: 'Current Plan', color: Color(0xFF34D399)),
+                  if (package.isPopular)
+                    const _Badge(text: 'Popular', color: Color(0xFF2DD4BF))
+                  else if (package.isFeatured)
+                    const _Badge(text: 'Featured', color: Color(0xFFFBBF24)),
+                ],
+              ),
             ],
           ),
           if (package.shortDescription.isNotEmpty) ...[
@@ -74,8 +84,10 @@ class SubscriptionPackageCard extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 14),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.end,
+            spacing: 6,
+            runSpacing: 4,
             children: [
               Text(
                 package.priceText,
@@ -85,7 +97,6 @@ class SubscriptionPackageCard extends StatelessWidget {
                   fontWeight: FontWeight.w900,
                 ),
               ),
-              const SizedBox(width: 6),
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
                 child: Text(
@@ -104,35 +115,52 @@ class SubscriptionPackageCard extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _LimitChip(
-                icon: Icons.card_giftcard_rounded,
-                label: '${package.trialDays ?? 0} trial days',
-              ),
+              if (package.trialDays != null && package.trialDays! > 0)
+                _LimitChip(
+                  icon: Icons.card_giftcard_rounded,
+                  label: '${package.trialDays} trial days',
+                ),
               _LimitChip(
                 icon: Icons.inventory_2_outlined,
                 label: _limitText(package.maxProducts, 'products'),
               ),
-
-              _LimitChip(
-                icon: Icons.groups_2_outlined,
-                label: _limitText(package.maxStaff, 'staff'),
-              ),
-
-
+              if (package.maxOrdersPerMonth != null)
+                _LimitChip(
+                  icon: Icons.receipt_long_outlined,
+                  label: _limitText(package.maxOrdersPerMonth, 'orders/month'),
+                ),
+              if (package.maxStaff != null)
+                _LimitChip(
+                  icon: Icons.groups_2_outlined,
+                  label: _limitText(package.maxStaff, 'staff'),
+                ),
+              if (package.maxBranches != null)
+                _LimitChip(
+                  icon: Icons.account_tree_outlined,
+                  label: _limitText(package.maxBranches, 'branches'),
+                ),
+              if (package.commissionRate != null && package.commissionRate! > 0)
+                _LimitChip(
+                  icon: Icons.percent_rounded,
+                  label: '${package.commissionRate}% commission',
+                ),
             ],
           ),
           if (package.features.isNotEmpty) ...[
             const SizedBox(height: 14),
-            ...package.features.take(6).map((feature) {
+            ...package.features.map((feature) {
               return Padding(
-                padding: const EdgeInsets.only(bottom: 7),
+                padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(
-                      Icons.check_circle_rounded,
-                      color: Color(0xFF34D399),
-                      size: 18,
+                    const Padding(
+                      padding: EdgeInsets.only(top: 2),
+                      child: Icon(
+                        Icons.check_circle_rounded,
+                        color: Color(0xFF34D399),
+                        size: 16,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -141,7 +169,7 @@ class SubscriptionPackageCard extends StatelessWidget {
                         style: const TextStyle(
                           color: Color(0xFFE5E7EB),
                           fontSize: 13,
-                          height: 1.3,
+                          height: 1.35,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -151,7 +179,7 @@ class SubscriptionPackageCard extends StatelessWidget {
               );
             }),
           ],
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
           SizedBox(
             width: double.infinity,
             height: 50,
@@ -244,12 +272,14 @@ class _LimitChip extends StatelessWidget {
         children: [
           Icon(icon, color: const Color(0xFF2DD4BF), size: 15),
           const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Color(0xFFD1D5DB),
-              fontSize: 11.5,
-              fontWeight: FontWeight.w700,
+          Flexible(
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: Color(0xFFD1D5DB),
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],
