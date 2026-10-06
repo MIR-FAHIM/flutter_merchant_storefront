@@ -2,6 +2,7 @@ import 'package:ecom_delivery_flutter/app/models/chat_model.dart';
 import 'package:ecom_delivery_flutter/app/models/order/order_list_model.dart';
 import 'package:ecom_delivery_flutter/app/modules/shop_chat/controllers/shop_chat_controller.dart';
 import 'package:ecom_delivery_flutter/app/routes/app_pages.dart';
+import 'package:ecom_delivery_flutter/common/payment_method_display.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -69,7 +70,7 @@ class OrderCard extends StatelessWidget {
             orderNum.toUpperCase().startsWith('POS-');
 
     final String paymentMethod =
-        (effectiveOrder.paymentMethod ?? 'N/A').toUpperCase();
+        paymentMethodLabel(effectiveOrder.paymentMethod);
     final String paymentStatus =
         (effectiveOrder.paymentStatus ?? 'N/A').toUpperCase();
 

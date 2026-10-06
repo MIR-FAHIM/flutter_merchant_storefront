@@ -72,9 +72,13 @@ class ProfileView extends GetView<HomeController> {
 
     final shareMessage =
         '🛍️ MyZoo মার্চেন্ট অ্যাপে যোগ দিন এবং অনলাইনে আপনার ব্যবসা সহজে পরিচালনা ও বৃদ্ধি করুন!\n'
+        '💰 প্রতিদিনের ক্যাশবক্সের হিসাব অ্যাপের মাধ্যমে মিলিয়ে নিন।\n'
+        '📒 কাস্টমারের বাকি-খাতার হিসাব সহজে সংরক্ষণ ও পরিচালনা করুন।\n'
+        '🎁 রিওয়ার্ড সিস্টেম চালু করে কাস্টমার ধরে রাখুন এবং ব্যবসা বাড়ান।\n'
         '$referralPart\n'
         '📲 এখনই মার্চেন্ট অ্যাপটি ডাউনলোড করুন:\n'
         'https://play.google.com/store/apps/details?id=com.myzoo.marchant&pli=1';
+
 
     Share.share(
       shareMessage,

@@ -1,6 +1,9 @@
+import 'dart:ui' show FontFeature;
+
 import 'package:ecom_delivery_flutter/app/models/reports/shop_cash_flow_report_model.dart';
 import 'package:ecom_delivery_flutter/app/modules/reports/controllers/shop_cash_flow_controller.dart';
 import 'package:ecom_delivery_flutter/app/modules/reports/views/widgets/add_expense_bottom_sheet.dart';
+import 'package:ecom_delivery_flutter/app/modules/reports/views/widgets/cashbox_entry_bottom_sheet.dart';
 import 'package:ecom_delivery_flutter/app/modules/reports/views/widgets/adjust_cash_drawer_bottom_sheet.dart';
 import 'package:ecom_delivery_flutter/app/modules/reports/views/widgets/quick_cash_sale_bottom_sheet.dart';
 import 'package:ecom_delivery_flutter/app/modules/reports/views/widgets/set_opening_cash_bottom_sheet.dart';
@@ -61,7 +64,7 @@ class ShopCashFlowReportWidget extends GetWidget<ShopCashFlowController> {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -71,7 +74,7 @@ class ShopCashFlowReportWidget extends GetWidget<ShopCashFlowController> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.only(topLeft: Radius.circular(8), topRight: Radius.circular(8)),
         boxShadow: [
           BoxShadow(
             color: AppColors.primaryColor.withOpacity(0.24),
@@ -111,10 +114,7 @@ class ShopCashFlowReportWidget extends GetWidget<ShopCashFlowController> {
 
             // 5. Master Financial & Cash Ledger Table (Interactive)
             _buildMasterLedgerTable(context),
-            const SizedBox(height: 18),
 
-            // 6. Bottom Highlighted Summary Cards (Interactive)
-            _buildBottomSummaryCards(context),
           ],
         );
       }),
@@ -218,50 +218,56 @@ class ShopCashFlowReportWidget extends GetWidget<ShopCashFlowController> {
             children: [
               const Icon(Icons.date_range_rounded, color: Colors.white, size: 16),
               const SizedBox(width: 8),
-              Text(
-                'Reporting Period'.tr,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
+              Expanded(
+                child: Text(
+                  'Reporting Period'.tr,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               // Custom Date Range Button
-              InkWell(
-                onTap: () => _pickCustomDateRange(context),
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: controller.selectedPeriod.value == 'custom'
-                        ? Colors.white
-                        : Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.white.withOpacity(0.25)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.edit_calendar_outlined,
-                        size: 13,
-                        color: controller.selectedPeriod.value == 'custom'
-                            ? const Color(0xFF0F766E)
-                            : Colors.white,
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        'Custom Range'.tr,
-                        style: TextStyle(
+              Flexible(
+                child: InkWell(
+                  onTap: () => _pickCustomDateRange(context),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: controller.selectedPeriod.value == 'custom'
+                          ? Colors.white
+                          : Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.white.withOpacity(0.25)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.edit_calendar_outlined,
+                          size: 13,
                           color: controller.selectedPeriod.value == 'custom'
                               ? const Color(0xFF0F766E)
                               : Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 5),
+                        Flexible(
+                          child: Text(
+                            'Custom Range'.tr,
+                            style: TextStyle(
+                              color: controller.selectedPeriod.value == 'custom'
+                                  ? const Color(0xFF0F766E)
+                                  : Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -317,69 +323,72 @@ class ShopCashFlowReportWidget extends GetWidget<ShopCashFlowController> {
 
   // --- Quick Action Shortcuts ---
   Widget _buildQuickActionShortcuts(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    void entry(CashboxEntryType type) => CashboxEntryBottomSheet.show(
+          context: context, controller: controller, type: type);
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(
-            'Quick Drawer & Cash Actions'.tr,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+        _buildShortcutButton(
+          icon: Icons.wb_sunny_outlined,
+          title: 'cashbox.opening'.tr,
+          bgColor: _amber.withValues(alpha: 0.20),
+          textColor: Colors.white,
+          onTap: () => SetOpeningCashBottomSheet.show(
+              context: context, controller: controller),
         ),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              _buildShortcutButton(
-                icon: Icons.wb_sunny_outlined,
-                title: 'Set Opening Cash'.tr,
-                bgColor: Colors.white.withOpacity(0.20),
-                textColor: Colors.white,
-                onTap: () => SetOpeningCashBottomSheet.show(
-                  context: context,
-                  controller: controller,
-                ),
-              ),
-              const SizedBox(width: 8),
-              _buildShortcutButton(
-                icon: Icons.bolt_rounded,
-                title: '+ Quick Cash Sale'.tr,
-                bgColor: _amber.withOpacity(0.25),
-                textColor: const Color(0xFFFFFBEB),
-                onTap: () => QuickCashSaleBottomSheet.show(
-                  context: context,
-                  controller: controller,
-                ),
-              ),
-              const SizedBox(width: 8),
-              _buildShortcutButton(
-                icon: Icons.money_off_rounded,
-                title: '- Add Expense'.tr,
-                bgColor: _red.withOpacity(0.25),
-                textColor: const Color(0xFFFEF2F2),
-                onTap: () => AddExpenseBottomSheet.show(
-                  context: context,
-                  controller: controller,
-                ),
-              ),
-              const SizedBox(width: 8),
-              _buildShortcutButton(
-                icon: Icons.tune_rounded,
-                title: 'Adjust Drawer'.tr,
-                bgColor: _cyan.withOpacity(0.25),
-                textColor: const Color(0xFFF0FDFA),
-                onTap: () => AdjustCashDrawerBottomSheet.show(
-                  context: context,
-                  controller: controller,
-                ),
-              ),
-            ],
-          ),
+        _buildShortcutButton(
+          icon: Icons.south_west_rounded,
+          title: 'cashbox.deposit'.tr,
+          bgColor: _green.withValues(alpha: 0.20),
+          textColor: Colors.white,
+          onTap: () => entry(CashboxEntryType.deposit),
+        ),
+        _buildShortcutButton(
+          icon: Icons.north_east_rounded,
+          title: 'cashbox.withdrawal'.tr,
+          bgColor: _red.withValues(alpha: 0.20),
+          textColor: Colors.white,
+          onTap: () => entry(CashboxEntryType.withdrawal),
+        ),
+        _buildShortcutButton(
+          icon: Icons.receipt_long_outlined,
+          title: 'cashbox.expense'.tr,
+          bgColor: _red.withValues(alpha: 0.20),
+          textColor: Colors.white,
+          onTap: () => AddExpenseBottomSheet.show(
+              context: context, controller: controller),
+        ),
+        _buildShortcutButton(
+          icon: Icons.bolt_rounded,
+          title: 'cashbox.quickSale'.tr,
+          bgColor: _amber.withValues(alpha: 0.20),
+          textColor: Colors.white,
+          onTap: () => QuickCashSaleBottomSheet.show(
+              context: context, controller: controller),
+        ),
+        _buildShortcutButton(
+          icon: Icons.fact_check_outlined,
+          title: 'cashbox.closing'.tr,
+          bgColor: _blue.withValues(alpha: 0.20),
+          textColor: Colors.white,
+          onTap: () => entry(CashboxEntryType.closing),
+        ),
+        _buildShortcutButton(
+          icon: Icons.calendar_month_outlined,
+          title: 'cashbox.carryForward'.tr,
+          bgColor: _cyan.withValues(alpha: 0.20),
+          textColor: Colors.white,
+          onTap: () => entry(CashboxEntryType.carryForward),
+        ),
+        _buildShortcutButton(
+          icon: Icons.tune_rounded,
+          title: 'cashbox.adjustment'.tr,
+          bgColor: _cyan.withValues(alpha: 0.20),
+          textColor: Colors.white,
+          onTap: () => AdjustCashDrawerBottomSheet.show(
+              context: context, controller: controller),
         ),
       ],
     );
@@ -421,169 +430,247 @@ class ShopCashFlowReportWidget extends GetWidget<ShopCashFlowController> {
     );
   }
 
-  // --- Top 4 KPI Summary Cards (Clickable) ---
   Widget _buildKpiCardsGrid(BuildContext context) {
     final kpis = controller.reportData.value?.kpiCards ?? KpiCards();
+    final amounts = CashboxAmounts.fromReport(controller.reportData.value);
+    void adjustCash() => AdjustCashDrawerBottomSheet.show(
+          context: context,
+          controller: controller,
+        );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(
-            'Financial KPI Snapshot'.tr,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-        Row(
-          children: [
-            Expanded(
-              child: _buildKpiCard(
-                title: 'Expected Cash in Drawer'.tr,
-                subtitle: 'Physical Till Cash'.tr,
-                amount: kpis.expectedCashInDrawer,
-                icon: Icons.payments_outlined,
-                accentColor: const Color(0xFF34D399),
-                isHighlight: true,
-                onTap: () => AdjustCashDrawerBottomSheet.show(
-                  context: context,
-                  controller: controller,
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _buildKpiCard(
-                title: 'Total Digital Payments'.tr,
-                subtitle: 'bKash / Nagad / Card'.tr,
-                amount: kpis.totalDigitalPayments,
-                icon: Icons.account_balance_outlined,
-                accentColor: _blue,
-                onTap: () => Get.toNamed(Routes.ORDER_SHOP_LIST),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: _buildKpiCard(
-                title: "Today's New Baki".tr,
-                subtitle: 'Unpaid Given Out'.tr,
-                amount: kpis.todayNewBaki,
-                icon: Icons.assignment_late_outlined,
-                accentColor: _amber,
-                onTap: () => Get.toNamed(Routes.BAKI_KHATA),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _buildKpiCard(
-                title: 'Store Market Baki'.tr,
-                subtitle: 'Overall Customer Debt'.tr,
-                amount: kpis.totalStoreOutstandingBaki,
-                icon: Icons.account_balance_wallet_outlined,
-                accentColor: _red,
-                onTap: () => Get.toNamed(Routes.BAKI_KHATA),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
+    const cashGreen = Color(0xFF34D399);
+    const dividerColor = Color(0xFF34383E);
+    final isBangla = Get.locale?.languageCode == 'bn';
 
-  Widget _buildKpiCard({
-    required String title,
-    required String subtitle,
-    required double amount,
-    required IconData icon,
-    required Color accentColor,
-    bool isHighlight = false,
-    VoidCallback? onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+    return DefaultTextStyle.merge(
+      style: TextStyle(fontFamily: isBangla ? 'BanglaFont' : null),
+      child: Material(
+        color: const Color(0xFF202428),
+        borderRadius: BorderRadius.circular(12),
+        clipBehavior: Clip.antiAlias,
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: isHighlight
-                ? Colors.black.withOpacity(0.35)
-                : Colors.black.withOpacity(0.22),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isHighlight ? Colors.white.withOpacity(0.45) : Colors.white.withOpacity(0.15),
-              width: isHighlight ? 1.5 : 1,
-            ),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: dividerColor),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(5),
-                    decoration: BoxDecoration(
-                      color: accentColor.withOpacity(0.20),
-                      borderRadius: BorderRadius.circular(8),
+                  const Icon(Icons.account_balance_wallet_outlined,
+                      size: 18, color: cashGreen),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'cashSnapshot.title'.tr,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                    child: Icon(icon, size: 15, color: accentColor),
                   ),
-                  const Spacer(),
-                  if (isHighlight)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      margin: const EdgeInsets.only(right: 4),
-                      decoration: BoxDecoration(
-                        color: accentColor.withOpacity(0.25),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        'IN HAND'.tr,
-                        style: TextStyle(color: accentColor, fontSize: 8.5, fontWeight: FontWeight.w900),
-                      ),
-                    ),
-                  if (onTap != null)
-                    Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 11,
-                      color: Colors.white.withOpacity(0.55),
-                    ),
                 ],
               ),
               const SizedBox(height: 8),
-              Text(
-                '৳${_formatCurrency(amount)}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
+              _buildReceiptRow(
+                'cashSnapshot.opening'.tr,
+                _formatSnapshotAmount(amounts.openingCash),
+                _amber,
+                icon: Icons.wb_sunny_outlined,
+                onTap: () => SetOpeningCashBottomSheet.show(
+                  context: context,
+                  controller: controller,
                 ),
               ),
-              const SizedBox(height: 3),
-              Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
+              _buildReceiptRow(
+                'cashbox.cashSales'.tr,
+                '+ ${_formatSnapshotAmount(amounts.cashSales)}',
+                cashGreen,
+                icon: Icons.south_west_rounded,
+                onTap: () => Get.toNamed(Routes.ORDER_SHOP_LIST),
+              ),
+              _buildReceiptRow(
+                'cashbox.bakiCollection'.tr,
+                '+ ${_formatSnapshotAmount(amounts.bakiCashCollection)}',
+                cashGreen,
+                icon: Icons.menu_book_outlined,
+                onTap: () => Get.toNamed(Routes.BAKI_KHATA),
+              ),
+              _buildReceiptRow(
+                'cashbox.deposit'.tr,
+                '+ ${_formatSnapshotAmount(amounts.ownerDeposit)}',
+                _blue,
+                icon: Icons.south_west_rounded,
+                onTap: () => CashboxEntryBottomSheet.show(
+                  context: context, controller: controller,
+                  type: CashboxEntryType.deposit),
+              ),
+              _buildReceiptRow(
+                'cashbox.expense'.tr,
+                '- ${_formatSnapshotAmount(amounts.expense)}',
+                _red,
+                icon: Icons.north_east_rounded,
+                onTap: () => AddExpenseBottomSheet.show(
+                  context: context,
+                  controller: controller,
                 ),
               ),
-              Text(
-                subtitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Colors.white60, fontSize: 9.5),
+              _buildReceiptRow(
+                'cashbox.withdrawal'.tr,
+                '- ${_formatSnapshotAmount(amounts.ownerWithdrawal)}',
+                _amber,
+                icon: Icons.north_east_rounded,
+                onTap: () => CashboxEntryBottomSheet.show(
+                  context: context, controller: controller,
+                  type: CashboxEntryType.withdrawal),
+              ),
+              if (amounts.refunds != 0)
+                _buildReceiptRow(
+                  'cashbox.refunds'.tr,
+                  '- ${_formatSnapshotAmount(amounts.refunds)}',
+                  _red,
+                  icon: Icons.undo_rounded,
+                ),
+              if (amounts.drawerAdjustment != 0)
+                _buildReceiptRow(
+                  'cashSnapshot.adjustment'.tr,
+                  '${amounts.drawerAdjustment > 0 ? '+' : '-'} ${_formatSnapshotAmount(amounts.drawerAdjustment.abs())}',
+                  _blue,
+                  icon: Icons.tune_rounded,
+                  onTap: adjustCash,
+                ),
+              const Divider(height: 12, color: dividerColor),
+              _buildReceiptRow(
+                'cashSnapshot.expected'.tr,
+                _formatSnapshotAmount(kpis.expectedCashInDrawer),
+                cashGreen,
+                icon: Icons.payments_outlined,
+                isBold: true,
+                onTap: adjustCash,
+              ),
+              const Divider(height: 12, color: dividerColor),
+              _buildReceiptRow(
+                'cashbox.actualClosing'.tr,
+                kpis.actualClosingCash == null
+                    ? 'cashbox.notClosed'.tr
+                    : _formatSnapshotAmount(kpis.actualClosingCash!),
+                _blue,
+                icon: Icons.fact_check_outlined,
+                onTap: () => CashboxEntryBottomSheet.show(
+                  context: context, controller: controller,
+                  type: CashboxEntryType.closing),
+              ),
+              if (kpis.drawerDifference != null)
+                _buildReceiptRow(
+                  'cashbox.difference'.tr,
+                  '${kpis.drawerDifference! > 0 ? '+' : ''}${_formatSnapshotAmount(kpis.drawerDifference!)}',
+                  kpis.drawerDifference!.abs() < 0.005 ? cashGreen : _red,
+                  icon: Icons.compare_arrows_rounded,
+                ),
+              _buildReceiptRow(
+                'cashbox.carryForward'.tr,
+                _formatSnapshotAmount(kpis.carryForwardCash ?? 0),
+                _cyan,
+                icon: Icons.calendar_month_outlined,
+                onTap: () => CashboxEntryBottomSheet.show(
+                  context: context, controller: controller,
+                  type: CashboxEntryType.carryForward),
+              ),
+              const Divider(height: 12, color: dividerColor),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final metrics = [
+                    _buildSnapshotMetric(
+                      'cashSnapshot.digital'.tr,
+                      kpis.totalDigitalPayments,
+                      Icons.phone_android_outlined,
+                      _blue,
+                      () => Get.toNamed(Routes.ORDER_SHOP_LIST),
+                    ),
+                    _buildSnapshotMetric(
+                      'cashSnapshot.newBaki'.tr,
+                      kpis.todayNewBaki,
+                      Icons.assignment_late_outlined,
+                      _amber,
+                      () => Get.toNamed(Routes.BAKI_KHATA),
+                    ),
+                    _buildSnapshotMetric(
+                      'cashSnapshot.totalBaki'.tr,
+                      kpis.totalStoreOutstandingBaki,
+                      Icons.menu_book_outlined,
+                      _red,
+                      () => Get.toNamed(Routes.BAKI_KHATA),
+                    ),
+                  ];
+                  if (constraints.maxWidth < 240) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: metrics,
+                    );
+                  }
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (var i = 0; i < metrics.length; i++) ...[
+                        if (i > 0) const SizedBox(width: 8),
+                        Expanded(child: metrics[i]),
+                      ],
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton.icon(
+                      onPressed: adjustCash,
+                      icon: const Icon(Icons.tune_rounded, size: 15),
+                      label: Text('cashSnapshot.adjustAction'.tr,
+                          textAlign: TextAlign.center),
+                      style: TextButton.styleFrom(
+                        foregroundColor: cashGreen,
+                        backgroundColor: cashGreen.withValues(alpha: 0.10),
+                        minimumSize: const Size(0, 34),
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6)),
+                        textStyle: TextStyle(
+                          fontFamily: isBangla ? 'BanglaFont' : null,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextButton.icon(
+                      onPressed: () => Get.toNamed(Routes.BAKI_KHATA),
+                      icon: const Icon(Icons.menu_book_outlined, size: 15),
+                      label: Text('cashSnapshot.bakiAction'.tr,
+                          textAlign: TextAlign.center),
+                      style: TextButton.styleFrom(
+                        foregroundColor: _amber,
+                        backgroundColor: _amber.withValues(alpha: 0.10),
+                        minimumSize: const Size(0, 34),
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6)),
+                        textStyle: TextStyle(
+                          fontFamily: isBangla ? 'BanglaFont' : null,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -592,29 +679,141 @@ class ShopCashFlowReportWidget extends GetWidget<ShopCashFlowController> {
     );
   }
 
-  // --- Master Financial & Cash Ledger Table (Executive Merchant View) ---
+  String _formatSnapshotAmount(double amount) {
+    final formatter =
+        NumberFormat.decimalPattern(Get.locale?.languageCode == 'bn' ? 'bn' : 'en')
+          ..minimumFractionDigits = 0
+          ..maximumFractionDigits = 2;
+    return '৳${formatter.format(amount)}';
+  }
+
+  Widget _buildReceiptRow(
+    String label,
+    String value,
+    Color valueColor, {
+    required IconData icon,
+    bool isBold = false,
+    VoidCallback? onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Icon(icon, size: isBold ? 18 : 14, color: valueColor),
+            const SizedBox(width: 8),
+            Expanded(
+              flex: 3,
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: isBold ? Colors.white : const Color(0xFFCDD2D6),
+                  fontSize: isBold ? 13 : 12,
+                  fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              flex: 2,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    value,
+                    style: TextStyle(
+                      color: valueColor,
+                      fontSize: isBold ? 24 : 13,
+                      fontWeight: isBold ? FontWeight.w800 : FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSnapshotMetric(
+    String label,
+    double amount,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(icon, size: 12, color: color),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(label,
+                      style: const TextStyle(
+                          color: Colors.white60, fontSize: 10)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 3),
+            SizedBox(
+              width: double.infinity,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  _formatSnapshotAmount(amount),
+                  style: TextStyle(
+                      color: color, fontSize: 13, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- Invoice-style cashbox statement ---
   Widget _buildMasterLedgerTable(BuildContext context) {
     return Obx(() {
       final isExpanded = controller.isLedgerTableExpanded.value;
       final grouped = controller.groupedLedgerRows;
       final totalRowsCount = controller.reportData.value?.ledgerRows.length ?? 0;
+      final data = controller.reportData.value;
+      final expectedCash = data?.kpiCards?.expectedCashInDrawer ??
+          data?.totals?.expectedCashDrawer ?? 0;
+      final entryCount = NumberFormat.decimalPattern(
+              Get.locale?.languageCode == 'bn' ? 'bn' : 'en')
+          .format(totalRowsCount);
 
       final sectionConfigs = [
         {
           'key': 'OPENING_BALANCE',
           'title': 'OPENING CASH BALANCE'.tr,
           'icon': Icons.wb_sunny_outlined,
-          'color': const Color(0xFF6EE7B7),
+          'color': _amber,
         },
         {
           'key': 'REVENUE_INFLOW',
-          'title': 'CASH INFLOW & REVENUE'.tr,
+          'title': 'cashbox.cashInflow'.tr,
           'icon': Icons.arrow_downward_rounded,
           'color': const Color(0xFF6EE7B7),
         },
         {
           'key': 'CASH_OUTFLOW',
-          'title': 'CASH OUTFLOW & EXPENSES'.tr,
+          'title': 'cashbox.cashOutflow'.tr,
           'icon': Icons.arrow_upward_rounded,
           'color': const Color(0xFFFCA5A5),
         },
@@ -630,19 +829,56 @@ class ShopCashFlowReportWidget extends GetWidget<ShopCashFlowController> {
           'icon': Icons.account_balance_wallet_outlined,
           'color': const Color(0xFFFDE68A),
         },
+        {
+          'key': 'OWNER_DEPOSIT',
+          'title': 'cashbox.deposit'.tr,
+          'icon': Icons.south_west_rounded,
+          'color': const Color(0xFF6EE7B7),
+        },
+        {
+          'key': 'OWNER_WITHDRAWAL',
+          'title': 'cashbox.withdrawal'.tr,
+          'icon': Icons.north_east_rounded,
+          'color': const Color(0xFFFCA5A5),
+        },
+        {
+          'key': 'CLOSING_BALANCE',
+          'title': 'cashbox.closing'.tr,
+          'icon': Icons.fact_check_outlined,
+          'color': _blue,
+        },
+        {
+          'key': 'CARRY_FORWARD',
+          'title': 'cashbox.carryForward'.tr,
+          'icon': Icons.forward_rounded,
+          'color': _amber,
+        },
       ];
 
+      // New backend ledger sections must remain visible in the full audit.
+      for (final key in grouped.keys) {
+        if (!sectionConfigs.any((config) => config['key'] == key)) {
+          sectionConfigs.add({
+            'key': key,
+            'title': key.replaceAll('_', ' ').tr,
+            'icon': Icons.receipt_long_outlined,
+            'color': _blue,
+          });
+        }
+      }
+
       return Container(
+        key: const ValueKey('cash-ledger-invoice'),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.28),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Colors.white.withOpacity(0.18)),
+          color: const Color(0xFF181A1D),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFF3C4045)),
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Table Header (Interactive toggle)
+            Container(height: 3, color: _amber),
             Material(
               color: Colors.transparent,
               child: InkWell(
@@ -651,21 +887,15 @@ class ShopCashFlowReportWidget extends GetWidget<ShopCashFlowController> {
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   child: Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(Icons.table_chart_outlined, color: Colors.white, size: 18),
-                      ),
+                      const Icon(Icons.receipt_long_outlined,
+                          color: _amber, size: 22),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Master Cash & Financial Ledger'.tr,
+                              'cashLedger.title'.tr,
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 13.5,
@@ -674,34 +904,23 @@ class ShopCashFlowReportWidget extends GetWidget<ShopCashFlowController> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              isExpanded
-                                  ? 'Tap to collapse breakdown'.tr
-                                  : '$totalRowsCount ${'ledger entries • Tap to view breakdown'.tr}',
+                              '${'Store'.tr} #${controller.currentStoreId}  |  '
+                              '${'cashLedger.entries'.trParams({'count': entryCount})}',
                               style: const TextStyle(color: Colors.white60, fontSize: 10.5),
                             ),
                           ],
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: isExpanded ? Colors.white.withOpacity(0.15) : Colors.white.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              isExpanded ? 'Hide'.tr : 'Show'.tr,
-                              style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600),
-                            ),
-                            const SizedBox(width: 4),
-                            AnimatedRotation(
-                              turns: isExpanded ? 0.5 : 0.0,
-                              duration: const Duration(milliseconds: 200),
-                              child: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white, size: 18),
-                            ),
-                          ],
+                      IconButton(
+                        key: const ValueKey('cash-ledger-toggle'),
+                        tooltip: (isExpanded
+                            ? 'cashLedger.hide' : 'cashLedger.show').tr,
+                        onPressed: controller.toggleLedgerTable,
+                        icon: AnimatedRotation(
+                          turns: isExpanded ? 0.5 : 0.0,
+                          duration: const Duration(milliseconds: 200),
+                          child: const Icon(Icons.keyboard_arrow_down_rounded,
+                              color: Colors.white70, size: 22),
                         ),
                       ),
                     ],
@@ -710,13 +929,42 @@ class ShopCashFlowReportWidget extends GetWidget<ShopCashFlowController> {
               ),
             ),
 
+            if (data?.from != null && data?.to != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                child: Text(
+                  '${_formatIso(data?.from)} - ${_formatIso(data?.to)}',
+                  style: const TextStyle(color: Colors.white54, fontSize: 10),
+                ),
+              ),
+
             // Animated Expandable Content
             AnimatedCrossFade(
               firstChild: const SizedBox(width: double.infinity, height: 0),
               secondChild: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Divider(color: Colors.white.withOpacity(0.15), height: 1),
+                  const Divider(color: Color(0xFF3C4045), height: 1),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    child: Row(
+                      children: [
+                        Expanded(child: Text('cashLedger.particulars'.tr,
+                            style: const TextStyle(color: Colors.white54,
+                                fontSize: 10, fontWeight: FontWeight.w600))),
+                        const SizedBox(width: 12),
+                        Text('cashLedger.amount'.tr,
+                            style: const TextStyle(color: Colors.white54,
+                                fontSize: 10, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                  if (totalRowsCount == 0)
+                    Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Text('cashLedger.empty'.tr,
+                          style: const TextStyle(color: Colors.white60, fontSize: 12)),
+                    ),
 
                   // Render Sections
                   ...sectionConfigs.map((sec) {
@@ -730,11 +978,13 @@ class ShopCashFlowReportWidget extends GetWidget<ShopCashFlowController> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Section Header Bar with Subtotal
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                          color: secColor.withOpacity(0.12),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF222529),
+                            border: Border(top: BorderSide(color: Color(0xFF34383D))),
+                          ),
                           child: Row(
                             children: [
                               Icon(sec['icon'] as IconData, size: 14, color: secColor),
@@ -746,28 +996,62 @@ class ShopCashFlowReportWidget extends GetWidget<ShopCashFlowController> {
                                     color: secColor,
                                     fontSize: 11,
                                     fontWeight: FontWeight.w800,
-                                    letterSpacing: 0.4,
                                   ),
                                 ),
                               ),
-                              Text(
-                                _formatSectionSubtotal(key, secTotal),
-                                style: TextStyle(
-                                  color: secTotal.abs() > 0.0001 ? secColor : Colors.white54,
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w800,
+                              const SizedBox(width: 12),
+                              Flexible(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerRight,
+                                  child: Text(
+                                  _formatSectionSubtotal(key, secTotal),
+                                  maxLines: 1,
+                                  textAlign: TextAlign.end,
+                                  style: TextStyle(
+                                    color: secTotal.abs() > 0.0001 ? secColor : Colors.white54,
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w800,
+                                    fontFeatures: const [FontFeature.tabularFigures()],
+                                  ),
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        Divider(color: Colors.white.withOpacity(0.08), height: 1),
-
-                        // Section Rows
                         ...rows.map((row) => _buildLedgerRow(context, row)),
                       ],
                     );
                   }),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
+                    decoration: const BoxDecoration(
+                      border: Border(top: BorderSide(color: Color(0xFF60666D))),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(child: Text('cashLedger.expectedCash'.tr,
+                            style: const TextStyle(color: Color(0xFF6EE7B7),
+                                fontSize: 12, fontWeight: FontWeight.w700))),
+                        const SizedBox(width: 12),
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerRight,
+                            child: Text(_formatSnapshotAmount(expectedCash),
+                              maxLines: 1,
+                              textAlign: TextAlign.end,
+                              style: const TextStyle(color: Color(0xFF6EE7B7),
+                                  fontSize: 16, fontWeight: FontWeight.w800,
+                                  fontFeatures: [FontFeature.tabularFigures()]),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
               crossFadeState: isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
@@ -814,7 +1098,6 @@ class ShopCashFlowReportWidget extends GetWidget<ShopCashFlowController> {
     final amountColor = _getRowAmountColor(row, amount);
     final title = _getSmartLedgerTitle(row);
     final flowBadgeColor = _getFlowBadgeColor(row);
-    final icon = _getLedgerRowIcon(row);
     final smartAction = _getSmartAction(context, row);
 
     return Material(
@@ -823,120 +1106,76 @@ class ShopCashFlowReportWidget extends GetWidget<ShopCashFlowController> {
         onTap: smartAction?.onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             border: Border(
-              bottom: BorderSide(color: Colors.white.withOpacity(0.06), width: 0.6),
+              bottom: BorderSide(color: Color(0xFF34383D), width: 0.6),
             ),
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Icon container
-              Container(
-                height: 34,
-                width: 34,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: flowBadgeColor.withOpacity(0.14),
-                  borderRadius: BorderRadius.circular(9),
-                ),
-                child: Icon(icon, color: flowBadgeColor, size: 17),
-              ),
-              const SizedBox(width: 10),
-
-              // Title and Flow Type Badge
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
+          child: LayoutBuilder(
+            builder: (context, constraints) => Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          color: flowBadgeColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          height: 1.4,
+                        ),
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 3),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                          decoration: BoxDecoration(
-                            color: flowBadgeColor.withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: flowBadgeColor.withOpacity(0.24), width: 0.6),
+                      if (row.flowType.isNotEmpty) ...[
+                        const SizedBox(height: 3),
+                        Text(row.flowType.tr,
+                            style: const TextStyle(color: Colors.white54,
+                                fontSize: 10, height: 1.4)),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: constraints.maxWidth * 0.4,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          amountText,
+                          maxLines: 1,
+                          textAlign: TextAlign.end,
+                          style: TextStyle(
+                            color: amountColor,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            fontFeatures: const [FontFeature.tabularFigures()],
                           ),
-                          child: Text(
-                            row.flowType.isNotEmpty ? row.flowType : 'Entry'.tr,
-                            style: TextStyle(
-                              color: flowBadgeColor,
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                        ),
+                      ),
+                      if (smartAction != null) ...[
+                        const SizedBox(height: 3),
+                        IconButton(
+                          tooltip: smartAction.label,
+                          onPressed: smartAction.onTap,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+                          icon: Icon(smartAction.icon ?? Icons.arrow_forward_rounded,
+                              color: smartAction.color, size: 16),
                         ),
                       ],
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(width: 10),
-
-              // Amount & Smart Action Button
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    amountText,
-                    style: TextStyle(
-                      color: amountColor,
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w900,
-                    ),
+                    ],
                   ),
-                  if (smartAction != null) ...[
-                    const SizedBox(height: 3),
-                    InkWell(
-                      onTap: smartAction.onTap,
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
-                        decoration: BoxDecoration(
-                          color: smartAction.color.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: smartAction.color.withOpacity(0.35), width: 0.8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (smartAction.icon != null) ...[
-                              Icon(smartAction.icon, size: 10.5, color: smartAction.color),
-                              const SizedBox(width: 3),
-                            ],
-                            Text(
-                              smartAction.label,
-                              style: TextStyle(
-                                color: smartAction.color,
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -945,6 +1184,10 @@ class ShopCashFlowReportWidget extends GetWidget<ShopCashFlowController> {
 
   String _getSmartLedgerTitle(LedgerRowItem row) {
     final title = row.title.toLowerCase();
+    if (title.contains('owner') && title.contains('deposit')) return 'cashbox.deposit'.tr;
+    if (title.contains('owner') && title.contains('withdrawal')) return 'cashbox.withdrawal'.tr;
+    if (title.contains('closing')) return 'cashbox.closing'.tr;
+    if (title.contains('carry')) return 'cashbox.carryForward'.tr;
     if (title.contains('opening')) return 'Opening Drawer Cash'.tr;
     if (title.contains('quick manual')) return 'Quick Manual Cash Sales'.tr;
     if (title.contains('pos')) return 'POS In-Store Cash Sales'.tr;
@@ -1044,25 +1287,28 @@ class ShopCashFlowReportWidget extends GetWidget<ShopCashFlowController> {
 
   Color _getRowAmountColor(LedgerRowItem row, double amount) {
     if (amount <= 0.0001) return Colors.white38;
-    final sec = row.section.toUpperCase();
-    if (sec == 'CASH_OUTFLOW') return const Color(0xFFFCA5A5);
-    if (sec == 'REVENUE_INFLOW' || sec == 'OPENING_BALANCE') return const Color(0xFF6EE7B7);
-    if (sec == 'DRAWER_ADJUSTMENT') return const Color(0xFF5EEAD4);
-    if (sec == 'BAKI_FLOW') return const Color(0xFFFDE68A);
-    return Colors.white;
+    return _getFlowBadgeColor(row);
   }
 
   Color _getFlowBadgeColor(LedgerRowItem row) {
     final flow = row.flowType.toLowerCase();
     final sec = row.section.toUpperCase();
+    final title = row.title.toLowerCase();
+    if (flow.contains('digital') || title.contains('digital') || title.contains('aamarpay')) {
+      return const Color(0xFF93C5FD);
+    }
+    if (title.contains('owner') && title.contains('withdrawal') ||
+        sec.contains('WITHDRAWAL')) return const Color(0xFFFCA5A5);
+    if (title.contains('owner') && title.contains('deposit') ||
+        sec.contains('DEPOSIT')) return const Color(0xFF6EE7B7);
+    if (sec.contains('CLOSING')) return _blue;
+    if (sec.contains('CARRY')) return _amber;
+    if (sec == 'OPENING_BALANCE') return _amber;
     if (flow.contains('cash in') || flow.contains('recovery') || sec == 'REVENUE_INFLOW') {
       return const Color(0xFF6EE7B7);
     }
     if (flow.contains('cash out') || sec == 'CASH_OUTFLOW') {
       return const Color(0xFFFCA5A5);
-    }
-    if (flow.contains('digital')) {
-      return const Color(0xFF93C5FD);
     }
     if (flow.contains('drawer') || flow.contains('starting') || sec == 'OPENING_BALANCE' || sec == 'DRAWER_ADJUSTMENT') {
       return const Color(0xFF5EEAD4);
@@ -1071,24 +1317,6 @@ class ShopCashFlowReportWidget extends GetWidget<ShopCashFlowController> {
       return const Color(0xFFFDE68A);
     }
     return Colors.white60;
-  }
-
-  IconData _getLedgerRowIcon(LedgerRowItem row) {
-    final title = row.title.toLowerCase();
-    final sec = row.section.toUpperCase();
-
-    if (title.contains('opening') || sec == 'OPENING_BALANCE') return Icons.wb_sunny_outlined;
-    if (title.contains('quick manual')) return Icons.flash_on_rounded;
-    if (title.contains('pos')) return Icons.point_of_sale_rounded;
-    if (title.contains('cod')) return Icons.local_shipping_outlined;
-    if (title.contains('baki recovered') || title.contains('recovery')) return Icons.payments_outlined;
-    if (title.contains('digital') || title.contains('bkash') || title.contains('nagad')) return Icons.account_balance_wallet_outlined;
-    if (title.contains('refund')) return Icons.currency_exchange_outlined;
-    if (title.contains('expense') || sec == 'CASH_OUTFLOW') return Icons.shopping_bag_outlined;
-    if (title.contains('adjust') || sec == 'DRAWER_ADJUSTMENT') return Icons.tune_rounded;
-    if (title.contains('new baki')) return Icons.assignment_late_outlined;
-    if (title.contains('total baki')) return Icons.assignment_turned_in_outlined;
-    return Icons.receipt_long_outlined;
   }
 
   // --- Bottom Highlighted Summary Cards ---

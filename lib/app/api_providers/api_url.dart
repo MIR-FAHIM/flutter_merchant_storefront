@@ -125,7 +125,7 @@ class ApiClient {
     final queryString = queryParams.isNotEmpty
         ? '?${Uri(queryParameters: queryParams).query}'
         : '';
-    return '$baseUrl/api/reports/shop/$storeId/summary$queryString';
+    return '$baseUrl/api/seller/stores/$storeId/reports/summary$queryString';
   }
 
   // Cash Logs Quick Actions
@@ -137,6 +137,14 @@ class ApiClient {
       '$baseUrl/api/seller/stores/$storeId/cash-logs/expense';
   static String cashLogAdjustDrawer(String storeId) =>
       '$baseUrl/api/seller/stores/$storeId/cash-logs/adjust-drawer';
+  static String cashLogWithdrawal(String storeId) =>
+      '$baseUrl/api/seller/stores/$storeId/cash-logs/withdrawal';
+  static String cashLogDeposit(String storeId) =>
+      '$baseUrl/api/seller/stores/$storeId/cash-logs/deposit';
+  static String cashLogClosing(String storeId) =>
+      '$baseUrl/api/seller/stores/$storeId/cash-logs/closing';
+  static String cashLogCarryForward(String storeId) =>
+      '$baseUrl/api/seller/stores/$storeId/cash-logs/carry-forward';
 
   // Seller Challenges & Reward Races
   static String sellerChallenges(dynamic shopId) =>

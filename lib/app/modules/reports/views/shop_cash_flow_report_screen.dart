@@ -38,7 +38,7 @@ class ShopCashFlowReportScreen extends GetView<ShopCashFlowController> {
           physics: const AlwaysScrollableScrollPhysics(
             parent: BouncingScrollPhysics(),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 14),
           child: Column(
             children: [
               InkWell(

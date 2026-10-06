@@ -4,6 +4,7 @@ import 'package:ecom_delivery_flutter/app/modules/baki/controllers/customer_ledg
 import 'package:ecom_delivery_flutter/app/modules/baki/views/widgets/collect_payment_bottom_sheet.dart';
 import 'package:ecom_delivery_flutter/app/modules/baki/views/widgets/quick_add_baki_bottom_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:ecom_delivery_flutter/common/payment_method_display.dart';
 import 'package:get/get.dart';
 
 class CustomerLedgerScreen extends GetView<CustomerLedgerController> {
@@ -430,7 +431,7 @@ class CustomerLedgerScreen extends GetView<CustomerLedgerController> {
                               border: Border.all(color: const Color(0xFF2E3033)),
                             ),
                             child: Text(
-                              entry.paymentMethod!.toUpperCase(),
+                              paymentMethodLabel(entry.paymentMethod),
                               style: const TextStyle(
                                 color: Colors.white70,
                                 fontSize: 10,

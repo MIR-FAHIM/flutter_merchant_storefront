@@ -4,6 +4,42 @@ import 'package:ecom_delivery_flutter/app/api_providers/api_url.dart';
 class ShopCashFlowRepository {
   final APIManager _apiManager = APIManager();
 
+  Future<Map<String, dynamic>> recordOwnerWithdrawal({
+    required String storeId,
+    required Map<String, dynamic> body,
+  }) async {
+    final response = await _apiManager.postJsonWithHeaderStatus(
+        ApiClient.cashLogWithdrawal(storeId), body, {});
+    return response;
+  }
+
+  Future<Map<String, dynamic>> recordOwnerDeposit({
+    required String storeId,
+    required Map<String, dynamic> body,
+  }) async {
+    final response = await _apiManager.postJsonWithHeaderStatus(
+        ApiClient.cashLogDeposit(storeId), body, {});
+    return response;
+  }
+
+  Future<Map<String, dynamic>> recordClosingCash({
+    required String storeId,
+    required Map<String, dynamic> body,
+  }) async {
+    final response = await _apiManager.postJsonWithHeaderStatus(
+        ApiClient.cashLogClosing(storeId), body, {});
+    return response;
+  }
+
+  Future<Map<String, dynamic>> recordCarryForward({
+    required String storeId,
+    required Map<String, dynamic> body,
+  }) async {
+    final response = await _apiManager.postJsonWithHeaderStatus(
+        ApiClient.cashLogCarryForward(storeId), body, {});
+    return response;
+  }
+
   /// 1. Fetch Summary Report (KPIs, Ledger Rows, Totals)
   Future<Map<String, dynamic>> fetchSummaryReport({
     required String storeId,

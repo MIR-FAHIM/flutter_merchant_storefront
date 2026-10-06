@@ -2,6 +2,7 @@ import 'package:ecom_delivery_flutter/app/models/reports/shop_cash_flow_report_m
 import 'package:ecom_delivery_flutter/app/modules/reports/controllers/shop_cash_flow_controller.dart';
 import 'package:ecom_delivery_flutter/app/modules/reports/views/widgets/add_expense_bottom_sheet.dart';
 import 'package:ecom_delivery_flutter/app/modules/reports/views/widgets/adjust_cash_drawer_bottom_sheet.dart';
+import 'package:ecom_delivery_flutter/app/modules/reports/views/widgets/cashbox_entry_bottom_sheet.dart';
 import 'package:ecom_delivery_flutter/app/modules/reports/views/widgets/quick_cash_sale_bottom_sheet.dart';
 import 'package:ecom_delivery_flutter/app/modules/reports/views/widgets/set_opening_cash_bottom_sheet.dart';
 import 'package:ecom_delivery_flutter/app/routes/app_pages.dart';
@@ -66,17 +67,13 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
         final totals = data?.totals ?? LedgerTotals();
         final grouped = controller.groupedLedgerRows;
 
-        // Calculate dynamic figures from live ledger
-        double openingCash = 0.0;
-        for (var row in grouped['OPENING_BALANCE'] ?? <LedgerRowItem>[]) {
-          openingCash += row.credit;
-        }
-
-        double cashInflow = 0.0;
+        final cashbox = CashboxAmounts.fromReport(data);
+        final openingCash = cashbox.openingCash;
+        final cashInflow = cashbox.cashSales + cashbox.bakiCashCollection;
+        final cashExpenses = cashbox.expense;
+        final drawerAdjustment = cashbox.drawerAdjustment;
         double quickManualCashSales = 0.0;
         for (var row in grouped['REVENUE_INFLOW'] ?? <LedgerRowItem>[]) {
-          cashInflow += row.credit;
-
           final normalizedTitle = row.title.trim().toLowerCase();
           final normalizedFlowType = row.flowType.trim().toLowerCase();
           if (normalizedTitle == 'quick manual cash sales (no cart)' ||
@@ -85,20 +82,7 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
           }
         }
 
-        double cashExpenses = 0.0;
-        for (var row in grouped['CASH_OUTFLOW'] ?? <LedgerRowItem>[]) {
-          cashExpenses += row.debit;
-        }
-
-        double drawerAdjustment = 0.0;
-        for (var row in grouped['DRAWER_ADJUSTMENT'] ?? <LedgerRowItem>[]) {
-          drawerAdjustment += row.netImpact;
-        }
-
-        double bakiCollected = 0.0;
-        for (var row in grouped['BAKI_FLOW'] ?? <LedgerRowItem>[]) {
-          bakiCollected += row.credit;
-        }
+        final bakiCollected = cashbox.bakiCashCollection;
 
         final double expectedDrawer = kpis.expectedCashInDrawer;
         final double digitalWallet = kpis.totalDigitalPayments;
@@ -132,6 +116,9 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
                   expectedDrawer: expectedDrawer,
                   todayNewBaki: todayNewBaki,
                 ),
+                const SizedBox(height: 16),
+
+                _buildOwnerCashGuide(context, cashbox, kpis),
                 const SizedBox(height: 16),
 
                 // 2. Period Filter Selector
@@ -171,6 +158,9 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
                   openingCash: openingCash,
                   cashInflow: cashInflow,
                   cashExpenses: cashExpenses,
+                  ownerDeposit: cashbox.ownerDeposit,
+                  ownerWithdrawal: cashbox.ownerWithdrawal,
+                  cashRefunds: cashbox.refunds,
                   drawerAdjustment: drawerAdjustment,
                   expectedDrawer: expectedDrawer,
                   digitalWallet: digitalWallet,
@@ -203,6 +193,9 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
                   openingCash: openingCash,
                   cashInflow: cashInflow,
                   cashExpenses: cashExpenses,
+                  ownerDeposit: cashbox.ownerDeposit,
+                  ownerWithdrawal: cashbox.ownerWithdrawal,
+                  cashRefunds: cashbox.refunds,
                   drawerAdjustment: drawerAdjustment,
                 ),
               ],
@@ -334,7 +327,7 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
           ),
           const SizedBox(height: 7),
           const Text(
-            'আপনি যদি এই পাঁচটি ক্যাশ ইন-আউট ঠিকভাবে পরিচালনা করেন, তাহলে দিন শেষে আপনার দোকানের টাকার একটি সঠিক হিসাব আপনার কাছে থাকবে।\n\n'
+            'বিক্রি, খরচ, বাকি এবং মালিকের টাকা জমা বা উত্তোলন আলাদা করে লিখুন। দিন শেষে টাকা গুনে Closing Cash Count জমা দিন। তাহলে ক্যাশ বাক্সের টাকার সঠিক হিসাব আপনার কাছে থাকবে।\n\n'
             'মাস শেষে রিপোর্ট দেখে সহজেই বুঝতে পারবেন, আপনার ব্যবসার ক্যাশ ফ্লো কত সুন্দরভাবে আপনার চোখের সামনে পরিষ্কার হয়ে উঠেছে।',
             style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
           ),
@@ -346,8 +339,8 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
             instruction:
                 'শুধু নোট ও কয়েন গুনে Opening Cash লিখুন। বিকাশ/নগদ/ব্যাংকের টাকা এখানে দেবেন না।',
             status: hasOpeningEntry
-                ? 'আজ রেকর্ড হয়েছে: ৳${_formatCurrency(openingCash)}'
-                : 'আজ এখনো Opening Cash রেকর্ড হয়নি',
+                ? 'নির্বাচিত সময়ে রেকর্ড হয়েছে: ৳${_formatCurrency(openingCash)}'
+                : 'নির্বাচিত সময়ে Opening Cash রেকর্ড নেই',
             statusColor: hasOpeningEntry
                 ? const Color(0xFF34D399)
                 : const Color(0xFFFBBF24),
@@ -405,7 +398,7 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
             title: 'কাস্টমারের বাকি আলাদা রাখুন',
             instruction:
                 'বাকিতে বিক্রি হলে কাস্টমারের খাতায় লিখুন। টাকা হাতে না পাওয়া পর্যন্ত সেটি ক্যাশ বাক্সের টাকা নয়।',
-            status: 'আজকের নতুন বাকি: ৳${_formatCurrency(todayNewBaki)}',
+            status: 'নির্বাচিত সময়ে নতুন বাকি: ৳${_formatCurrency(todayNewBaki)}',
             statusColor: const Color(0xFFFBBF24),
             buttonLabel: 'বাকি খাতা খুলুন',
             buttonIcon: Icons.menu_book_outlined,
@@ -418,7 +411,7 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
             timeLabel: 'দোকান বন্ধের আগে',
             title: 'ক্যাশ গুনে সিস্টেমের সঙ্গে মিলান',
             instruction:
-                'প্রথমে বাদ পড়া বিক্রি, খরচ ও রিফান্ড খুঁজুন। কারণ পাওয়ার পরেই প্রয়োজন হলে Drawer Adjustment দিন।',
+                'বাদ পড়া বিক্রি, খরচ, রিফান্ড এবং মালিকের টাকা জমা বা উত্তোলন আগে লিখুন। তারপর Closing Cash Count দিন। এটি টাকা তোলা নয়, হাতে থাকা টাকা গুনে রেকর্ড করা।',
             status:
                 'সিস্টেম অনুযায়ী ক্যাশ থাকার কথা: ৳${_formatCurrency(expectedDrawer)}',
             statusColor: const Color(0xFF34D399),
@@ -429,6 +422,132 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
               context: context,
               expectedDrawer: expectedDrawer,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openCashboxEntry(BuildContext context, CashboxEntryType type) {
+    CashboxEntryBottomSheet.show(
+      context: context,
+      controller: controller,
+      type: type,
+    );
+  }
+
+  Widget _buildOwnerCashGuide(
+      BuildContext context, CashboxAmounts cashbox, KpiCards kpis) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFFBBF24).withOpacity(0.45)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'মালিকের টাকা ও দিনশেষের হিসাব',
+            style: TextStyle(color: Color(0xFFFBBF24), fontSize: 15,
+                fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'নিজের টাকা দোকানে দিলে বিক্রি নয়। নিজের জন্য টাকা নিলে দোকানের খরচ নয়। নিচের অঙ্কগুলো রিপোর্টের নির্বাচিত সময়ের; প্রতিটি এন্ট্রিতে সঠিক দিনের তারিখ বাছুন।',
+            style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
+          ),
+          const SizedBox(height: 14),
+          _buildActionStep(
+            step: '১', timeLabel: 'মালিক নিজের টাকা ক্যাশ বাক্সে দিলে',
+            title: 'Owner Deposit: মালিকের টাকা জমা',
+            instruction:
+                'ধরুন, ভাংতি বা দোকান চালানোর জন্য নিজের ৳৫,০০০ ক্যাশ বাক্সে রাখলেন। Owner Deposit-এ ৳৫,০০০, তারিখ ও কারণ লিখুন। এতে ক্যাশ বাড়বে, কিন্তু বিক্রি বা বিক্রির আয় বাড়বে না।',
+            status: 'মালিকের জমা: ৳${_formatCurrency(cashbox.ownerDeposit)}',
+            statusColor: const Color(0xFF34D399),
+            buttonLabel: 'cashbox.deposit'.tr,
+            buttonIcon: Icons.south_west_rounded,
+            buttonColor: const Color(0xFF34D399),
+            onAction: () => _openCashboxEntry(context, CashboxEntryType.deposit),
+          ),
+          const SizedBox(height: 10),
+          _buildActionStep(
+            step: '২', timeLabel: 'মালিক নিজের জন্য টাকা নিয়ে গেলে',
+            title: 'Owner Withdrawal: মালিকের টাকা উত্তোলন',
+            instruction:
+                'ধরুন, রাতে নিজের জন্য ক্যাশ বাক্স থেকে ৳১০,০০০ নিলেন। Owner Withdrawal-এ টাকার পরিমাণ, তারিখ ও কারণ লিখুন। এতে ক্যাশ কমবে; Expense বা Drawer Adjustment দেবেন না।',
+            status: 'মালিকের উত্তোলন: ৳${_formatCurrency(cashbox.ownerWithdrawal)}',
+            statusColor: const Color(0xFFF87171),
+            buttonLabel: 'cashbox.withdrawal'.tr,
+            buttonIcon: Icons.north_east_rounded,
+            buttonColor: const Color(0xFFF87171),
+            onAction: () => _openCashboxEntry(context, CashboxEntryType.withdrawal),
+          ),
+          const SizedBox(height: 10),
+          _buildActionStep(
+            step: '৩', timeLabel: 'দোকান বন্ধ করার সময়',
+            title: 'Closing Cash Count: বাকি থাকা টাকা গুনে লিখুন',
+            instruction:
+                'সব বিক্রি, খরচ ও মালিকের উত্তোলন লেখার পরে বাক্সে যত টাকা আছে গুনে Actual Closing Cash-এ লিখুন। বাক্স খালি হলে ০ লিখুন। আগামী দিনের জন্য রাখা টাকা Carry Forward Amount-এ দিন; এটি গোনা টাকার চেয়ে বেশি হবে না। Closing Cash Count নিজে কোনো টাকা সরায় না।',
+            status: kpis.actualClosingCash == null
+                ? 'ক্লোজিং ক্যাশ এখনো রেকর্ড নেই'
+                : 'গোনা ক্লোজিং ক্যাশ: ৳${_formatCurrency(kpis.actualClosingCash!)}',
+            statusColor: const Color(0xFF60A5FA),
+            buttonLabel: 'cashbox.closing'.tr,
+            buttonIcon: Icons.fact_check_outlined,
+            buttonColor: const Color(0xFF60A5FA),
+            onAction: () => _openCashboxEntry(context, CashboxEntryType.closing),
+          ),
+          const SizedBox(height: 10),
+          _buildActionStep(
+            step: '৪', timeLabel: 'আগামী দিনের জন্য ক্যাশ রেখে দিলে',
+            title: 'Carry Forward: পরের দিনের ওপেনিংয়ের টাকা',
+            instruction:
+                'যেমন, আজ ৳৫,০০০ রেখে আগামীকাল শুরু করবেন। Carry Forward-এ ৳৫,০০০ এবং দুই দিনের তারিখ লিখুন। Closing Cash Count-এ রাখা টাকা দিয়ে পরের দিনের Opening Cash সেট করেও এটি করতে পারেন। একই টাকার জন্য দুইভাবে এন্ট্রি দেবেন না। আগামীকাল ওপেনিং আগে থেকেই সেট থাকলে আবার যোগ করবেন না। এটি নতুন বিক্রি নয়।',
+            status: 'পরের দিনের জন্য রাখা: ৳${_formatCurrency(kpis.carryForwardCash ?? 0)}',
+            statusColor: const Color(0xFFFBBF24),
+            buttonLabel: 'cashbox.carryForward'.tr,
+            buttonIcon: Icons.forward_rounded,
+            buttonColor: const Color(0xFFFBBF24),
+            onAction: () => _openCashboxEntry(context, CashboxEntryType.carryForward),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'দিন বন্ধ করার সহজ নিয়ম',
+            style: TextStyle(color: Colors.white, fontSize: 13,
+                fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 10),
+          _buildClosingCheckRow(number: '১', text: 'ক্যাশ বাক্সের নোট ও কয়েন গুনুন।'),
+          _buildClosingCheckRow(number: '২', text: 'Actual Closing Cash-এ গোনা টাকা লিখুন।'),
+          _buildClosingCheckRow(number: '৩', text: 'আগামী দিনের জন্য রাখলে Carry Forward Amount লিখুন। কিছু না রাখলে ০ দিন।'),
+          _buildClosingCheckRow(number: '৪', text: 'মালিক বাকি টাকা নিলে আলাদা Owner Withdrawal রেকর্ড করুন। ক্লোজিং ফর্ম থেকে করলে বাকি থাকা নগদের অঙ্ক নিজে কমে যাবে। আগে রেকর্ড করে থাকলে আবার দেবেন না।'),
+          _buildClosingCheckRow(number: '৫', text: 'শেষে বাক্সে থাকা নগদ যাচাই করে Closing Cash Count জমা দিন। পরের দিনের ওপেনিং সেট করতে চাইলে সেই অপশনে টিক দিন।'),
+          const Divider(color: Colors.white24, height: 24),
+          const Text('উদাহরণ: রাতে সব টাকা মালিক নিয়ে গেলেন',
+              style: TextStyle(color: Color(0xFFFBBF24), fontSize: 12,
+                  fontWeight: FontWeight.w700)),
+          const SizedBox(height: 6),
+          const Text(
+            'উত্তোলনের আগে Expected Cash ৳১০,০০০।\n'
+            'Owner Withdrawal ৳১০,০০০ রেকর্ড করুন।\n'
+            'Actual Closing Cash ০, Carry Forward ০।\n'
+            'উত্তোলন রেকর্ড হওয়ার পরে Expected Cash-ও ০ হবে। টাকা নেওয়াকে খরচ দেখাবেন না।',
+            style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.5),
+          ),
+          if (kpis.drawerDifference != null) ...[
+            const SizedBox(height: 12),
+            _buildReceiptRow('গোনা নগদ ও হিসাবের পার্থক্য:',
+                '৳${_formatCurrency(kpis.drawerDifference!)}',
+                kpis.drawerDifference == 0
+                    ? const Color(0xFF34D399) : const Color(0xFFFBBF24)),
+          ],
+          const SizedBox(height: 8),
+          const Text(
+            'পার্থক্য ০ হলে হিসাব মিলে গেছে। অমিল হলে আগে বাদ পড়া এন্ট্রি খুঁজুন; শুধু হিসাব মেলাতে অকারণে Drawer Adjustment দেবেন না। AamarPay অনলাইন পেমেন্ট; এটি ক্যাশ বাক্সের নগদ নয়।',
+            style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
           ),
         ],
       ),
@@ -593,12 +712,12 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
               _buildClosingCheckRow(
                 number: '২',
                 text:
-                    'গোনা টাকার সঙ্গে ৳${_formatCurrency(expectedDrawer)} মিলিয়ে দেখুন।',
+                    'নির্বাচিত রিপোর্টে ক্যাশ ৳${_formatCurrency(expectedDrawer)}। ক্লোজিং ফর্মে সঠিক দিনের হিসাব বেছে গোনা নগদ লিখুন।',
               ),
               _buildClosingCheckRow(
                 number: '৩',
                 text:
-                    'অমিল হলে আগে বাদ পড়া বিক্রি, খরচ, রিফান্ড বা ভাংতির ভুল খুঁজুন।',
+                    'মালিক টাকা নিলে Owner Withdrawal লিখুন। আগামী দিনের জন্য রাখা টাকা Carry Forward-এ দিন। তারপর ক্লোজিং জমা দিন।',
               ),
               const SizedBox(height: 14),
               Container(
@@ -625,9 +744,16 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () => Navigator.of(sheetContext).pop(),
+                      onPressed: () {
+                        Navigator.of(sheetContext).pop();
+                        Future<void>.delayed(const Duration(milliseconds: 180), () {
+                          if (context.mounted) {
+                            _openCashboxEntry(context, CashboxEntryType.closing);
+                          }
+                        });
+                      },
                       icon: const Icon(Icons.check_circle_outline_rounded),
-                      label: const Text('মিলে গেছে'),
+                      label: const Text('ক্লোজিং লিখুন'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFF34D399),
                         side: const BorderSide(color: Color(0xFF34D399)),
@@ -931,7 +1057,7 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
               SizedBox(width: 9),
               Expanded(
                 child: Text(
-                  'কাজ শুরুর আগে এই ৪টি পার্থক্য বুঝুন',
+                  'কাজ শুরুর আগে এই পার্থক্যগুলো বুঝুন',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 14,
@@ -968,7 +1094,14 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
             color: const Color(0xFF60A5FA),
             title: 'সব টাকা ক্যাশ বাক্সে থাকে না',
             text:
-                'Opening Cash আয় নয়। বিকাশ/নগদ/কার্ডে পাওয়া টাকা Cash In হলেও সেটি ক্যাশ বাক্সে নয়, ডিজিটাল হিসাবে থাকে।',
+                'Opening Cash আয় নয়। বিকাশ/নগদ/কার্ড/ব্যাংক ও AamarPay-এর টাকা ডিজিটাল হিসাবে থাকে, ক্যাশ বাক্সে নয়।',
+          ),
+          _buildBasicFact(
+            icon: Icons.person_outline_rounded,
+            color: const Color(0xFFFBBF24),
+            title: 'মালিকের জমা বিক্রি নয়, উত্তোলন খরচ নয়',
+            text:
+                'Owner Deposit ক্যাশ বাড়ায়, কিন্তু বিক্রির আয় নয়। Owner Withdrawal ক্যাশ কমায়, কিন্তু দোকানের খরচ নয়। Closing Cash Count শুধু বাক্সে থাকা নগদের রেকর্ড।',
             showDivider: false,
           ),
           const SizedBox(height: 12),
@@ -995,7 +1128,14 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
                 ),
                 SizedBox(height: 5),
                 Text(
-                  'ক্যাশ বাক্সে থাকার কথা = Opening Cash + নগদ আদায় - নগদ খরচ/রিফান্ড ± যাচাইকৃত সমন্বয়',
+                  'দিন শেষে ক্যাশ বাক্সে থাকার কথা =\n'
+                  'সকালের ওপেনিং ক্যাশ\n'
+                  '+ নগদ বিক্রি\n'
+                  '+ নগদ বাকি আদায়\n'
+                  '+ মালিকের টাকা জমা\n'
+                  '- দোকানের নগদ খরচ\n'
+                  '- মালিকের টাকা উত্তোলন\n\n'
+                  'নগদ রিফান্ড থাকলে বাদ যাবে। যাচাই করা Drawer Adjustment থাকলে যোগ বা বিয়োগ হবে। Carry Forward একই নগদ পরের দিনে নেয়; নতুন আয় যোগ করে না।',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 12,
@@ -1290,24 +1430,9 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
                     color: Colors.black.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'রিপোর্টে মোট Credit / যোগ:',
-                        style:
-                            TextStyle(color: Color(0xFFA7F3D0), fontSize: 11),
-                      ),
-                      Text(
-                        '৳${_formatCurrency(totalCredit)}',
-                        style: const TextStyle(
-                          color: Color(0xFF34D399),
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ],
-                  ),
+                  child: _buildReceiptRow('রিপোর্টে মোট Credit / যোগ:',
+                      '৳${_formatCurrency(totalCredit)}',
+                      const Color(0xFF34D399)),
                 ),
               ],
             ),
@@ -1371,24 +1496,9 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
                     color: Colors.black.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'রিপোর্টে মোট Debit / কমা:',
-                        style:
-                            TextStyle(color: Color(0xFFFECACA), fontSize: 11),
-                      ),
-                      Text(
-                        '৳${_formatCurrency(totalDebit)}',
-                        style: const TextStyle(
-                          color: Color(0xFFF87171),
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ],
-                  ),
+                  child: _buildReceiptRow('রিপোর্টে মোট Debit / কমা:',
+                      '৳${_formatCurrency(totalDebit)}',
+                      const Color(0xFFF87171)),
                 ),
               ],
             ),
@@ -1404,6 +1514,9 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
     required double openingCash,
     required double cashInflow,
     required double cashExpenses,
+    required double ownerDeposit,
+    required double ownerWithdrawal,
+    required double cashRefunds,
     required double drawerAdjustment,
     required double expectedDrawer,
     required double digitalWallet,
@@ -1433,9 +1546,9 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
             iconColor: const Color(0xFF34D399),
             title: '১. 💵 ক্যাশ বাক্সের টাকা (Cash in Drawer)',
             description:
-                'এটি আপনার ক্যাশ বাক্সে (গাল্লায়) আসল কাগজ বা নোটের টাকা।',
+                'এটি হিসাব অনুযায়ী দিন শেষে ক্যাশ বাক্সে থাকার কথা। হাতে কত আছে জানতে টাকা গুনে Closing Cash Count লিখুন।',
             formula:
-                'হিসাব: (সকালের শুরুর ক্যাশ) + (আজকের নগদ ইনকাম) - (আজকের নগদ খরচ)',
+                'ওপেনিং + নগদ বিক্রি ও বাকি আদায় + মালিকের জমা - খরচ - মালিকের উত্তোলন - নগদ রিফান্ড ± সমন্বয়',
             liveWidget: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
@@ -1449,13 +1562,23 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
                   _buildMiniMathRow('সকালের শুরুর ক্যাশ (Opening):',
                       '৳${_formatCurrency(openingCash)}', Colors.white70),
                   _buildMiniMathRow(
-                      'নগদ ইনকাম (বিক্রি ও উদ্ধার):',
+                      'নগদ বিক্রি ও বাকি আদায়:',
                       '+ ৳${_formatCurrency(cashInflow)}',
+                      const Color(0xFF34D399)),
+                  _buildMiniMathRow('মালিকের টাকা জমা:',
+                      '+ ৳${_formatCurrency(ownerDeposit)}',
                       const Color(0xFF34D399)),
                   _buildMiniMathRow(
                       'নগদ খরচ (চা-নাশতা/অন্যান্য):',
                       '- ৳${_formatCurrency(cashExpenses)}',
                       const Color(0xFFF87171)),
+                  _buildMiniMathRow('মালিকের টাকা উত্তোলন:',
+                      '- ৳${_formatCurrency(ownerWithdrawal)}',
+                      const Color(0xFFF87171)),
+                  if (cashRefunds != 0)
+                    _buildMiniMathRow('নগদ রিফান্ড:',
+                        '- ৳${_formatCurrency(cashRefunds)}',
+                        const Color(0xFFF87171)),
                   if (drawerAdjustment != 0)
                     _buildMiniMathRow(
                         'ড্রয়ার সমন্বয় (সিস্টেম এডজাস্টমেন্ট):',
@@ -1480,7 +1603,7 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
             iconColor: const Color(0xFF60A5FA),
             title: '২. 📱 ডিজিটাল টাকা (Digital Wallets)',
             description:
-                'বিকাশ, নগদ বা কার্ডে পাওয়া টাকা। এই টাকা আপনার ক্যাশ বাক্সে থাকে না, সরাসরি ব্যাংক বা ওয়ালেটে জমা হয়।',
+                'বিকাশ, নগদ, কার্ড, ব্যাংক বা AamarPay-এ পাওয়া টাকা। এই টাকা ক্যাশ বাক্সের নগদ নয়; ব্যাংক বা ওয়ালেটের পেমেন্ট হিসেবে দেখুন।',
             liveWidget: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
@@ -1489,23 +1612,9 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
                 border: Border.all(
                     color: const Color(0xFF60A5FA).withOpacity(0.35)),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'ডিজিটাল পেমেন্ট রিসিভড:',
-                    style: TextStyle(color: Colors.white70, fontSize: 11.5),
-                  ),
-                  Text(
-                    '৳${_formatCurrency(digitalWallet)}',
-                    style: const TextStyle(
-                      color: Color(0xFF60A5FA),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ],
-              ),
+              child: _buildReceiptRow('ডিজিটাল পেমেন্ট রিসিভড:',
+                  '৳${_formatCurrency(digitalWallet)}',
+                  const Color(0xFF60A5FA)),
             ),
           ),
           const SizedBox(height: 16),
@@ -1585,7 +1694,7 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
             iconColor: const Color(0xFF34D399),
             title: '৪. 🟢 আজকের বাকি উদ্ধার (Baki Recovered)',
             description:
-                'পুরনো বাকির কাস্টমারদের কাছ থেকে আজ নগদ বা বিকাশে কত টাকা ফেরত পেলেন।',
+                'কাস্টমারের পুরনো বাকি থেকে নগদে আদায় করা টাকা। ডিজিটালে আদায় হলে তা ক্যাশ বাক্সে যোগ হবে না।',
             liveWidget: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
@@ -1594,23 +1703,9 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
                 border: Border.all(
                     color: const Color(0xFF34D399).withOpacity(0.35)),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'সংগৃহীত নগদ বাকি:',
-                    style: TextStyle(color: Colors.white70, fontSize: 11.5),
-                  ),
-                  Text(
-                    '৳${_formatCurrency(bakiCollected)}',
-                    style: const TextStyle(
-                      color: Color(0xFF34D399),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ],
-              ),
+              child: _buildReceiptRow('সংগৃহীত নগদ বাকি:',
+                  '৳${_formatCurrency(bakiCollected)}',
+                  const Color(0xFF34D399)),
             ),
           ),
         ],
@@ -1682,20 +1777,26 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: isBold ? Colors.white : Colors.white70,
-              fontSize: 11,
-              fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: isBold ? Colors.white : Colors.white70,
+                fontSize: 11,
+                fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
+              ),
             ),
           ),
-          Text(
-            value,
-            style: TextStyle(
-              color: valueColor,
-              fontSize: isBold ? 12.5 : 11.5,
-              fontWeight: isBold ? FontWeight.w900 : FontWeight.w700,
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: TextStyle(
+                color: valueColor,
+                fontSize: isBold ? 12.5 : 11.5,
+                fontWeight: isBold ? FontWeight.w900 : FontWeight.w700,
+              ),
             ),
           ),
         ],
@@ -1853,19 +1954,18 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
                 color: Colors.white70, fontSize: 11.5, height: 1.35),
           ),
           const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: Text(
-                  statusText,
-                  style: const TextStyle(
-                    color: Color(0xFFFDE68A),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
+              Text(
+                statusText,
+                style: const TextStyle(
+                  color: Color(0xFFFDE68A),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
+              const SizedBox(height: 8),
               InkWell(
                 onTap: onAction,
                 borderRadius: BorderRadius.circular(8),
@@ -2015,12 +2115,14 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
                     Icon(Icons.shopping_cart_outlined,
                         color: Colors.white70, size: 15),
                     SizedBox(width: 6),
-                    Text(
-                      'মোট বিক্রয় বিল: ৳১,০০০',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700),
+                    Expanded(
+                      child: Text(
+                        'মোট বিক্রয় বিল: ৳১,০০০',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700),
+                      ),
                     ),
                   ],
                 ),
@@ -2089,6 +2191,9 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
     required double openingCash,
     required double cashInflow,
     required double cashExpenses,
+    required double ownerDeposit,
+    required double ownerWithdrawal,
+    required double cashRefunds,
     required double drawerAdjustment,
   }) {
     final periodName = controller.selectedPeriod.value == 'today'
@@ -2109,11 +2214,17 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
 সময়কাল: $periodName ($dateRangeStr)
 ----------------------------------
 💵 প্রারম্ভিক ক্যাশ (Opening): ৳${_formatCurrency(openingCash)}
-🟢 নগদ ইনকাম (Sales & Recoveries): ৳${_formatCurrency(cashInflow)}
-🔴 নগদ খরচ (Cash Outflow): ৳${_formatCurrency(cashExpenses)}
+🟢 নগদ বিক্রি ও বাকি আদায়: ৳${_formatCurrency(cashInflow)}
+🟢 মালিকের টাকা জমা (Owner Deposit): ৳${_formatCurrency(ownerDeposit)}
+🔴 দোকানের নগদ খরচ (Expense): ৳${_formatCurrency(cashExpenses)}
+🔴 মালিকের টাকা উত্তোলন (Owner Withdrawal): ৳${_formatCurrency(ownerWithdrawal)}
+🔴 নগদ রিফান্ড: ৳${_formatCurrency(cashRefunds)}
 ⚖️ ক্যাশ সমন্বয় (Drawer Adj.): ৳${_formatCurrency(drawerAdjustment)}
 ----------------------------------
-➡️ ক্যাশ বাক্সে থাকার কথা (Galla Cash): ৳${_formatCurrency(kpis.expectedCashInDrawer)}
+➡️ দিন শেষে ক্যাশ বাক্সে থাকার কথা: ৳${_formatCurrency(kpis.expectedCashInDrawer)}
+গোনা ক্লোজিং ক্যাশ: ${kpis.actualClosingCash == null ? 'রেকর্ড নেই' : '৳${_formatCurrency(kpis.actualClosingCash!)}'}
+ক্লোজিংয়ের পার্থক্য: ${kpis.drawerDifference == null ? 'রেকর্ড নেই' : '৳${_formatCurrency(kpis.drawerDifference!)}'}
+পরের দিনের জন্য রাখা: ৳${_formatCurrency(kpis.carryForwardCash ?? 0)}
 📱 ডিজিটাল ওয়ালেট ইনকাম: ৳${_formatCurrency(kpis.totalDigitalPayments)}
 🔴 নতুন বাকি দেওয়া: ৳${_formatCurrency(kpis.todayNewBaki)}
 🟢 মোট অনাদায়ী বকেয়া: ৳${_formatCurrency(kpis.totalStoreOutstandingBaki)}
@@ -2203,10 +2314,20 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
                     'মোট নগদ বিক্রি ও সংগ্রহ:',
                     '+ ৳${_formatCurrency(cashInflow)}',
                     const Color(0xFF34D399)),
+                _buildReceiptRow('মালিকের টাকা জমা:',
+                    '+ ৳${_formatCurrency(ownerDeposit)}',
+                    const Color(0xFF34D399)),
                 _buildReceiptRow(
                     'নগদ খরচ (Expenses):',
                     '- ৳${_formatCurrency(cashExpenses)}',
                     const Color(0xFFF87171)),
+                _buildReceiptRow('মালিকের টাকা উত্তোলন:',
+                    '- ৳${_formatCurrency(ownerWithdrawal)}',
+                    const Color(0xFFF87171)),
+                if (cashRefunds != 0)
+                  _buildReceiptRow('নগদ রিফান্ড:',
+                      '- ৳${_formatCurrency(cashRefunds)}',
+                      const Color(0xFFF87171)),
                 if (drawerAdjustment != 0)
                   _buildReceiptRow(
                       'ড্রয়ার সমন্বয় (Adjustments):',
@@ -2214,11 +2335,22 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
                       const Color(0xFF60A5FA)),
                 const Divider(color: Colors.white24, height: 16),
                 _buildReceiptRow(
-                  '💵 ক্যাশ বাক্সে মোট টাকা (Expected):',
+                  'দিন শেষে ক্যাশ বাক্সে থাকার কথা:',
                   '৳${_formatCurrency(kpis.expectedCashInDrawer)}',
                   const Color(0xFF34D399),
                   isBold: true,
                 ),
+                _buildReceiptRow('গোনা ক্লোজিং ক্যাশ:',
+                    kpis.actualClosingCash == null ? 'রেকর্ড নেই'
+                        : '৳${_formatCurrency(kpis.actualClosingCash!)}',
+                    const Color(0xFF60A5FA)),
+                if (kpis.drawerDifference != null)
+                  _buildReceiptRow('ক্লোজিংয়ের পার্থক্য:',
+                      '৳${_formatCurrency(kpis.drawerDifference!)}',
+                      const Color(0xFFFBBF24)),
+                _buildReceiptRow('পরের দিনের জন্য রাখা:',
+                    '৳${_formatCurrency(kpis.carryForwardCash ?? 0)}',
+                    const Color(0xFFFBBF24)),
                 const SizedBox(height: 6),
                 _buildReceiptRow(
                     '📱 ডিজিটাল ওয়ালেট সংগ্রহ:',
@@ -2306,20 +2438,26 @@ class SellerCashFlowGuideScreen extends GetView<ShopCashFlowController> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: isBold ? Colors.white : Colors.white70,
-              fontSize: isBold ? 11.5 : 11,
-              fontWeight: isBold ? FontWeight.w800 : FontWeight.w500,
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: isBold ? Colors.white : Colors.white70,
+                fontSize: isBold ? 11.5 : 11,
+                fontWeight: isBold ? FontWeight.w800 : FontWeight.w500,
+              ),
             ),
           ),
-          Text(
-            value,
-            style: TextStyle(
-              color: valueColor,
-              fontSize: isBold ? 13 : 11.5,
-              fontWeight: isBold ? FontWeight.w900 : FontWeight.w700,
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: TextStyle(
+                color: valueColor,
+                fontSize: isBold ? 13 : 11.5,
+                fontWeight: isBold ? FontWeight.w900 : FontWeight.w700,
+              ),
             ),
           ),
         ],

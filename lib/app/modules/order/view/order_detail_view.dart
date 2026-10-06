@@ -5,6 +5,7 @@ import 'package:ecom_delivery_flutter/app/modules/order/controller/order_control
 import 'package:ecom_delivery_flutter/app/modules/shop_chat/controllers/shop_chat_controller.dart';
 import 'package:ecom_delivery_flutter/app/routes/app_pages.dart';
 import 'package:flutter/material.dart';
+import 'package:ecom_delivery_flutter/common/payment_method_display.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -518,7 +519,7 @@ class OrderDetailView extends GetView<OrderController> {
     final double discount = order?.discount ?? 0;
     final double paidAmount = order?.paidAmount ?? 0;
     final double dueAmount = order?.dueAmount ?? 0;
-    final String paymentMethod = (order?.paymentMethod ?? 'N/A').toUpperCase();
+    final String paymentMethod = paymentMethodLabel(order?.paymentMethod);
     final String paymentStatus = (order?.paymentStatus ?? 'N/A').toUpperCase();
 
     final buffer = StringBuffer();
@@ -601,7 +602,7 @@ class _OrderHeroCard extends StatelessWidget {
     final double total = order?.total ?? item?.lineTotal ?? 0;
     final String status = order?.status ?? item?.status ?? 'N/A';
     final String paymentStatus = (order?.paymentStatus ?? 'N/A').toUpperCase();
-    final String paymentMethod = (order?.paymentMethod ?? 'N/A').toUpperCase();
+    final String paymentMethod = paymentMethodLabel(order?.paymentMethod);
     final double dueAmount = order?.dueAmount ?? 0;
     final double paidAmount = order?.paidAmount ?? 0;
     final bool isPos = (order?.orderType ?? '').toLowerCase() == 'pos' ||
@@ -2153,7 +2154,7 @@ class _FinancialSummaryCard extends StatelessWidget {
     final double paidAmount = order?.paidAmount ?? 0;
     final double dueAmount = order?.dueAmount ?? 0;
     final String paymentStatus = order?.paymentStatus ?? 'N/A';
-    final String paymentMethod = (order?.paymentMethod ?? 'N/A').toUpperCase();
+    final String paymentMethod = paymentMethodLabel(order?.paymentMethod);
     final String platform = (order?.platform ?? 'Direct').toUpperCase();
 
     return Container(
